@@ -1,0 +1,5 @@
+export const TEST_GET = 'TEST_GET';
+export const TEST_GET_ONE = 'TEST_GET_ONE';
+export const TEST_GET_MULTIPLE = 'TEST_GET_MULTIPLE';
+export const TEST_LOADING = 'TEST_LOADING';
+export const TEST_LOADING_ERROR = 'TEST_LOADING_ERROR';

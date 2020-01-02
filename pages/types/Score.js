@@ -1,0 +1,5 @@
+export const SCORE_GET = 'SCORE_GET';
+export const SCORE_GET_ONE = 'SCORE_GET_ONE';
+export const SCORE_GET_MULTIPLE = 'SCORE_GET_MULTIPLE';
+export const SCORE_LOADING = 'SCORE_LOADING';
+export const SCORE_LOADING_ERROR = 'SCORE_LOADING_ERROR';

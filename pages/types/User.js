@@ -1,0 +1,5 @@
+export const USER_GET = 'USER_GET';
+export const USER_GET_ONE = 'USER_GET_ONE';
+export const USER_GET_MULTIPLE = 'USER_GET_MULTIPLE';
+export const USER_LOADING = 'USER_LOADING';
+export const USER_LOADING_ERROR = 'USER_LOADING_ERROR';
