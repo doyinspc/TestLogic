@@ -12,8 +12,8 @@ export default function Activity(props) {
         color = {local_color.Colors}
         size = "large"
         />
-    <Text>{`${props.title}... Please wait..`}</Text>
-    <Text>this will take some time. Please wait</Text>
+    <Text style={{ alignSelf:'center', margin:0, padding:0, alignContent:'center', justifyContent:'center'}}>{`${props.title}... Please wait..`}</Text>
+    <Text style={{ alignSelf:'center', alignContent:'center', justifyContent:'center'}}>this will take some time. Please wait</Text>
     <Button 
         title="Cancel Process" 
         buttonStyle={styles.but}

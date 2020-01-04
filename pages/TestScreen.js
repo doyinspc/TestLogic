@@ -26,7 +26,7 @@ class TestScreen extends React.Component{
   relocate = (value) =>{
     if(value && value > 0)
     {
-     this.props.navigation.navigate('ScoresScreen', {'testID':value})
+     this.props.navigation.navigate('TestSheetScreen', {'testID':value})
     }
   }
  
@@ -58,12 +58,14 @@ render(){
                 titleStyle={styles.listItem}  
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
                 title={l.title}
+                subtitle={`${l.settings.split(':::')[0]} Questions`}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
                 onPress={()=>{this.relocate(l.id)}}
-                badge={{  value: 457, textStyle: { color: 'white', backgroundColor:local_color.MAIN, borderRadius:20 }, containerStyle: { marginTop: 1 } }}
+                badge={{  value: l.id, textStyle: { color: 'white', backgroundColor:local_color.MAIN, borderRadius:20 }, containerStyle: { marginTop: 1 } }}
+                chevron
             />
             ))
             }

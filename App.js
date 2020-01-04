@@ -17,6 +17,7 @@ import ChangePasswordScreen from './pages/ChangePasswordScreen';
 import ForgotPasswordScreen from './pages/ForgotPasswordScreen';
 import TestSettingsScreen from './pages/TestSettingsScreen';
 import TestScreen from './pages/TestScreen';
+import TestSheetScreen from './pages/TestSheetScreen';
 import ScoresScreen from './pages/ScoresScreen';
 import ScoreSheetScreen from './pages/ScoreSheetScreen';
 import ScoreScreen from './pages/ScoreScreen';
@@ -118,6 +119,15 @@ const AppStack = createStackNavigator({
     }, 
    TestScreen: {
       screen: TestScreen,
+      navigationOptions: {
+        title: 'Tests List',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    TestSheetScreen: {
+      screen: TestSheetScreen,
       navigationOptions: {
         title: 'Tests',
         headerStyle: pgArr,

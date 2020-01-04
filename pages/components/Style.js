@@ -13,7 +13,7 @@ let MAIN_COLOR = 'teal';
 let color1 = '#003B46' //PRIMARY
 let color2 = '#07575B' //SECONDARY
 let color3 = '#66A5AD'
-let color4 = '#C4DFE6'
+let color4 = '#cccccc' //'#C4DFE6'
 let color5 = '#ffffff' 
 
 //let color1 = '#021C1E',
@@ -230,8 +230,8 @@ module.exports = {
             marginTop: 9
           },
           timers: {
-            color: color4,
-            fontSize: 40,
+            color: color1,
+            fontSize: 20,
             justifyContent:'center',
             alignItems:'center',
             fontFamily: 'PoiretOne',

@@ -29,36 +29,27 @@ module.exports = {
     },
     test: {
         name:'tests',
-        schema: `   id INTEGER PRIMARY KEY ,
-
-                    userID TEXT ,
-                    subjectID TEXT ,
-                    title TEXT ,
-                    description TEXT ,
-                    testtime TEXT DEFAULT 0,
-                    settings TEXT,
-                    ids TEXT,
+        schema: `id INTEGER PRIMARY KEY , userID TEXT ,subjectID TEXT ,title TEXT ,description TEXT ,testtime TEXT DEFAULT 0,settings TEXT,ids TEXT,
                     instructions TEXT,
                     questions TEXT,
                     answers TEXT,
                     options TEXT,
-                    questionweigth TEXT,
-                   
-                    active INTEGER DEFAULT 0, 
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP `
+                    questionweigth TEXT, active INTEGER DEFAULT 0, 
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
     },
     score: {
         name:'scores',
         schema: `   id INTEGER PRIMARY KEY ,
                     testID INTEGER NOT NULL,
-                    score INTEGER DEFAULT 0, 
-                    testtime INTEGER DEFAULT 0,
-                    choices TEXT,
-                    started_at TIMESTAMP ,
-                    ended_at TIMESTAMP ,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-                    updated_at TIMESTAMP  `
+                    score TEXT , 
+                    timeleft INTEGER DEFAULT 0,
+                    timespent TEXT DEFAULT NULL,
+                    choices TEXT DEFAULT NULL,
+                    started_at TEXT NULL ,
+                    ended_at TEXT NULL ,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
     },
     user: {
         name:'users',
@@ -67,8 +58,8 @@ module.exports = {
                     fullname TEXT,
                     password TEXT, 
                     hashkey TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-                    updated_at TIMESTAMP  `
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL `
     }
 
 

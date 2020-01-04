@@ -68,9 +68,8 @@ export const getQuestionsSave = (data) => (dispatch, getState) => {
   dispatch({ type: TOPIC_LOADING});
   const TABLES_NAME = SCHEME['test'].name;
   const TABLES_STRUCTURE = SCHEME['test'].schema;
-  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-  let dbs = db.openDB();
-  db.insertTest(dbs, TABLES_NAME, TABLES_STRUCTURE, 1, data)
+  
+  db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 1)
   .then((dat) => {
     dispatch({
       type: TOPIC_GET_ONE,
@@ -89,21 +88,14 @@ export const getQuestionsUpdate = (data) => (dispatch, getState) => {
   dispatch({ type: TOPIC_LOADING});
   const TABLES_NAME = SCHEME['test'].name;
   const TABLES_STRUCTURE = SCHEME['test'].schema;
-  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-  let dbs = db.openDB();
-  db.insertTest(dbs, TABLES_NAME, TABLES_STRUCTURE, 2,  data)
-  .then((dat) => {
+  
+  db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 2, (data)=>{
     dispatch({
       type: TOPIC_GET_ONE,
-      payload: dat
+      payload: data
     })
   })
-  .catch((err) => {
-    dispatch({
-      type : TOPIC_LOADING_ERROR,
-      payload: err
-    })
-  })
+ 
 };
 
 

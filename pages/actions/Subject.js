@@ -40,7 +40,6 @@ export const getSubjectsClear = () => (dispatch, getState) => {
           dropData('question');
           dropData('answer');
           dropData('distractor');
-
 };
 
 export const getTableClear = table => (dispatch, getState) => {
@@ -74,7 +73,6 @@ export const getSubject = (id) => (dispatch, getState) => {
 };
 
 loadSubjects  = (data) =>{
-  console.log(1234)
   return new Promise((resolve) => {
     data.forEach(element => {
       db.insert(TABLE_NAME, TABLE_STRUCTURE, element, (dat)=>{
@@ -95,10 +93,8 @@ loadData  = (data, tables) =>{
   const TABLES_STRUCTURE = SCHEME[tables].schema;
   let I  = 0;
   return new Promise((resolve) => {
-    db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-    dbs = db.openDB();
     data.forEach(element => {
-      db.insert(dbs, TABLES_NAME, TABLES_STRUCTURE, element, (dat)=>{
+      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (dat)=>{
         console.log(`${TABLES_NAME} DONE ${++I}`)
       })
       .then((dat) => {

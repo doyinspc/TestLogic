@@ -58,7 +58,7 @@ class TestSettingsScreen extends React.Component{
     if(this.props.navigation.getParam('testID')){
 
       let testID = this.props.navigation.getParam('testID');
-      this.props.getTest(JSON.stringify(this.props.navigation.getParam('testID')));
+      this.props.getTest(JSON.stringify(testID));
       let test_data = this.props.test.test;
 
       if(test_data && Object.keys(test_data).length > 0){
@@ -116,14 +116,16 @@ class TestSettingsScreen extends React.Component{
 
     this.setState({statePos:'Loading Questions', fontLoaded: false});
     let arr = topics.toString().split(',');
-    this.props.getQuestions('"1", "2"');
+    this.props.getQuestions('"1", "2", "3", "4", "5", "6", "7", "8"');
     if(!isLoading){
       if(testRawQuestions &&  testRawQuestions.length > 0)
       {
+        console.log(testRawQuestions);
         //preparing questions
         this.setState({statePos: 'Preparing Test'});
-        this.deConstruct(testRawQuestions)
-        .then((data)=>{
+        let data = this.deConstruct(testRawQuestions);
+
+        if(data){
           //saving test 
           this.setState({statePos: 'Saving Test'});
           let tID = this.saveTest(data);
@@ -131,13 +133,14 @@ class TestSettingsScreen extends React.Component{
           if(!isLoading && tID > 0)
           {
             this.setState({ fontLoaded: true });
-            this.setState({statePos:'Done'});
+            this.setState({ statePos:'Done'});
           }else{
             this.setState({ fontLoaded: true });
             this.setState({statePos:'Failed to save '});
           }
-        })
-        .catch((error)=>console.log(error));  
+        }  
+      }else{
+        this.setState({ fontLoaded: false });
       }
     }
     else
@@ -170,28 +173,32 @@ class TestSettingsScreen extends React.Component{
   
   
 deConstruct = (arr) =>{
-  return new Promise((resolve, reject)=>{
+    //creat array to store items
     let idStore = [];
     let answerStore = {};
     let optionStore = {};
     let instructionStore = {};
     let questionStore = {};
+    //general store
     let struct = {};
       arr.forEach(element => {
         //get answer
         let ans = element.answer;
         let answ = [];
-        let answer = '';
+        let answer = {};
         if(ans && ans.length > 0){
-            answ = ans.split(',');
+            answ = ans.split(':::::');
         }
+
         if(answ.length > 0){
           if(answ.length == 1){
-              answer = answ[0];
+              let answer_string = answ[0].split(':::');
+              answer[answer_string[0]] = answer_string[1];
           }
           else if(answ.length > 1){
-                answ = shuffle(answ);
-                answer = answ[0];
+                answ = this.shuffle(answ);
+                let answer_string = answ[0].split(':::');
+                answer[answer_string[0]] = answer_string[1];
           }
         }else{
             answer = 'All options are incorrect';
@@ -203,49 +210,54 @@ deConstruct = (arr) =>{
           //confirm if any distractor is available
           if(dis && dis.length > 0){
             //if available convert the string to array
-            disw = dis.split(',');
+            disw = dis.split(':::::');
           }else{
             //else no distractor string create empty array
-            disw = ['None is incorrect']
+            disw = ['None answer']
           }
-
+          
           if(disw.length > 0){
-            if(disw.length < 3){
+            if(disw.length < 4){
               // less than three distractors
               for(let i = 0; i < disw.length; i++){
-                diswer[i] = disw[i];
+                let diswer_string = disw[i].split(':::');
+                diswer[`d${diswer_string[0]}`] = diswer_string[1];
               }
             }
-            else if(disw.length == 3){
-              // three distractors available
-              diswer = disw;
-            }
             else if(disw.length > 3){
-              // more than three distractors available
-              //shuffle and pick first three
-                disw = shuffle(disw);
-                diswer[0] = disw[0];
-                diswer[1] = disw[1];
-                diswer[2] = disw[2];
+                // more than three distractors available
+                //shuffle and pick first three
+                disw = this.shuffle(disw);
+                //pick first option
+                let diswer_string0 = disw[0].split(':::');
+                diswer[`d${diswer_string0[0]}`] = diswer_string0[1];
+                //pick second option
+                let diswer_string1 = disw[1].split(':::');
+                diswer[`d${diswer_string1[0]}`] = diswer_string1[1];
+                //pick third option
+                let diswer_string2 = disw[2].split(':::');
+                diswer[`d${diswer_string2[0]}`] = diswer_string2[1];
             }
           }else{
             diswer[0] = 'All options are incorrect';
           }
         //combine answer and distractor
+        let merged = {...diswer, ...answer};
         //get answers position
-        let totalPositions = diswer.length + 1;
-        let randomPosition = Math.floor(Math.random() * totalPositions) - 1;
-        let rem = diswer.splice(randomPosition, 0, answer);
-        let options = diswer;
-        //console.log(options);
-        //store answer
+        let getKeys = Object.keys(merged);
         
+       
+        let options = [];
+        getKeys.map((d) =>{
+            options.push([d, merged[d]]);
+        })
+        options = this.shuffle(options);
+        //store answer 
         idStore.push(element.qid);
-        answerStore[element.qid] = randomPosition;
+        answerStore[element.qid] = answer;
         optionStore[element.qid] = options;
         questionStore[element.qid] = [element.ind, element.question, element.question_img, element.question_audio, element.question_video];
-        instructionStore[element.ind] = [element.namex, element.contenttitle, element.content]
-          
+        instructionStore[element.ind] = [element.namex, element.contenttitle, element.content];    
       });
 
     struct['ids']  = idStore;
@@ -253,14 +265,16 @@ deConstruct = (arr) =>{
     struct['options'] = optionStore;
     struct['answers'] = answerStore;
     struct['instructions'] = instructionStore;
-    if(struct){
-      resolve(struct);
-    }else{
-      reject('Question not available');
-    }
+    console.log(optionStore);
+    return struct;
+    
   
 
-  })
+  //})
+}
+
+shuffle=(array) => {
+  return array.sort(() => Math.random() - 0.5);
 }
 saveTest=(data)=>{
   let{ title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
@@ -333,7 +347,7 @@ render(){
         <View style={{flex:1, flexDirection:'column'}} >
               <ScrollView>
               <View style={styles.section_container}>
-                  <Icon name='edit' style={styles.section_icon}/>
+                  <Icon name='gear' type='octicon' style={styles.section_icon}/>
                   <Text style={styles.section_text}>Basic Settings </Text>
               </View>
 
@@ -378,7 +392,7 @@ render(){
                     </View>
         </View>
         <View style={styles.section_container}>
-              <Icon name='alarm' type='material' style={styles.section_icon}/>
+              <Icon name='clock-o' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Timer </Text>
         </View>
         <View style={{flex:1, marginLeft:30, flexDirection:'row'  , alignItems: 'center'}} >
@@ -444,7 +458,7 @@ render(){
           }
         </View>
         <View style={styles.section_container}>
-              <Icon name='alarm_add' type='material' style={styles.section_icon}/>
+              <Icon name='spellcheck' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Answer </Text>
         </View>
         <View style={{flex: 1,  marginLeft:30}} >

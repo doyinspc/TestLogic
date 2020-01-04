@@ -25,6 +25,7 @@ export const getScores = (scoreID) => (dispatch, getState) => {
     };
     dispatch({ type: SCORE_LOADING})
     db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+      console.log(data);
       dispatch({
         type: SCORE_GET_MULTIPLE,
         payload: data._array
@@ -32,13 +33,12 @@ export const getScores = (scoreID) => (dispatch, getState) => {
     })
 };
 //GET SINGLE SCORE
-export const getScore = (id) => (dispatch, getState) => {
+export const getScorex = (id) => (dispatch, getState) => {
     let PARAM = {
       id : id,
     };
     dispatch({ type: SCORE_LOADING})
     db.selectOne(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      console.log(data);
       dispatch({
         type: SCORE_GET_ONE,
         payload: data._array
@@ -46,20 +46,33 @@ export const getScore = (id) => (dispatch, getState) => {
     })
 };
 
-export const getQuestionsSave = (data) => (dispatch, getState) => {
-  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-  let dbs = db.openDB();
-  db.insertScore(dbs, TABLES_NAME, TABLES_STRUCTURE, 1, data)
-  .then((dat) => {
+//GET SINGLE SCORE
+export const getScore = (PARAM) =>(dispatch, getState) =>{
+  db.selectOne(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
     dispatch({
       type: SCORE_GET_ONE,
-      payload: dat
+      payload: data
     })
   })
-  .catch((err) => {
+};
+
+//GET SINGLE SCORE
+export const insertScore = (PARAM, callback) =>(dispatch, getState) =>{
+  db.insertScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, 1, (data)=>{
+    callback(data);
     dispatch({
-      type : SCORE_LOADING_ERROR,
-      payload: err
+      type: SCORE_GET_ONE,
+      id: data
+    })
+  })
+};
+
+//GET SINGLE SCORE
+export const updateScore = (PARAM, st, callback) =>(dispatch, getState) =>{
+  db.insertScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, st, (data)=>{
+    dispatch({
+      type: SCORE_GET_ONE,
+      id: data
     })
   })
 };

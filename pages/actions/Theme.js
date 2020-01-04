@@ -156,10 +156,9 @@ loadData  = (data, tables) =>{
   const TABLES_STRUCTURE = SCHEME[tables].schema;
   let I  = 0;
   return new Promise((resolve) => {
-    db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-    dbs = db.openDB();
+   
     data.forEach(element => {
-      db.insert(dbs, TABLES_NAME, TABLES_STRUCTURE, element, (dat)=>{
+      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (dat)=>{
         console.log(`${TABLES_NAME} DONE ${++I}`)
       })
       .then((dat) => {

@@ -82,6 +82,41 @@ class ThemeScreen extends React.Component{
          })
     });
   }
+
+  updateDatax =(subject)=>{
+    getThemesID(subject, (response)=>{
+         let themes = [];
+         response.forEach((m) =>{themes.push(m.id)});
+         getTopicsID(themes, (resp) =>{
+           let topics = []
+           resp.forEach((m) =>{topics.push(m.id)});
+           console.log('topics');
+           console.log(topics);
+           getInstructionsID(topics, (reso) =>{
+            let instrs = []
+            reso.forEach((m) =>{instrs.push(m.id)});
+            console.log('instrs');
+            console.log(instrs);
+            getQuestionsID(instrs, (res) =>{
+              let ques = []
+              res.forEach((m) =>{ques.push(m.id)});
+              console.log('ques');
+              console.log(ques);
+              
+              getAnswersID(ques, (re) =>{
+                let ans = []
+                re.forEach((m) =>{ans.push(m.id)});
+              })
+
+              getDistractorsID(ques, (r) =>{
+                let dis = []
+                r.forEach((m) =>{dis.push(m.id)});
+              })     
+            })
+          })
+         })
+    });
+  }
  
  onChange = e => {
    let news = {...this.state.checked};

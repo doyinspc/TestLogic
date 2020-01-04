@@ -57,7 +57,7 @@ class HomeScreen extends React.Component {
           <View>
           <Button 
               title='DROP Scores Table'
-              onPress={()=>{this.dropTable('scores')}}
+              onPress={()=>{this.dropTable('score')}}
               />
           </View>
           <View>

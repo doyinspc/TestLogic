@@ -29,10 +29,10 @@ export default function(state = initialState, action){
                 isLoading: false
             };
         case SCORE_GET_ONE:
-            console.log(action.payload)
             return {
                 ...state,
-                score: action.payload[0],
+                score: action.payload,
+                isEdit: action.id,
                 isLoading: false
             };
         case SCORE_LOADING_ERROR:
