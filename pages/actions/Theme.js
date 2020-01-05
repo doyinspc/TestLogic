@@ -151,25 +151,26 @@ export const getTheme = (id) => (dispatch, getState) => {
   })
 };
 
-loadData  = (data, tables) =>{
+loadData  = (data, tables, callback) =>{
   const TABLES_NAME = SCHEME[tables].name;
   const TABLES_STRUCTURE = SCHEME[tables].schema;
-  let I  = 0;
-  return new Promise((resolve) => {
-   
+  let dt  = [];
     data.forEach(element => {
-      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (dat)=>{
-        console.log(`${TABLES_NAME} DONE ${++I}`)
-      })
-      .then((dat) => {
-        resolve(dat);
-      })
-      .catch((err) => {
-        console.log(err);
+      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (data)=>{
+        if(data == 'xx')
+        {
+          // failed to insert
+        }
+        else if(data > 0)
+        {
+          console.log(`${TABLES_NAME} DONE ${data}`)
+          dt.push(data);
+        }
       })
    });
-  })
+   callback(dt);
 };
+
 
 dropThemes  = () =>{
   return new Promise((resolve) => {

@@ -111,16 +111,16 @@ class TestSettingsScreen extends React.Component{
 
   onPrepare = () =>{
     //activity pulling questions
-    const { isLoading, testRawQuestions, activeTestID } = this.props.topic;
+    const { isLoading, isLoadingTest, isInsertingTest, testRawQuestions, activeTestID } = this.props.topic;
     const { noq, topics } = this.state;
-
     this.setState({statePos:'Loading Questions', fontLoaded: false});
-    let arr = topics.toString().split(',');
-    this.props.getQuestions('"1", "2", "3", "4", "5", "6", "7", "8"');
-    if(!isLoading){
+    let arry = this.props.navigation.getParam('topics');
+    let arr = arry.toString().split(',');
+    this.props.getQuestions(arr.join());
+
+    if(!isLoadingTest){
       if(testRawQuestions &&  testRawQuestions.length > 0)
       {
-        console.log(testRawQuestions);
         //preparing questions
         this.setState({statePos: 'Preparing Test'});
         let data = this.deConstruct(testRawQuestions);
@@ -130,7 +130,7 @@ class TestSettingsScreen extends React.Component{
           this.setState({statePos: 'Saving Test'});
           let tID = this.saveTest(data);
           this.setState({getID: tID});
-          if(!isLoading && tID > 0)
+          if(!isInsertingTest && tID > 0)
           {
             this.setState({ fontLoaded: true });
             this.setState({ statePos:'Done'});
@@ -166,8 +166,16 @@ class TestSettingsScreen extends React.Component{
      $f['testtime'] = total_time;
      $f['settings'] = settings;
     
-     let test_id = this.props.getQuestionsUpdate($f);
-     return test_id;
+     this.props.getQuestionsUpdate($f);
+     if(!this.props.topic.isInsertingTest)
+      {
+        if(this.props.topic.activeTestID   && parseInt(this.props.topic.activeTestID) > 0)
+        {
+          //saved
+        }else{
+          //failed
+        } 
+      }
    
   }
   
@@ -265,12 +273,7 @@ deConstruct = (arr) =>{
     struct['options'] = optionStore;
     struct['answers'] = answerStore;
     struct['instructions'] = instructionStore;
-    console.log(optionStore);
     return struct;
-    
-  
-
-  //})
 }
 
 shuffle=(array) => {
@@ -300,8 +303,18 @@ saveTest=(data)=>{
    $f['options'] = JSON.stringify(data.options);
    $f['answers'] = JSON.stringify(data.answers);
    $f['questionweigth'] = JSON.stringify(data.questionweight);
-   let test_id = this.props.getQuestionsSave($f);
-   return test_id;
+   this.props.getQuestionsSave($f);
+   if(!this.props.topic.isInsertingTest)
+   {
+     if(this.props.topic.activeTestID  && this.props.topic.activeTestID && parseInt(this.props.topic.activeTestID) > 0)
+     {
+      return this.props.topic.activeTestID;
+     }else{
+       return null;
+     }
+    
+   }
+   
 }
 
 
@@ -458,7 +471,7 @@ render(){
           }
         </View>
         <View style={styles.section_container}>
-              <Icon name='spellcheck' type='octicon' style={styles.section_icon}/>
+              <Icon name='list' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Answer </Text>
         </View>
         <View style={{flex: 1,  marginLeft:30}} >
@@ -488,7 +501,7 @@ render(){
                 />:
                 <Button
                 large
-                icon={{name: 'gears', type: 'material', color:'#fff' }}
+                icon={{name: 'gear', type: 'octicon', color:'#fff' }}
                 title='Save Settings' 
                 buttonStyle={styles.butSetting}
                 onPress={()=>{this.onEditPrepare()}}

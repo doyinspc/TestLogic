@@ -23,6 +23,7 @@ const schema = require('./Schema');
 const build_param = utility.build_param;
 const build_paramz = utility.build_paramz;
 const build_in_param = utility.build_in_param;
+const build_in_paramx = utility.build_in_paramx;
 const insert_param = utility.insert_param;
 const insert_params = utility.insert_params;
 const update_param = utility.update_param;
@@ -128,18 +129,20 @@ closeDatabase(db) {
     
     const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
    // const st = this.initDB(TABLE_NAME, TABLE_STRUCTURE);
-   
-    
     db.transaction(
               (tx) => { 
                 tx.executeSql(query, [], (transaction, result) => {
                     callback(result.rows);
                   },
-                  (error) => {console.log(error);}
+                  (error) => {
+                    callback(1);
+                  }
                 ) 
               }, 
-              (error)=>{console.log(error)}, 
-              //db._db.close()
+              (error)=>{
+                callback(1)
+              }, 
+             
       );
     }
 
@@ -164,7 +167,7 @@ closeDatabase(db) {
 
      
     selectQuestions(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
-      let completeQuery = build_in_param(param);
+      let completeQuery = build_in_paramx(param);
       const query0 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM answers WHERE  answers.questionID = questions.id GROUP BY questionID ";
       const query1 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM distractors WHERE  distractors.questionID = questions.id GROUP BY questionID ";
       const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id ${ completeQuery } LIMIT 40`;
@@ -175,11 +178,17 @@ closeDatabase(db) {
                       
                       callback(result.rows);
                     },
-                    (t, error) => {console.log(error);}
+                    (t, error) => {
+                      console.log(error);
+                      callback(1);
+                    }
                   ) 
                 }, 
-                (t, error)=>{console.log(error)}, 
-                //this.closeDatabase(db)
+                (t, error)=>{
+                  callback(1);
+                  console.log(error)
+                }, 
+                
         );
       }
 
@@ -208,11 +217,15 @@ closeDatabase(db) {
                           callback(result.insertId)
                       },
                       (t, error) => {
+                        callback('xx');
                         console.log(error.message);
                       }
                     ) 
                   }, 
-                  (t, error)=>{console.log(error.message)},     
+                  (t, error)=>{
+                    callback('xx');
+                    console.log(error.message)
+                  },     
           )
       }
 

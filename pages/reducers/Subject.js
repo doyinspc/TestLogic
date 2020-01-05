@@ -2,11 +2,15 @@ import {
     SUBJECT_GET_MULTIPLE,
     SUBJECT_GET_ONE, 
     SUBJECT_LOADING,
-    SUBJECT_LOADING_ERROR 
+    SUBJECT_LOADING_ERROR,
+    SUBJECT_LOADING_ERROR_ONLINE, 
+    SUBJECT_GET_MULTIPLE_ONLINE,
+    SUBJECT_LOADING_ONLINE
 } from "../types/Subject";
 
 const initialState = {
     isLoading: false,
+    isLoadingOnline: false,
     subjects: [],
     subject: {},
     msg: null,
@@ -21,6 +25,17 @@ export default function(state = initialState, action){
             return {
                 ...state,
                 isLoading: true
+            };
+         case SUBJECT_LOADING_ONLINE:
+            return {
+                ...state,
+                isLoadingOnline: true
+            };
+        case SUBJECT_GET_MULTIPLE_ONLINE:
+            return {
+                ...state,
+                subjects : action.payload,
+                isLoadingOnline: false
             };
         case SUBJECT_GET_MULTIPLE:
             return {
@@ -39,7 +54,11 @@ export default function(state = initialState, action){
                 ...state,
                 isLoading: false
             };
-
+        case SUBJECT_LOADING_ERROR_ONLINE:
+            return {
+                ...state,
+                isLoadingOnline: false
+            };
         default:
             return state;
     }

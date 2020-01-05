@@ -1,13 +1,13 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ThemeProvider, Button, Avatar, Header, ListItem, CheckBox } from 'react-native-elements';
+import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
+import AwesomeAlert from 'react-native-awesome-alerts';
+
 import { getInstructionsID, getQuestionsID, getAnswersID, getDistractorsID } from './actions/Theme';
 import { getTopics } from './actions/Topic';
-import Headers from './components/Header';
-import Activity from './components/Loader';
-
+import Activity from './components/LoaderTest';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -19,20 +19,31 @@ class TopicScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
+      fontLoaded: false,
+      showAlert: false,
+      selectedIndex: null,
       checked: {},
       values: []
     };
   }
 
- relocate = (id) =>{
-    this.props.navigation.navigate('TestSettingsScreen', { topics:this.state.values.toString(), testID:null})
+  showAlert = () =>{
+    this.setState({showAlert: true});
+  }
+  hideAlert = () =>{
+    this.setState({showAlert: false});
+  }
+
+ relocate = () =>{
+    this.props.navigation.navigate('TestSettingsScreen', { 'topics':this.state.values, testID:null})
  }
 
 
 async componentDidMount() {
-  let arry = this.props.navigation.getParam('val');
+  let arry = this.props.navigation.getParam('topics');
   let arr = arry.toString().split(',');
   this.props.getTopics(arr.join());
+
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -83,47 +94,73 @@ onChange = e => {
   
   }
 
+  updateIndex = (selectedIndex) =>{
+    this.setState({ selectedIndex });
+    if(selectedIndex == 0 )
+    {
+        this.props.navigation.navigate('HomeScreen');
+    }
+    else if(selectedIndex == 1 )
+    {
+      if(this.state.values.length > 0)
+      {
+        this.props.navigation.navigate('TestSettingsScreen', { 'topics':this.state.values, testID:null})
+      } else
+      {
+        //alert
+      } 
+    }
+    else if(selectedIndex == 2 )
+    {
+        const subs = JSON.stringify(this.props.navigation.getParam('themeID'));
+        this.updateTopic(subs)
+    }
+   
+  }
+  
+  comp1 = () => <Icon name='home' color='white' type='material' />
+  comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next</Text>
+  comp3 = () => <Icon name='cloud-download' color='white' type='material' />
+
 render(){
   const { topics, isLoading } = this.props.topic;
+  const { fontLoaded, selectedIndex, values } = this.state;
+  const buttons = [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
+
   return (
     <ThemeProvider >
-      {isLoading ?  
-        <Activity title='Topics' onPress={()=>{this.onPress(3)}} />:
-      <View style={{flex: 1}}>
-        <View style={{flex: 9}}>
-        <ScrollView>
-        {
-            topics.map((l, i) => (
+       <View style={{flex:1}}>
+        {fontLoaded  && !isLoading ?  
+         <ScrollView>
+        {topics  && Object.keys(topics).length > 0 ? topics.map((l, i) => (
             <ListItem
-            key={i}
-            titleStyle={styles.listItem}  
-            leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
-            title={l.name}
-            bottomDivider
-            friction={90}
-            tension={100}
-            activeScale={0.85}
-            badge={{  value: 457, textStyle: { color: 'white', backgroundColor:local_color.MAIN, borderRadius:20 }, containerStyle: { marginTop: 1 } }}
-            checkBox={{ checked: this.state.checked[l.id], onPress:()=>this.onChange(l.id) }}
+                key={i}
+                titleStyle={styles.listItem}  
+                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
+                title={l.name}
+                bottomDivider
+                friction={90}
+                tension={100}
+                activeScale={0.85}
+                checkBox={{ checked: this.state.checked[l.id], onPress:()=>this.onChange(l.id) }}
             />
             ))
-        }
-        </ScrollView>
+          :
+        <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
+          <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />
+          <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Subjects</Text>
         </View>
-        {this.state.values.length > 0? 
-        <View style={{flex: 1, alignContent:'flex-end'}}>
-             <Button 
-              style={styles.but}
-              title='Test Settings'
-              onPress={()=>{this.relocate(1)}}
-              />
-              <Button 
-              style={styles.but}
-              title='inst'
-              onPress={()=>{this.updateData('1,2,3,4,5,6,7,8,9')}}
-              />
-        </View>:null}
-        </View>}
+        }
+        </ScrollView>:<Activity title='Topics' onPress={()=>{this.onPress(1)}} />}
+        <ButtonGroup
+            onPress={this.updateIndex}
+            selectedIndex={selectedIndex}
+            buttons={buttons}
+            containerStyle={styles.genButtonGroup}
+            selectedButtonStyle={styles.genButtonStyle}
+            textStyle={styles.genButtonTextStyle}
+            />
+           </View>     
     </ThemeProvider>
   );
 };
@@ -135,4 +172,5 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps, 
   { 
     getTopics
-   })(TopicScreen);
+   }
+   )(TopicScreen);

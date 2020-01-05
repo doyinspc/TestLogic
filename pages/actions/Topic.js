@@ -1,9 +1,13 @@
 import {
     TOPIC_GET_MULTIPLE,
-    TOPIC_GET_ONE, 
     TOPIC_LOADING,
     TOPIC_LOADING_ERROR,
-    TOPIC_GET_QUESTIONS
+    TOPIC_INSERT_LOADING,
+    TOPIC_INSERT_ERROR,
+    TOPIC_INSERTED,
+    TOPIC_QUESTION_LOADING,
+    TOPIC_QUESTION_GET,
+    TOPIC_QUESTION_ERROR
 } from "../types/Topic";
 
 
@@ -49,56 +53,70 @@ export const getTopics = (theme) => (dispatch, getState) => {
 
 //GET ALL TOPIC
 export const getQuestions = (instruction) => (dispatch, getState) => {
-  console.log(instruction);
   let inst = instruction.split(',')
-  console.log(inst);
   let PARAM = {
-    instructionID : inst
+    topicID : inst
   };
-  dispatch({ type: TOPIC_LOADING})
+  dispatch({ type: TOPIC_QUESTION_LOADING});
   db.selectQuestions(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-    dispatch({
-      type: TOPIC_GET_QUESTIONS, 
-      payload: data._array
-    })
+    if(data == 1)
+    {
+      dispatch({
+        type: TOPIC_QUESTION_ERROR, 
+        msg: 'error'
+      })
+    }else
+    {
+      dispatch({
+        type: TOPIC_QUESTION_GET, 
+        payload: data._array
+      })
+    }
   })
 };
 
 export const getQuestionsSave = (data) => (dispatch, getState) => {
-  dispatch({ type: TOPIC_LOADING});
+  dispatch({ type: TOPIC_INSERT_LOADING});
   const TABLES_NAME = SCHEME['test'].name;
   const TABLES_STRUCTURE = SCHEME['test'].schema;
   
-  db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 1)
-  .then((dat) => {
+  db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 1, (dat) => {
+    if(data == 1)
+    {
     dispatch({
-      type: TOPIC_GET_ONE,
+      type: TOPIC_INSERT_ERROR,
+      msg: 'none'
+    })
+  }else{
+    dispatch({
+      type: TOPIC_INSERTED,
       payload: dat
     })
-  })
-  .catch((err) => {
-    dispatch({
-      type : TOPIC_LOADING_ERROR,
-      payload: err
-    })
+  }
   })
 };
 
 export const getQuestionsUpdate = (data) => (dispatch, getState) => {
-  dispatch({ type: TOPIC_LOADING});
+  dispatch({ type: TOPIC_INSERT_LOADING});
   const TABLES_NAME = SCHEME['test'].name;
   const TABLES_STRUCTURE = SCHEME['test'].schema;
   
   db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 2, (data)=>{
+    if(data == 1)
+    {
     dispatch({
-      type: TOPIC_GET_ONE,
+      type: TOPIC_INSERT_ERROR,
+      msg: 'none'
+    })
+  }else{
+    dispatch({
+      type: TOPIC_INSERTED,
       payload: data
     })
+  }
   })
  
 };
-
-
 
 export const getTopic = (id) => (dispatch, getState) => {
   dispatch({ type: TOPIC_LOADING})

@@ -1,12 +1,11 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View } from 'react-native';
-import { ThemeProvider, Avatar,  ListItem, Button } from 'react-native-elements';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 
 import { getSubjectsCloud, getSubjects , getSubjectsClear} from './actions/Subject';
-import { getThemes } from './actions/Theme';
-import Activity from './components/Loader';
+import Activity from './components/LoaderTest';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -19,12 +18,13 @@ class SubjectScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      fontLoaded: false
+      fontLoaded: false,
+      selectedIndex: null
     };
   }
 
  relocate = id =>{
-  this.props.navigation.navigate('ThemeScreen', {id:id})
+  this.props.navigation.navigate('ThemeScreen', {'subjectID':id})
  }
 
  async componentDidMount() {
@@ -38,26 +38,43 @@ class SubjectScreen extends React.Component{
   this.setState({ fontLoaded: true });
 }
 
- updateSubjects =()=>{
+updateSubjects =()=>{
   this.props.getSubjectsCloud();
 }
 
+updateIndex = (selectedIndex) =>{
+  this.setState({ selectedIndex });
+  if(selectedIndex == 0 )
+  {
+      this.props.navigation.navigate('HomeScreen');
+  }
+  else if(selectedIndex == 1 )
+  {
+      this.updateSubjects()
+  }
  
+}
+
+comp1 = () => <Icon name='home' color='white' type='material' />
+comp2 = () => <Icon name='cloud-download' color='white' type='material' />
 
 render(){
   const { subjects, isLoading } = this.props.subject;
-  const { fontLoaded } = this.state;
+  const { fontLoaded, selectedIndex } = this.state;
+  const buttons = [{element:this.comp1}, {element:this.comp2}];
+
   return (
+    
     <ThemeProvider >
-        {isLoading ?  
-        <Activity title='Subject' onPress={()=>{this.onPress(1)}} />:
-        <View>
-        {fontLoaded && subjects  && Object.keys(subjects).length > 0 ?
+      <View style={{flex:1}}>
+        {fontLoaded  && !isLoading ?  
+         <ScrollView>
+         {subjects  && Object.keys(subjects).length > 0 ?
             subjects.map((l, i) => (
             <ListItem
                 key={i}
                 titleStyle={styles.listItem}  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: local_color.color3}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
+                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
                 title={l.name}
                 bottomDivider
                 friction={90}
@@ -65,18 +82,24 @@ render(){
                 activeScale={0.85}
                 onPress={()=>{this.relocate(l.id)}}
                 chevron
-                badge={{  value: 457, textStyle: { color: 'white', backgroundColor:local_color.MAIN, borderRadius:20 }, containerStyle: { marginTop: 1 } }}
+                badge={{  value: 457, textStyle: { color: 'white', backgroundColor:local_color.color1, padding:4, borderRadius:20, fontFamily:'PoiretOne' }, containerStyle: { marginTop: 10 } }}
             />
             ))
-        : null}
-        </View>}
-        <View style={{flex: 1}}>
-        <Button 
-              buttonStyle={styles.but}
-              title='UPDATE ALL'
-              onPress={()=>{this.updateSubjects()}}
-              />
-           
+        : 
+        <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
+          <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />
+          <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Subjects</Text>
+        </View>
+          }
+        </ScrollView>:<Activity title='Subject' onPress={()=>{this.onPress(1)}} />}
+           <ButtonGroup
+            onPress={this.updateIndex}
+            selectedIndex={selectedIndex}
+            buttons={buttons}
+            containerStyle={styles.genButtonGroup}
+            selectedButtonStyle={styles.genButtonStyle}
+            textStyle={styles.genButtonTextStyle}
+            />
            </View>
     </ThemeProvider>
   );
@@ -92,8 +115,6 @@ export default connect(mapStateToProps,
   { 
     getSubjects, 
     getSubjectsCloud,
-    getSubjectsClear,
-    getSubjects,
-    getThemes
+    getSubjectsClear
   
   })(SubjectScreen);

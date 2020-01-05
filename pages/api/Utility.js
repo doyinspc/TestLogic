@@ -63,6 +63,34 @@ module.exports = {
         }
         
     },
+    build_in_paramx : (datas) => {
+        let mains = Object.keys(datas);
+        let datax = Object.values(datas);
+        let main = mains[0];
+        let data = datax[0];
+        if(data && data.length  > 0 && main)
+        {
+            let values = '';
+            let num = data.length;
+            for(let v in data)
+            {
+                num = num - 1;
+                if(num > 0){
+                    values = `${values} ${String(data[v])},`;
+                }
+                else{
+                    values = `${values} ${String(data[v])}`;
+                }
+            }
+                
+            values = `WHERE ${main} IN (${values})`;
+            return values;
+        }
+        else{
+            return ''
+        }
+        
+    },
     concat_where_and : (data) => {
         if(Object.keys(data).length  > 0 )
         {

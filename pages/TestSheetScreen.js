@@ -163,7 +163,6 @@ class ScoresScreen extends React.Component{
 comp1 = () => <Icon name='edit' type='material' />
 comp2 = () => <Icon name='book' type='material' />
 comp3 = () => <Icon name='delete' type='material' />
- 
 
 render(){
   

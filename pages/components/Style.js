@@ -240,5 +240,8 @@ module.exports = {
           section_container: {margin:0, padding:0, borderRadius:1, marginTop:5, flexDirection:'row', justifyContent:'flex-start', alignItems:'stretch', padding:10, backgroundColor: color1 },
           section_text: { color:color5,  fontSize: 15, fontFamily: 'PoiretOne',  paddingLeft:10,  },
           section_icon: { color:color5, fontSize: 22, justifyContent:'center', textAlign: 'left', paddingLeft:10 },
+          genButtonGroup:{height:40, backgroundColor:color1},
+          genButtonStyle:{backgroundColor:color2},
+          genButtonTextStyle:{color:color5},
       }
 };

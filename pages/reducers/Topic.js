@@ -1,14 +1,19 @@
 import {
     TOPIC_GET_MULTIPLE,
-    TOPIC_GET_ONE, 
     TOPIC_LOADING,
     TOPIC_LOADING_ERROR,
-    TOPIC_GET_QUESTIONS,
-    TOPIC_GET_ID
+    TOPIC_INSERT_LOADING,
+    TOPIC_INSERT_ERROR,
+    TOPIC_INSERTED,
+    TOPIC_QUESTION_LOADING,
+    TOPIC_QUESTION_GET,
+    TOPIC_QUESTION_ERROR
 } from "../types/Topic";
 
 const initialState = {
     isLoading: false,
+    isLoadingTest: false,
+    isInsertingTest: false,
     topics: [],
     topic: {},
     testRawQuestions:{},
@@ -24,7 +29,20 @@ export default function(state = initialState, action){
         case TOPIC_LOADING:
             return {
                 ...state,
-                isLoading: true
+                isLoading: true,
+                topics: []
+            };
+        case TOPIC_QUESTION_LOADING:
+            return {
+                ...state,
+                isLoadingTest: true,
+                testRawQuestions:{}
+            };
+       case TOPIC_INSERT_LOADING:
+            return {
+                ...state,
+                isInsertingTest: true,
+                activeTestID: null
             };
         case TOPIC_GET_MULTIPLE:
             return {
@@ -32,29 +50,34 @@ export default function(state = initialState, action){
                 topics : action.payload,
                 isLoading: false
             };
-        case TOPIC_GET_QUESTIONS:
+        case TOPIC_QUESTION_GET:
             return {
                 ...state,
                 testRawQuestions : action.payload,
-                isLoading: false
+                isLoadingTest: false
             };
-        case TOPIC_GET_ONE:
-            return {
-                ...state,
-                message : action.payload,
-                isLoading: false
-            };
-        case TOPIC_GET_ID:
+        case TOPIC_INSERTED:
             return {
                 ...state,
                 activeTestID : action.payload,
-                isLoading: false
-            };
+                isInsertingTest: false
+            }; 
         case TOPIC_LOADING_ERROR:
             return {
                 ...state,
                 isLoading: false
             };
+        case TOPIC_QUESTION_ERROR:
+            return {
+                ...state,
+                isLoadingTest: false
+            };
+        case TOPIC_INSERT_ERROR:
+            return {
+                ...state,
+                isInsertingTest: false
+            };
+    
 
         default:
             return state;
