@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 
-import { getSubjectsCloud, getSubjects , getSubjectsClear} from './actions/Subject';
+import { getSubjectsCloud, getSubjects , getSubjectsClear, getSubjectOne} from './actions/Subject';
 import Activity from './components/LoaderTest';
 
 const tools = require('./components/Style');
@@ -23,19 +23,22 @@ class SubjectScreen extends React.Component{
     };
   }
 
- relocate = id =>{
-  this.props.navigation.navigate('ThemeScreen', {'subjectID':id})
- }
-
  async componentDidMount() {
   this.props.getSubjects();
-
+  this.props.getSubjectsCloud();
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
   });
-
   this.setState({ fontLoaded: true });
+}
+
+relocate = (value) =>{
+  if(value && value > 0)
+  {
+    this.props.getSubjectOne(value);
+    this.props.navigation.navigate('ThemeScreen', {'subjectID':value})
+  }
 }
 
 updateSubjects =()=>{
@@ -66,6 +69,10 @@ render(){
   return (
     
     <ThemeProvider >
+      <View style={styles.topSection}>
+          <Text style={styles.h1}>Subjects</Text>
+          <Text style={styles.h2}>Pick a subject</Text>
+      </View>
       <View style={{flex:1}}>
         {fontLoaded  && !isLoading ?  
          <ScrollView>
@@ -107,7 +114,6 @@ render(){
 }
 
 const styles = StyleSheet.create(local_style);
-
 const mapStateToProps = state => ({ 
   subject: state.subjectReducer
 })
@@ -115,6 +121,7 @@ export default connect(mapStateToProps,
   { 
     getSubjects, 
     getSubjectsCloud,
-    getSubjectsClear
+    getSubjectsClear,
+    getSubjectOne
   
   })(SubjectScreen);

@@ -1,11 +1,9 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { ThemeProvider, Button} from 'react-native-elements';
+import { ThemeProvider, Button, ButtonGroup} from 'react-native-elements';
 import { TextInput, View, Text, StyleSheet } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Pickers from './components/Picker';
-import  SwitchSet from './components/Switch';
 import * as Font from 'expo-font';
 import Activity from './components/LoaderTest';
 import { getTest } from './actions/Test';
@@ -40,19 +38,21 @@ class TestSettingsScreen extends React.Component{
       userID:1,
       subjectID:1,
       isEdit: null,
+      selectedIndex: null
     };
   }
 
   async componentDidMount() {
     //get topics id
     if(this.props.navigation.getParam('topics')){
-      let topics = this.props.navigation.getParam('topics');
-      this.setState({isEdit:false, topics:JSON.stringify(topics)});
+      let arry = this.props.navigation.getParam('topics');
+      let arr = arry.toString().split(',');
+      this.setState({isEdit:false, topics:arr.join()});
       //get last test saved
       //add one to id
       //create new title Text + id + 1
       //save in state
-      this.setState({ title: 'Test1234' });
+      this.setState({ title: 'Test 1' });
     }
     
     if(this.props.navigation.getParam('testID')){
@@ -81,7 +81,7 @@ class TestSettingsScreen extends React.Component{
           valueTimers: settings[1],
           valueAnswers: settings[2],
           testID: testID,
-          isEdit: true,
+          isEdit: true
         });
         
       }
@@ -97,7 +97,6 @@ class TestSettingsScreen extends React.Component{
   }
 
   
-
   valueTimer = (a) =>{
     this.setState({valueTimers:a})
   }
@@ -111,12 +110,12 @@ class TestSettingsScreen extends React.Component{
 
   onPrepare = () =>{
     //activity pulling questions
-    const { isLoading, isLoadingTest, isInsertingTest, testRawQuestions, activeTestID } = this.props.topic;
-    const { noq, topics } = this.state;
+    const { isLoadingTest, isInsertingTest, testRawQuestions, activeTestID } = this.props.topic;
+    const {  selectedIndex } = this.state;
     this.setState({statePos:'Loading Questions', fontLoaded: false});
     let arry = this.props.navigation.getParam('topics');
     let arr = arry.toString().split(',');
-    this.props.getQuestions(arr.join());
+    this.props.getQuestions(arr.join(),);
 
     if(!isLoadingTest){
       if(testRawQuestions &&  testRawQuestions.length > 0)
@@ -124,12 +123,12 @@ class TestSettingsScreen extends React.Component{
         //preparing questions
         this.setState({statePos: 'Preparing Test'});
         let data = this.deConstruct(testRawQuestions);
-
         if(data){
           //saving test 
           this.setState({statePos: 'Saving Test'});
           let tID = this.saveTest(data);
-          this.setState({getID: tID});
+          console.log(tID);
+          this.setState({testID: tID});
           if(!isInsertingTest && tID > 0)
           {
             this.setState({ fontLoaded: true });
@@ -279,6 +278,7 @@ deConstruct = (arr) =>{
 shuffle=(array) => {
   return array.sort(() => Math.random() - 0.5);
 }
+
 saveTest=(data)=>{
   let{ title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
   
@@ -317,10 +317,41 @@ saveTest=(data)=>{
    
 }
 
+updateIndex = (selectedIndex) =>{
+  this.setState({ selectedIndex });
+  if(selectedIndex == 0 )
+  {
+      this.props.navigation.navigate('HomeScreen');
+  }
+  else if(selectedIndex == 1 )
+  {
+    if(this.state.testID && this.state.testID > 0)
+    {
+      this.props.navigation.navigate('TestSheetScreen', { 'testID':testID })
+    } else
+    {
+      //alert
+      this.onPrepare();
+    } 
+  }
+  else if(selectedIndex == 2 )
+  {
+    if(this.state.testID && this.state.testID > 0)
+    {
+      this.onEditPrepare();
+    }
+  }
+ 
+}
+
+comp1 = () => <Icon name='home' color='white' type='material' style={styles.section_icon} />
+comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next</Text>
+comp3 = () => <Icon name='save' color='white' type='material' style={styles.section_icon} />
 
 render(){
   const { theme } = this.props;
-  const { fontLoaded , testLoaded, statePos, testID, isEdit } = this.state;
+  const { fontLoaded , statePos, selectedIndex } = this.state;
+  const buttons = this.state.testID > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}] ;
 
   let data =[
     {
@@ -416,7 +447,7 @@ render(){
                         <TextInput
                             style={styles.textplace_min}
                             placeholder='00'
-                            value={this.state.noq.toString()}
+                            value={this.state.hours.toString()}
                             defaultValue={this.state.hours.toString()}
                             keyboardType='numeric'
                             onChangeText={(text) => this.setState({hours: text})}
@@ -492,32 +523,14 @@ render(){
        
        
         </ScrollView>
-            { !isEdit  ?<Button
-                large
-                icon={{name: 'home', type: 'material', color:'#fff' }}
-                title='Prepare Test' 
-                buttonStyle={styles.butSetting}
-                onPress={()=>{this.onPrepare()}}
-                />:
-                <Button
-                large
-                icon={{name: 'gear', type: 'octicon', color:'#fff' }}
-                title='Save Settings' 
-                buttonStyle={styles.butSetting}
-                onPress={()=>{this.onEditPrepare()}}
-                />
-                
-                }
-             { testID && testID > 0 ? 
-               <Button
-                large
-                icon={{name: 'save', type: 'material', color:'#fff' }}
-                title='START TEST' 
-                buttonStyle={styles.butSetting}
-                onPress={()=>{this.onSubmit(testID)}}
-                />
-                : null
-                }
+        <ButtonGroup
+            onPress={this.updateIndex}
+            selectedIndex={selectedIndex}
+            buttons={buttons}
+            containerStyle={styles.genButtonGroup}
+            selectedButtonStyle={styles.genButtonStyle}
+            textStyle={styles.genButtonTextStyle}
+            />
         </View>
         :<Activity title={statePos}/>
         }

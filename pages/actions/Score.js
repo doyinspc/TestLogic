@@ -21,11 +21,10 @@ const TABLE_STRUCTURE = SCHEME.score.schema;
 //GET ALL SCORE
 export const getScores = (scoreID) => (dispatch, getState) => {
     let PARAM = {
-      testID : scoreID
+      testID : parseInt(scoreID)
     };
     dispatch({ type: SCORE_LOADING})
     db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      console.log(data);
       dispatch({
         type: SCORE_GET_MULTIPLE,
         payload: data._array
@@ -46,12 +45,18 @@ export const getScorex = (id) => (dispatch, getState) => {
     })
 };
 
-//GET SINGLE SCORE
-export const getScore = (PARAM) =>(dispatch, getState) =>{
+export const getScore = (thm) => (dispatch, getState) => {
+
+  let PARAM = {
+    id : parseInt(thm)
+  };
+  
+  dispatch({ type: SCORE_LOADING})
   db.selectOne(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
     dispatch({
       type: SCORE_GET_ONE,
-      payload: data
+      payload: data._array[0],
+      id: thm
     })
   })
 };
@@ -69,7 +74,7 @@ export const insertScore = (PARAM, callback) =>(dispatch, getState) =>{
 
 //GET SINGLE SCORE
 export const updateScore = (PARAM, st, callback) =>(dispatch, getState) =>{
-  db.insertScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, st, (data)=>{
+  db.updateScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, st, (data)=>{
     dispatch({
       type: SCORE_GET_ONE,
       id: data

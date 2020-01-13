@@ -29,7 +29,7 @@ module.exports = {
     },
     test: {
         name:'tests',
-        schema: `id INTEGER PRIMARY KEY , userID TEXT ,subjectID TEXT ,title TEXT ,description TEXT ,testtime TEXT DEFAULT 0,settings TEXT,ids TEXT,
+        schema: `id INTEGER PRIMARY KEY , userID TEXT , subjectID TEXT ,title TEXT ,description TEXT ,testtime TEXT DEFAULT 0,settings TEXT,ids TEXT,
                     instructions TEXT,
                     questions TEXT,
                     answers TEXT,

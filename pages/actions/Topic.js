@@ -1,193 +1,122 @@
 import {
-    TOPIC_GET_MULTIPLE,
+    TOPIC_GET_ONE, 
+    TOPIC_LOADING_ONLINE, 
+    TOPIC_LOADING_ONLINE_ERROR, 
     TOPIC_LOADING,
     TOPIC_LOADING_ERROR,
-    TOPIC_INSERT_LOADING,
-    TOPIC_INSERT_ERROR,
-    TOPIC_INSERTED,
-    TOPIC_QUESTION_LOADING,
-    TOPIC_QUESTION_GET,
-    TOPIC_QUESTION_ERROR
+    TOPIC_GET_MULTIPLE,
+    TOPIC_GET_MULTIPLE_ONLINE,
+    TOPIC_GET_SELECTED
+
 } from "../types/Topic";
 
-
-import Database from './../api/Database';
 import axios from 'axios';
-import { API_PATH } from './Common';
+import { API_PATH, DB_PATH, CONFIG } from './Common';
 import  SCHEME  from './../api/Schema';
-const db = new Database();
-const path = API_PATH;
+
+const db = DB_PATH;
+const path = API_PATH;   
+const config = CONFIG;
 
 const TABLE_NAME = SCHEME.topic.name;
 const TABLE_STRUCTURE = SCHEME.topic.schema;
 
 //GET TOPICS FROM ONLINE DATABANK
-export const getTopicsCloud = (num) => (dispatch, getState) => {
-  let paths = `${path}/topic/cloud/${num}`
-  axios.get(paths, topicSetConfig(getState))
-      .then(res => {
-          loadTopics(res.data);
-      })
-      .catch(err => {
-          dispatch({
-              type : TOPIC_LOADING_ERROR,
-              payload: err
-          })
-      })
-};
+export const getTopicsCloud = (themeID) => (dispatch, getState) => {
+  dispatch({ type: TOPIC_LOADING_ONLINE, payload: 1});
+  
+  let topicID =  [];
+  let instructionID =  [];
+  let questionID =  [];
+
+  let topic_paths = `${path}/topic/mult/n`;
+  let instruction_paths = `${path}/instruction/mult/n`;
+  let question_paths = `${path}/question/mult/n`;
+  let answer_paths = `${path}/answer/mult/n`;
+  let distractor_paths = `${path}/distractor/mult/n`;
+
+  let theme_id_string = '';
+  let topic_id_string = '';
+  let instruction_id_string = '';
+  let question_id_string = '';
+
+  theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : '';
+  axios.patch(topic_paths, theme_id_string, config(getState)).then(top => {
+        dispatch({ type: TOPIC_LOADING, payload: 2});
+        dispatch({ type: TOPIC_GET_MULTIPLE_ONLINE, payload: top.data, id:themeID});
+        loadData(top.data, 'topic');
+        let topics = top.data;
+        topics.map((row) =>(topicID.push(row.id)));
+        topic_id_string = topicID && Array.isArray(topicID) ? topicID.toString() : '';
+
+        axios.patch(instruction_paths, topic_id_string, config(getState)).then(inst => {
+            dispatch({ type: TOPIC_LOADING, payload: 3});
+            loadData(inst.data, 'instruction');
+            let instructions = inst.data;
+            instructions.map((row) =>(instructionID.push(row.id)));
+            instruction_id_string = instructionID && Array.isArray(instructionID) ? instructionID.toString() : '';
+            
+            axios.patch(question_paths, instruction_id_string, config(getState)).then(ques => {
+              dispatch({ type: TOPIC_LOADING, payload: 4});
+              loadData(ques.data, 'question');
+              let questions = ques.data;
+              questions.map((row) =>(questionID.push(row.id)));
+              question_id_string = questionID && Array.isArray(questionID) ? questionID.toString() : '';
+              
+              axios.patch(answer_paths, question_id_string, config(getState)).then(ques => {
+                dispatch({ type: TOPIC_LOADING, payload: 6});
+                loadData(ques.data, 'answer');
+                }).catch(err => {dispatch({type : TOPIC_LOADING_ONLINE_ERROR, payload: 10})})
+
+              axios.patch(distractor_paths, question_id_string, config(getState)).then(ques => {
+                dispatch({ type: TOPIC_LOADING, payload: 6});
+                loadData(ques.data, 'distractor');
+                }).catch(err => {dispatch({type : TOPIC_LOADING_ONLINE_ERROR, payload: 10})})
+
+              }).catch(err => {dispatch({type : TOPIC_LOADING_ONLINE_ERROR, payload: 10})})
+            }).catch(err => {dispatch({type : TOPIC_LOADING_ONLINE_ERROR, payload: 10})})
+          }).catch(err => {dispatch({type : TOPIC_LOADING_ONLINE_ERROR, payload: 10})})
+}
+
 
 //GET ALL TOPIC
-export const getTopics = (theme) => (dispatch, getState) => {
+export const getTopics = (theme) => (dispatch) => {
     let thm = theme.split(',');
-    let PARAM = {
-      themeID : thm,
-    };
+    let PARAM = {themeID : thm,};
     dispatch({ type: TOPIC_LOADING})
     db.selectIN(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      dispatch({
-        type: TOPIC_GET_MULTIPLE,
-        payload: data._array
-      })
+      data == 1 ? dispatch({type: TOPIC_LOADING_ERROR, payload: data._array}) : dispatch({ type: TOPIC_GET_MULTIPLE, payload: top.data, id:theme}); 
     })
 };
 
-//GET ALL TOPIC
-export const getQuestions = (instruction) => (dispatch, getState) => {
-  let inst = instruction.split(',')
-  let PARAM = {
-    topicID : inst
-  };
-  dispatch({ type: TOPIC_QUESTION_LOADING});
-  db.selectQuestions(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-    if(data == 1)
-    {
-      dispatch({
-        type: TOPIC_QUESTION_ERROR, 
-        msg: 'error'
-      })
-    }else
-    {
-      dispatch({
-        type: TOPIC_QUESTION_GET, 
-        payload: data._array
-      })
-    }
-  })
+//SELECT SINGLE THEME FROM TOPICS
+export const getTopic = (id) => (dispatch) => {
+  dispatch({ type: TOPIC_GET_ONE, payload: id})
 };
 
-export const getQuestionsSave = (data) => (dispatch, getState) => {
-  dispatch({ type: TOPIC_INSERT_LOADING});
-  const TABLES_NAME = SCHEME['test'].name;
-  const TABLES_STRUCTURE = SCHEME['test'].schema;
-  
-  db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 1, (dat) => {
-    if(data == 1)
-    {
-    dispatch({
-      type: TOPIC_INSERT_ERROR,
-      msg: 'none'
-    })
-  }else{
-    dispatch({
-      type: TOPIC_INSERTED,
-      payload: dat
-    })
-  }
-  })
+//KEEP SELECTED TOPICS
+export const getTopicsSelected = (ids) => (dispatch) => {
+  dispatch({ type: TOPIC_GET_SELECTED, payload: ids})
 };
 
-export const getQuestionsUpdate = (data) => (dispatch, getState) => {
-  dispatch({ type: TOPIC_INSERT_LOADING});
-  const TABLES_NAME = SCHEME['test'].name;
-  const TABLES_STRUCTURE = SCHEME['test'].schema;
-  
-  db.insertTest(TABLES_NAME, TABLES_STRUCTURE, data, 2, (data)=>{
-    if(data == 1)
-    {
-    dispatch({
-      type: TOPIC_INSERT_ERROR,
-      msg: 'none'
-    })
-  }else{
-    dispatch({
-      type: TOPIC_INSERTED,
-      payload: data
-    })
-  }
-  })
- 
-};
 
-export const getTopic = (id) => (dispatch, getState) => {
-  dispatch({ type: TOPIC_LOADING})
-  db.select(TABLE_NAME, TABLE_STRUCTURE, id).then((res) => {
-    dispatch({
-      type: TOPIC_GET_ID,
-      payload: data
-    })
-  }).catch((err) => {
-      dispatch({
-        type : TOPIC_LOADING_ERROR,
-        payload: err
-      })
-  })
-};
-
-loadSingle  = (data, tables) =>{
+loadData  = (data, tables) =>{
   const TABLES_NAME = SCHEME[tables].name;
   const TABLES_STRUCTURE = SCHEME[tables].schema;
-  let I  = 0;
-  return new Promise((resolve, reject) => {
-    db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-    dbs = db.openDB();
-      db.insert(dbs, TABLES_NAME, TABLES_STRUCTURE, data)
-      .then((dat) => {
-        resolve(dat);
-      })
-      .catch((err) => {
-        reject(err);
-      })
-  })
-};
-
-loadTopics  = (data) =>{
-  return new Promise((resolve) => {
+  let dt  = [];
     data.forEach(element => {
-      db.insert(TABLE_NAME, TABLE_STRUCTURE, element, (dat)=>{
-        console.log(dat);
-      })
-      .then((dat) => {
-        resolve(dat);
-      })
-      .catch((err) => {
-        console.log(err);
+      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (data)=>{
+        if(data == 'xx')
+        {
+          // failed to insert
+        }
+        else if(data > 0)
+        {
+          console.log(`${TABLES_NAME} DONE ${data}`)
+          dt.push(data);
+        }
       })
    });
-  })
+   return dt;
 };
 
-dropTopics  = () =>{
-  return new Promise((resolve) => {
-    db.drop(TABLE_NAME, TABLE_STRUCTURE, (data)=>{
-        console.log('Table Droped');
-    })
-    .then((dat) => {
-      console.log(dat);
-      resolve(dat);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
-  })
-};
-
-  //SET TOKEN AND HEADER - HELPER FUNCTION
-export const topicSetConfig = () => {
-  // headers
-  const config ={
-      headers:{
-          
-      }
-  }
-  return config
-}

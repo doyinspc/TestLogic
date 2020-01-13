@@ -40,7 +40,7 @@ class TopicScreen extends React.Component{
 
 
 async componentDidMount() {
-  let arry = this.props.navigation.getParam('topics');
+  let arry = this.props.navigation.getParam('topicID');
   let arr = arry.toString().split(',');
   this.props.getTopics(arr.join());
 
@@ -107,7 +107,9 @@ onChange = e => {
         this.props.navigation.navigate('TestSettingsScreen', { 'topics':this.state.values, testID:null})
       } else
       {
-        //alert
+        //download
+        const subs = JSON.stringify(this.props.navigation.getParam('themeID'));
+        this.updateTopic(subs)
       } 
     }
     else if(selectedIndex == 2 )
@@ -124,13 +126,20 @@ onChange = e => {
 
 render(){
   const { topics, isLoading } = this.props.topic;
+  const { themes } = this.props.theme;
+  const { name } = this.props.subject.subject;
   const { fontLoaded, selectedIndex, values } = this.state;
-  const buttons = [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
+  const buttons = values.length > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}] ;
 
   return (
     <ThemeProvider >
+      <View style={styles.topSection}>
+          <Text style={styles.h1}>{name}</Text>
+          <Text style={styles.h2}>{`${themes.length} theme(s) selected`}</Text>
+      </View>
        <View style={{flex:1}}>
-        {fontLoaded  && !isLoading ?  
+        {fontLoaded  && !isLoading ? 
+        
          <ScrollView>
         {topics  && Object.keys(topics).length > 0 ? topics.map((l, i) => (
             <ListItem
@@ -167,7 +176,9 @@ render(){
 }
 const styles = StyleSheet.create(local_style)
 const mapStateToProps = state => ({ 
-  topic: state.topicReducer
+  topic: state.topicReducer,
+  theme: state.themeReducer,
+  subject:state.subjectReducer
 })
 export default connect(mapStateToProps, 
   { 

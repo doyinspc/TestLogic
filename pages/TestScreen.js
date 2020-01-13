@@ -1,17 +1,16 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ThemeProvider, Button, Avatar, ListItem } from 'react-native-elements';
+import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
-import Activity from './components/Loader';
 
 import { getTests } from './actions/Test';
+import Activity from './components/LoaderTest';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
 const local_size = tools.Sizes;
-
 
 // Your App
 class TestScreen extends React.Component{
@@ -19,7 +18,8 @@ class TestScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      fontLoaded: false
+      fontLoaded: false,
+      selectedIndex: null
     };
   }
 
@@ -34,43 +34,78 @@ class TestScreen extends React.Component{
     this.props.getTests(JSON.stringify(this.props.navigation.getParam('subjectID')));
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
-      'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
+      'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Light.ttf")
     });
     this.setState({ fontLoaded: true });
   }
 
- 
+  uploadTest =()=>{
+    //this.props.getSubjectsCloud();
+  }
+
+  updateIndex = (selectedIndex) =>{
+    this.setState({ selectedIndex });
+    if(selectedIndex == 0 )
+    {
+        this.props.navigation.navigate('HomeScreen');
+    }
+    else if(selectedIndex == 1 )
+    {
+        this.uploadTest()
+    }
+   
+  }
+  
+  comp1 = () => <Icon name='home' color='white' type='material' />
+  comp2 = () => <Icon name='cloud-upload' color='white' type='material' />
 
 render(){
- const { test, isLoading } = this.props;
- const { fontLoaded } = this.state;
-
+ const { tests, isLoading } = this.props.test;
+ const { fontLoaded , selectedIndex} = this.state;
+ const buttons = [{element:this.comp1}, {element:this.comp2}];
   return (
     <ThemeProvider >
-       {!fontLoaded  ?  
-        <Activity title='Test' onPress={()=>{this.onPress(1)}} />:
-       <View style={{flex: 10}}>
-          <ScrollView>
-            {
-            test.tests.map((l, i) => (
+        <View style={{flex:1}}>
+        {fontLoaded  && !isLoading ?  
+         <ScrollView>
+            {tests  && Object.keys(tests).length > 0 ?
+            tests.map((l, i) => (
             <ListItem
                 key={i}
-                titleStyle={styles.listItem}  
+                titleStyle={styles.listItem}
+                rightTitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color2}} 
+                subtitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color4}} 
+                rightSubtitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color4}}   
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
                 title={l.title}
-                subtitle={`${l.settings.split(':::')[0]} Questions`}
+                subtitle={`${l.created_at}`}
+                rightTitle={`${l.settings.split(':::')[0]} Qs`}
+                rightSubtitle={`${Math.floor(l.testtime/60)} Mins`}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
                 onPress={()=>{this.relocate(l.id)}}
-                badge={{  value: l.id, textStyle: { color: 'white', backgroundColor:local_color.MAIN, borderRadius:20 }, containerStyle: { marginTop: 1 } }}
                 chevron
             />
             ))
+            :
+            <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
+              <Icon name='home' type='material' size={70} color={local_color.color1} />
+              <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>No Test</Text>
+              <Text style={{fontSize: 14, fontFamily:'SulphurPointNormal', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Go to the home page and prepare a test</Text>
+            </View>
             }
-         </ScrollView>
-        </View> }  
+        </ScrollView>:<Activity title='Subject' onPress={()=>{this.onPress(1)}} />}
+           <ButtonGroup
+            onPress={this.updateIndex}
+            selectedIndex={selectedIndex}
+            buttons={buttons}
+            containerStyle={styles.genButtonGroup}
+            selectedButtonStyle={styles.genButtonStyle}
+            textStyle={styles.genButtonTextStyle}
+            />
+           </View> 
     </ThemeProvider>
   );
 };

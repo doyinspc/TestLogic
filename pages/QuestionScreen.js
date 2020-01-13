@@ -3,7 +3,7 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ThemeProvider, Icon, ButtonGroup  } from 'react-native-elements';
+import { ThemeProvider, Icon, Button, ButtonGroup, Overlay  } from 'react-native-elements';
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { RadioButton } from 'react-native-paper';
 import * as Font from 'expo-font';
@@ -44,17 +44,19 @@ class QuestionScreen extends React.Component{
       currentTime:'',
       starttime: Math.floor(new Date().getTime()),
       selectedIndex: 2,
+      score: 0,
+      isVisible: false,
     };
   }
 
  async componentDidMount(){
    //get the test id stor in state
-  let testID = '14';// this.props.navigation.getParam('testID');
-  this.setState({ testID });
+  let testID = this.props.navigation.getParam('testID');
+  this.setState({ testID:testID });
   //load test from test table
   this.props.getTest(testID);
   let test_data = this.props.test.test; 
-  if(test_data && Object.keys(test_data).length > 0)
+  if(!this.props.test.isLoading && test_data && Object.keys(test_data).length > 0)
   {
     //set sata in state
     let settings = test_data.settings.split(':::');
@@ -76,35 +78,32 @@ class QuestionScreen extends React.Component{
   //if the score id is set 
   if(scoreID && parseInt(scoreID) > 0)
   {
-    //this is a continuation of previose test
-    //load the test data
-    //load past choices
-    //load past time 
-    this.props.getScore(scoreID, (data)=>{
-     this.setState({ 
-        choices: JSON.parse(data.choices), 
-        timeleft: data.timeleft, 
-      });
-    });
-    this.setState({ isRetest:true });
+    this.props.getScore(scoreID)
+    this.setState({ isRetest:true, scoreID: scoreID});
   }else
   {
-    //this is a new test score
-    //create score id
     let arr = {};
     arr['testID'] = testID;
     arr['score'] = 0;
     arr['timeleft'] = test_data.testtime;
+    arr['choices'] = JSON.stringify({});
     
-    this.props.insertScore(arr, (data)=>{
-      this.setState({ scoreID:data });
+    this.props.insertScore(arr, (id)=>{
+      this.setState({ isRetest:false , scoreID: id });
+      this.props.getScore(id);
     });
-    this.setState({ isRetest:false })
+    
   }
-
-  
-
-  
+  if(!this.props.score.isLoading){
+    let da = this.props.score.score;
+    this.setState({ 
+        choices: da.choices !== undefined ? JSON.parse(da.choices): {},
+        testtime: da.timeleft, 
+        timeleft: da.timeleft, 
+        score: da.score,  
+    });
+  }
+   
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -124,24 +123,25 @@ class QuestionScreen extends React.Component{
  //mark the test and record
  markTest=()=>{
 
-  let { answers, choices, scoreID, testtime } = this.state;
+  let { answers, choices, scoreID, testtime, testID } = this.state;
+
   let correctAnswers = [];
-  for(let i in choices){
-    let d = Object.entries(answers[i]);
-    if(choices[i] == d[0][0]){
-       correctAnswers.push(d[0]);
+  for(let i in answers)
+  {
+    let d = Object.keys(answers[i])[0];
+    if(choices[i] == d){
+       correctAnswers.push(d);
     }
   };
-  let score = correctAnswers.length > 0 && answers.length > 0 ? correctAnswers.length / answers.length : 0 ;
+  let score = correctAnswers.length > 0 && Object.keys(answers).length > 0 ? (correctAnswers.length / Object.keys(answers).length) : 0 ;
+  
   let arr = {}
-  arr['id']  = scoreID;
-  arr['score']  = score;
+  arr['score']  = score.toString();
   arr['timeleft']  = testtime;
   arr['choices']  = JSON.stringify(choices);
- // arr['answers']  = JSON.stringify(answers);
-    this.props.insertScore(arr, 1, (data)=>{
+    this.props.updateScore(arr, scoreID, (data)=>{
   });
-  //this.props.navigation.navigate('ScoreScreen', {'scoreID':scoreIDs });
+ this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
 }
 
  //swipe
@@ -150,9 +150,9 @@ class QuestionScreen extends React.Component{
   //this.setState({myText: 'You swiped up!'});
 }
 
-onSwipeDown=(gestureState)=> {
+onSwipeDown=(gestureState)=>{
   //hid all question numbers
-  //this.setState({myText: 'You swiped down!'});
+  this.setState({isVisible:true});
 }
 
 onSwipeLeft=(gestureState)=> {
@@ -161,16 +161,19 @@ onSwipeLeft=(gestureState)=> {
   
 }
 
-onSwipeRight=(gestureState)=> {
-  
+onSwipeRight=(gestureState)=> { 
   this.onBackward()
-  
+}
+changeQuestion=(activeIndex, activeNumber)=> {
+
+    this.setState({activeIndex: activeIndex, activeNumber: activeNumber, isVisible:false});
+ 
 }
 
 onForward=()=> {
   let oldIndex = this.state.activeIndex;
   let newIndex = oldIndex + 1;
-  if(newIndex < this.state.noq)
+  if(newIndex < Object.keys(this.state.answers).length)
   {
     let newActiveNumber = this.state.ids[newIndex];
     this.setState({activeIndex: newIndex, activeNumber: newActiveNumber});
@@ -198,20 +201,19 @@ updateIndex = (selectedIndex) =>{
   {
       //pause test save questions
       //exit to score screen
-      let {choices, timeleft, scoreID } = this.state;
+      let {choices, timeleft, scoreID, testID } = this.state;
       //1. set up an array of items to store
       let arr = {};
       arr['choices'] = JSON.stringify(choices);
-      arr['id'] = scoreID;
       arr['timeleft'] = timeleft;
       //2. get the id to store the data
       let scoreIDs = scoreID;
       //3. update the score database
-      this.props.updateScore(arr, (data)=>{
+      this.props.updateScore(arr, scoreID, (data)=>{
 
       })
       //4. close this page : move to the scores page
-      this.props.navigation.navigate('ScoreScreen', {'scoreID':scoreIDs });
+      this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
 
   }
   else if(selectedIndex == 2 )
@@ -228,7 +230,7 @@ updateIndex = (selectedIndex) =>{
 
 onSwipe=(gestureName, gestureState)=> {
   const {SWIPE_UP, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
-  //this.setState({gestureName: gestureName});
+  
   switch (gestureName) {
     case SWIPE_UP:
       break;
@@ -259,17 +261,14 @@ componentWillUnmount(){
   clearInterval(this.timer);
 }
 
-//componentWillMount(){
-//  this.getCurrentTime();
-//}
 
-comp1 = () => <Icon name='arrow-back' type='material' />
-comp2 = () => <Icon name='pause' type='material' />
-comp3 = () => <Icon name='done' type='material' />
-comp4 = () => <Icon name='arrow-forward' type='material' />
+comp1 = () => <Icon name='arrow-back' color='white' type='material' />
+comp2 = () => <Icon name='pause'color='white'   type='material' />
+comp3 = () => <Icon name='done' color='white'   type='material' />
+comp4 = () => <Icon name='arrow-forward' color='white'  type='material' />
 
 render(){
- const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, instructions, currentTime } = this.state;
+ const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans } = this.state;
  const buttons =[{element:this.comp1}, {element:this.comp2}, {element:this.comp3}, {element:this.comp4}];
  const config = {
   velocityThreshold: 0.3,
@@ -279,12 +278,44 @@ render(){
   let mainIDs = activeNumber;
   let mainID = mainIDs.toString();
  
- 
+  let li = ids && Array.isArray(ids) ? ids.map((l, i)=>(
+          <Button 
+          key={i} 
+          color= 'white'          
+          buttonStyle={{backgroundColor: choices[l] ?  ans == 1 ? 'black': choices[l] == Object.keys(answers[l])[0] ? 'green' : 'red' : local_color.color3 ,  minWidth:50, height: 40, alignContent:'center', margin:10, padding:0 }}
+          title={(i + 1).toString()}
+          titleStyle={{color:'white'}}
+          onPress={()=>this.changeQuestion(i, l)}
+          />
+  )): null;
 this.getCurrentTime
   return (
     <ThemeProvider>
         {fontLoaded && ids.length > 0 ?
         <View style={{flex:1}}> 
+        <Overlay
+          isVisible={this.state.isVisible}
+          windowBackgroundColor="rgba(7, 7, 7, .3)"
+          overlayBackgroundColor= {local_color.color4}
+          margin='auto'
+          padding="auto"
+          width="auto"
+          height="auto"
+        >
+          <ScrollView>
+          <View style={{flexDirection:'row', flexWrap:'wrap', margin:0, justifyContent:'center', alignContent:'center'}}>
+             { li }
+          </View>
+          <Button
+                title='Close'
+                style={styles.but}
+                onPress={()=>this.setState({isVisible:false})}
+                buttonStyle={{backgroundColor:local_color.color1}}
+            />
+          </ScrollView>
+
+        </Overlay>
+        
           <View style={{flex:.5, flexDirection:'row', justifyContent:'space-between', top:0, margin:10, padding:10, backgroundColor: local_color.color5, borderRadius:5,}}>
             <Text style={{fontFamily:'PoiretOne', fontSize:15, marginTop:2}} >{` Question ${activeIndex + 1}.`}</Text>
             <View style={{flexDirection:'row-reverse', justifyContent:'flex-end'}}>
@@ -292,6 +323,7 @@ this.getCurrentTime
                 <Icon name='alarm' type='material' />
             </View>
           </View>
+
           <GestureRecognizer
             onSwipe={this.onSwipe}
             onSwipeUp={this.onSwipeUp}
@@ -319,16 +351,34 @@ this.getCurrentTime
                   {options[mainID]  ? 
                     options[mainID].map((element) =>(
                         <View key={`${element[0]}`} style={{flexDirection:'row'}}>
+                        { choices[activeNumber] ?
+                          choices[activeNumber] == Object.keys(answers[activeNumber])[0] ?
+                          Object.keys(answers[activeNumber])[0] == element[0]?
+                          <Icon name='done' size={20} color='green' type='material' containerStyle={{marginTop:5}} />:
+                          <Icon name='remove' size={20} color='red' type='material' containerStyle={{marginTop:5}} /> : 
+                          <Icon name='remove' size={20}  color='red' type='material' containerStyle={{marginTop:5}} />
+                        :
+                        null
+                      }
                         <RadioButton
                           value={element[0]}
+                          uncheckedColor='grey'
+                          disabled = { choices[activeNumber] ?  true : false}
+                          color='blue'
                           status= {choices[activeNumber] && choices[activeNumber] == element[0] ? 'checked' : 'unchecked'}
                           onPress={() =>{this.setChoice(activeNumber, element[0])}}
+                          size={40}
                         />
                       <Text style={styles.label_radio}>{element[1]}</Text>
                       </View> 
-                      
                     ))
                     : null}
+                </View>
+                <View style={{borderTopWidth: 0.5, borderTopColor:local_color.color4, flex:.5, flexDirection:'row', justifyContent:'space-between', bottom:0, margin:2, padding:2, backgroundColor: local_color.color5, borderRadius:5,}}>
+                  <Icon name='dashboard' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
+                  <Icon name='spellcheck' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
+                  <Icon name='list' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
+                  <Icon name='comment' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
                 </View>
                 </View>
             </ScrollView>
@@ -338,7 +388,9 @@ this.getCurrentTime
                   onPress={this.updateIndex}
                   selectedIndex={selectedIndex}
                   buttons={buttons}
-                  containerStyle={{height:40, bottom:0}}
+                  containerStyle={styles.genButtonGroup}
+                  selectedButtonStyle={styles.genButtonStyle}
+                  textStyle={styles.genButtonTextStyle}
                   />
              
             </View>

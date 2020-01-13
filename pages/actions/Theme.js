@@ -2,158 +2,61 @@ import {
     THEME_GET_MULTIPLE,
     THEME_GET_ONE, 
     THEME_LOADING,
-    THEME_LOADING_ERROR 
+    THEME_LOADING_ERROR,
+    THEME_GET_MULTIPLE_ONLINE,
+    THEME_LOADING_ERROR_ONLINE,
+    THEME_LOADING_ONLINE,
+    THEME_GET_SELECTED
 } from "../types/Theme";
 
-
-import Database from './../api/Database';
 import axios from 'axios';
-import { API_PATH } from './Common';
+import { API_PATH, DB_PATH, CONFIG } from './Common';
 import  SCHEME  from './../api/Schema';
-const db = new Database();
+
+const db = DB_PATH;
 const path = API_PATH;
+const config = CONFIG;
 
 const TABLE_NAME = SCHEME.theme.name;
 const TABLE_STRUCTURE = SCHEME.theme.schema;
 
 //GET THEMES FROM ONLINE DATABANK
-export const getThemesCloud = (num) => (dispatch, getState) => {
-  let paths = `${path}/theme/cloud/${num}`
-  axios.get(paths, themeSetConfig(getState))
+export const getThemesCloud = (subjectID) => (dispatch, getState) => {
+  let paths = `${path}/theme/mult/n`;
+  dispatch({ type: THEME_LOADING_ONLINE });
+  axios.patch(paths, subjectID, config(getState))
       .then(res => {
-          loadData(res.data, 'theme');
+          loadData(res.data, 'theme', ()=>{
+          res.data ? dispatch({type: THEME_GET_MULTIPLE_ONLINE, payload: res.data }) : dispatch({type : THEME_LOADING_ERROR_ONLINE,  msg : 'Not Sac' }) ;
+        });
       })
-      .catch(err => {
-          dispatch({
-              type : THEME_LOADING_ERROR,
-              payload: err
-          })
+      .catch(err => {dispatch({type : THEME_LOADING_ERROR_ONLINE, msg : err })
       })
 };
-
-export function getThemesID(num, callback){
- 
-  let paths = `${path}/theme/cat/${num}`;
-  axios.get(paths, themeSetConfig(null))
-      .then(res => {
-        loadData(res.data, 'theme');
-        callback(res.data)
-      })
-      .catch(err => {
-          console.log(err.message);
-      })
-};
-
-export function getTopicsID(num, callback){
-  let paths = `${path}/topic/mult/n`;
-  let d = {
-    data: num.join(',')
-  };
-  axios.patch(paths, d, themeSetConfig(null))
-      .then(res => {
-        loadData(res.data, 'topic');
-        callback(res.data)
-      })
-      .catch(err => {
-          console.log(err.message);
-      })
-};
-
-export function getInstructionsID(num, callback){
-  let paths = `${path}/instruction/mult/n`;
-  let d = {
-    data: num.join(',')
-  };
-  axios.patch(paths, d, themeSetConfig(null))
-      .then(res => {
-        loadData(res.data, 'instruction');
-        callback(res.data)
-      })
-      .catch(err => {
-          console.log(err.message);
-      })
-};
-
-export function getQuestionsID(num, callback){
-  let paths = `${path}/question/mult/n`;
-  let d = {
-    data: num.join(',')
-  };
-  axios.patch(paths, d, themeSetConfig(null))
-      .then(res => {
-        loadData(res.data, 'question');
-        callback(res.data)
-      })
-      .catch(err => {
-          console.log(err);
-      })
-};
-
-export function getAnswersID(num, callback){
-  let paths = `${path}/answer/mult/n`;
-  let d = {
-    data: num.join(',')
-  };
-  let body = JSON.stringify({data: num.join(',')});
-  axios.patch(paths, d, themeSetConfig(null))
-      .then(res => {
-        loadData(res.data, 'answer');
-        callback(res.data)
-      })
-      .catch(err => {
-          console.log(err);
-      })
-};
-
-export function getDistractorsID(num, callback){
-  let paths = `${path}/distractor/mult/n`;
-  let d = {
-    data: num.join(',')
-  };
-  axios.patch(paths, d, themeSetConfig(null))
-      .then(res => {
-        loadData(res.data, 'distractor');
-        callback(res.data)
-      })
-      .catch(err => {
-          console.log(err.message);
-      })
-};
-
-
 
 //GET ALL THEME 
-export const getThemes = (subject) => (dispatch, getState) => {
-    let PARAM = {
-      subjectID : subject,
-    };
-      dispatch({ type: THEME_LOADING})
-      db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-        dispatch({
-          type: THEME_GET_MULTIPLE,
-          payload: data._array
-        })
-      })
+export const getThemes = (subject) => (dispatch) => {
+  let PARAM = {subjectID : subject};
+  dispatch({ type: THEME_LOADING });
+  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+    data && Array.isArray(data._array) && parseInt(data._length) > 0 ? dispatch({type: THEME_GET_MULTIPLE, payload: data._array}): dispatch({ type : THEME_LOADING_ERROR, msg : 'No file'});
+  })
 };
 
-export const getTheme = (id) => (dispatch, getState) => {
-  dispatch({ type: THEME_LOADING})
-  db.select(TABLE_NAME, TABLE_STRUCTURE, id).then((res) => {
-    dispatch({
-      type: THEME_GET_ONE,
-      payload: data
-    })
-  }).catch((err) => {
-      dispatch({
-        type : THEME_LOADING_ERROR,
-        payload: err
-      })
-  })
+//SELECT SINGLE THEME FROM THEMES
+export const getTheme = (id) => (dispatch) => {
+  dispatch({ type: THEME_GET_ONE, payload: id})
+};
+
+//KEEP SELECTED THEMES
+export const getThemesSelected = (ids) => (dispatch) => {
+  dispatch({ type: THEME_GET_SELECTED, payload: ids})
 };
 
 loadData  = (data, tables, callback) =>{
   const TABLES_NAME = SCHEME[tables].name;
   const TABLES_STRUCTURE = SCHEME[tables].schema;
+  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
   let dt  = [];
     data.forEach(element => {
       db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (data)=>{
@@ -163,7 +66,6 @@ loadData  = (data, tables, callback) =>{
         }
         else if(data > 0)
         {
-          console.log(`${TABLES_NAME} DONE ${data}`)
           dt.push(data);
         }
       })
@@ -171,29 +73,3 @@ loadData  = (data, tables, callback) =>{
    callback(dt);
 };
 
-
-dropThemes  = () =>{
-  return new Promise((resolve) => {
-    db.drop(TABLE_NAME, TABLE_STRUCTURE, (data)=>{
-        console.log('Table Droped');
-    })
-    .then((dat) => {
-      console.log(dat);
-      resolve(dat);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
-  })
-};
-
-  //SET TOKEN AND HEADER - HELPER FUNCTION
-export const themeSetConfig = () => {
-  // headers
-  const config ={
-      headers:{
-          
-      }
-  }
-  return config
-}

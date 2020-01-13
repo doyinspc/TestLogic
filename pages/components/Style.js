@@ -97,10 +97,10 @@ module.exports = {
           h2: {
             fontSize: 15,
             marginTop:20,
-            width: UNIT_WIDTH * 20,
             color: color4,
             margin: 1,
             alignSelf: 'center',
+            alignContent: 'center',
             fontFamily: 'SulphurPointNormal'
           },
           textplace: {
@@ -212,12 +212,13 @@ module.exports = {
             fontFamily: 'SulphurPointNormal',
             minHeight:20,
           },
-          table_container: { flex: 1, padding: 16, paddingTop: 30, backgroundColor: color4 },
-          table_head: {  height: 40,  backgroundColor: color1 },
+          table_container: { flex: 1, padding: 16, paddingTop: 10, backgroundColor: color5 },
+          table_head: {  height: 45,  backgroundColor: color1 },
           table_wrapper: { flexDirection: 'row' },
           table_title: { flex: 1, backgroundColor: color5 },
-          table_row: {  height: 28  },
+          table_row: {  height: 34  },
           table_text: { fontFamily: 'SulphurPoint', textAlign: 'left', paddingLeft:10 },
+          table_text_white: { fontFamily: 'SulphurPoint', textAlign: 'left', paddingLeft:10, color:'white', fontWeight:'bold' },
           label_radio: {
             color: '#000',
             fontSize: 14,
@@ -243,5 +244,22 @@ module.exports = {
           genButtonGroup:{height:40, backgroundColor:color1},
           genButtonStyle:{backgroundColor:color2},
           genButtonTextStyle:{color:color5},
-      }
+          topSection:{flex:.4, backgroundColor:color1, borderBottomRightRadius: 25, borderBottomLeftRadius:25, alignContent:'center', justifyContent:'center'},
+          home_list_container: {
+            flexDirection:'row',  
+            alignSelf:'center', 
+            height:100, 
+            width:'90%', 
+            margin:15, 
+            backgroundColor:'white',
+            shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 4,
+              },
+            shadowOpacity: 0.27,
+            shadowRadius: 4.65,
+            elevation: 16,
+            },
+        }
 };

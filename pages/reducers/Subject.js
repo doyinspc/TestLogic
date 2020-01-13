@@ -1,11 +1,11 @@
 import {
-    SUBJECT_GET_MULTIPLE,
     SUBJECT_GET_ONE, 
+    SUBJECT_LOADING_ONLINE, 
+    SUBJECT_LOADING_ONLINE_ERROR, 
     SUBJECT_LOADING,
     SUBJECT_LOADING_ERROR,
-    SUBJECT_LOADING_ERROR_ONLINE, 
+    SUBJECT_GET_MULTIPLE,
     SUBJECT_GET_MULTIPLE_ONLINE,
-    SUBJECT_LOADING_ONLINE
 } from "../types/Subject";
 
 const initialState = {
@@ -31,22 +31,34 @@ export default function(state = initialState, action){
                 ...state,
                 isLoadingOnline: true
             };
-        case SUBJECT_GET_MULTIPLE_ONLINE:
-            return {
-                ...state,
-                subjects : action.payload,
-                isLoadingOnline: false
-            };
         case SUBJECT_GET_MULTIPLE:
             return {
                 ...state,
                 subjects : action.payload,
                 isLoading: false
             };
-        case SUBJECT_GET_ONE:
+        case SUBJECT_GET_MULTIPLE_ONLINE:
+            let newArray = [];
+            let oldArray = [...state.subjects];
+            let onlineArray = action.payload;
+            oldArray.forEach((row)=>{
+                let f = onlineArray.filter((r)=>r.id == row.id);
+                f && Array.isArray(f) && f.length == 1 ? newArray.push(f[0]) : newArray.push(row);
+                onlineArray = onlineArray.filter((r)=>r.id != row.id);
+            })
+            newArray = [...newArray, ...onlineArray];
             return {
                 ...state,
-                message : action.payload,
+                subjects : newArray,
+                isLoadingOnline: false
+            };
+        case SUBJECT_GET_ONE:
+            let id = action.payload;
+            let newArray = [...state.subjects];
+            let newRow = newArray && Array.isArray(newArray) ? newArray.filter(row => row.id == id )[0] : {};
+            return {
+                ...state,
+                subject : newRow,
                 isLoading: false
             };
         case SUBJECT_LOADING_ERROR:
@@ -54,7 +66,7 @@ export default function(state = initialState, action){
                 ...state,
                 isLoading: false
             };
-        case SUBJECT_LOADING_ERROR_ONLINE:
+        case SUBJECT_LOADING_ONLINE_ERROR:
             return {
                 ...state,
                 isLoadingOnline: false

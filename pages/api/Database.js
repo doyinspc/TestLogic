@@ -20,6 +20,7 @@ var db;
 
 const utility = require('./Utility');
 const schema = require('./Schema');
+
 const build_param = utility.build_param;
 const build_paramz = utility.build_paramz;
 const build_in_param = utility.build_in_param;
@@ -125,17 +126,18 @@ closeDatabase(db) {
   };
 
   select(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
+    this.initDB(TABLE_NAME, TABLE_STRUCTURE);
     let completeQuery = build_param(param);
-    
     const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
-   // const st = this.initDB(TABLE_NAME, TABLE_STRUCTURE);
+    console.log(query);
     db.transaction(
               (tx) => { 
                 tx.executeSql(query, [], (transaction, result) => {
                     callback(result.rows);
                   },
-                  (error) => {
+                  (t, error) => {
                     callback(1);
+                    console.log(error)
                   }
                 ) 
               }, 
@@ -149,33 +151,31 @@ closeDatabase(db) {
     selectIN(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
       let completeQuery = build_in_param(param);
       const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
-      //const st = this.initDB(TABLE_NAME, TABLE_STRUCTURE);
-      //let db = this.db;
       
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
                       callback(result.rows);
                     },
-                    (t, error) => {console.log(error);}
+                    (t, error) => {console.log(error); callback(1)}
                   ) 
                 }, 
-                (t, error)=>{console.log(error)}, 
-                this.closeDatabase(db)
+                (t, error)=>{callback(1)}, 
         );
       }
 
      
-    selectQuestions(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
+    selectQuestions(TABLE_NAME, TABLE_STRUCTURE, param, num,  callback) {
+      this.initDB(TABLE_NAME, TABLE_STRUCTURE);
       let completeQuery = build_in_paramx(param);
       const query0 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM answers WHERE  answers.questionID = questions.id GROUP BY questionID ";
       const query1 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM distractors WHERE  distractors.questionID = questions.id GROUP BY questionID ";
-      const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id ${ completeQuery } LIMIT 40`;
+      const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id ${ completeQuery } LIMIT ${num}`;
       console.log(query);
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
-                      
+                      console.log(result.rows);
                       callback(result.rows);
                     },
                     (t, error) => {
@@ -201,16 +201,14 @@ closeDatabase(db) {
                 tx.executeSql(query, [], (transaction, result) => {
                     callback(result.rows);
                   },
-                  (error) => {console.log(error);}
+                  (t, error) => {console.log(error);}
                 ) 
               }, 
-              (error)=>{console.log(error)}, 
-              //db._db.close()
+              (t, error)=>{console.log(error)}, 
       );
     }
 
   insert(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
-    this.initDB(TABLE_NAME, TABLE_STRUCTURE);
     let completeQuery = insert_param(param);
     const query = `INSERT OR IGNORE INTO ${TABLE_NAME} ${completeQuery[0]} VALUES ${completeQuery[1]}`;
     this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) => {
@@ -245,7 +243,7 @@ closeDatabase(db) {
           )
       }
 
-      insertScore(TABLE_NAME, TABLE_STRUCTURE, param, status, callback) {
+  insertScore(TABLE_NAME, TABLE_STRUCTURE, param, status, callback) {
         this.initDB(TABLE_NAME, TABLE_STRUCTURE);
         let insert_array = []
         let qux = '';
@@ -264,19 +262,11 @@ closeDatabase(db) {
                 null,
                 null
               ];
+              
         }
 
-        if(status == 2){
-        qux = '(?, ?, ?, ?)';
-        nux = '(id, score, timeleft, choices )';
-        insert_array = [
-                param.id,
-                param.score ? param.score :null,
-                param.timeleft ? param.timeleft : 0,
-                param.choices ? param.choices :null
-              ];
-        }
-        const query = `INSERT OR REPLACE INTO ${TABLE_NAME} ${nux} VALUES ${qux} `;
+
+        let query = `INSERT OR REPLACE INTO ${TABLE_NAME} ${nux} VALUES ${qux} `;
         
         this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {
                             if (callback)
@@ -292,9 +282,41 @@ closeDatabase(db) {
                         ) 
                       }, 
                       (error)=>{console.log(error.message)}, 
-                      //this.closeDatabase(this.db)
               );
           }   
+
+  update(TABLE_NAME, TABLE_STRUCTURE, param, id, callback) {
+        let insert_array = []
+        let qux = '';
+
+        let quxs = [];
+        Object.keys(param).forEach((para)=>{
+            quxs.push(` ${para} = ? `);
+            insert_array.push(param[para])
+        })
+        qux = `${quxs.toString()}`;   
+       
+        let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
+        this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {
+                            if (callback)
+                            {
+                              console.log(`${TABLE_NAME} UPDATED INTO ROW ${result}`);
+                              callback(result)
+                            }
+                          },
+                          (t, error) => {
+                            callback(0);
+                            console.log(error.message);
+                          }
+                        ) 
+                      }, 
+                      (t, error)=>{
+                        callback(0) ; 
+                        console.log(error.message)}, 
+                      
+              );
+          }  
+
   insertTest(TABLE_NAME, TABLE_STRUCTURE, param, status, callback) {
     this.initDB(TABLE_NAME, TABLE_STRUCTURE);
     let insert_array = []
@@ -353,6 +375,7 @@ closeDatabase(db) {
                   //this.closeDatabase(this.db)
           );
       }
+
    async insertReturn(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
     let completeQuery = insert_param(param);
     
@@ -372,31 +395,7 @@ closeDatabase(db) {
                   this.closeDatabase(this.db)
           );
       }
-  
 
-
-  update(TABLE_NAME, TABLE_STRUCTURE, data, param) {
-    let completeQuery = update_param(param);
-    let whereQuery = build_param(data);
-
-    const sql = `UPDATE ${TABLE_NAME} SET ${completeQuery} ${whereQuery}`;
-    let db = this.db;
-    return new Promise((resolve) => {
-      this.initDB(TABLE_NAME, TABLE_STRUCTURE).then((db) => {
-        db.transaction((tx) => {
-          tx.executeSql(sql, []).then(([tx, results]) => {
-            resolve(results);
-          });
-        }).then((result) => {
-          //this.closeDatabase(db);
-        }).catch((err) => {
-          console.log(err);
-        });
-      }).catch((err) => {
-        console.log(err);
-      });
-    });  
-  }
 
   delete(TABLE_NAME, TABLE_STRUCTURE, id) {
     let db = this.db;

@@ -1,20 +1,21 @@
-import {
-    SUBJECT_GET_MULTIPLE_ONLINE,
-    SUBJECT_GET_MULTIPLE,
+import { 
     SUBJECT_GET_ONE, 
+    SUBJECT_LOADING_ONLINE, 
+    SUBJECT_LOADING_ONLINE_ERROR, 
     SUBJECT_LOADING,
     SUBJECT_LOADING_ERROR,
-    SUBJECT_LOADING_ERROR_ONLINE,
-    SUBJECT_LOADING_ONLINE
+    SUBJECT_GET_MULTIPLE,
+    SUBJECT_GET_MULTIPLE_ONLINE,
+       
 } from "../types/Subject";
 
-
-import Database from './../api/Database';
 import axios from 'axios';
-import { API_PATH } from './Common';
+import { API_PATH, DB_PATH, CONFIG } from './Common';
 import  SCHEME  from './../api/Schema';
-const db = new Database();
+
+const db = DB_PATH;
 const path = API_PATH;
+const config = CONFIG;
 
 const TABLE_NAME = SCHEME.subject.name;
 const TABLE_STRUCTURE = SCHEME.subject.schema;
@@ -23,31 +24,29 @@ const TABLE_STRUCTURE = SCHEME.subject.schema;
 export const getSubjectsCloud = () => (dispatch, getState) => {
   let paths = `${path}/subject/`
   dispatch({ type: SUBJECT_LOADING_ONLINE });
-  axios.get(paths, subjectSetConfig(getState))
+  axios.get(paths, config(getState))
       .then(res => {
-          loadData(res.data, 'subject', ()=>{
-            if(res.data){
-              dispatch({
-                type: SUBJECT_GET_MULTIPLE_ONLINE,
-                payload: res.data
-              })
-            }else
-            {
-              dispatch({
-                type : SUBJECT_LOADING_ERROR_ONLINE,
-                msg : err
-              })
-            }
-            
-          });
+        loadData(res.data, 'subject', ()=>{
+          res.data ? dispatch({type: SUBJECT_GET_MULTIPLE_ONLINE, payload: res.data }) : dispatch({type : SUBJECT_LOADING_ONLINE_ERROR,  msg : 'Not Sac' }) ;
+        });
       })
-      .catch(err => {
-          dispatch({
-              type : SUBJECT_LOADING_ERROR_ONLINE,
-              msg : err
-          })
+      .catch(err => {dispatch({type : SUBJECT_LOADING_ERROR_ONLINE, msg : err })
       })
 };
+
+//GET ALL SUBJECT 
+export const getSubjects = () => (dispatch, getState) => {
+  let PARAM= {};
+  dispatch({ type: SUBJECT_LOADING });
+  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+    data && Array.isArray(data._array) && parseInt(data._length) > 0 ? dispatch({type: SUBJECT_GET_MULTIPLE, payload: data._array}): dispatch({ type : SUBJECT_LOADING_ERROR, msg : 'No file'});
+  })
+};
+
+
+
+
+
 
 //GET SUBJECTS FROM ONLINE DATABANK
 export const getSubjectsClear = () => (dispatch, getState) => {
@@ -63,33 +62,15 @@ export const getSubjectsClear = () => (dispatch, getState) => {
 export const getTableClear = table => (dispatch, getState) => {
   dropData(table);        
 };
-//GET ALL SUBJECT 
-export const getSubjects = () => (dispatch, getState) => {
-      let PARAM= {};
-      dispatch({ type: SUBJECT_LOADING });
-      db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-        if(Array.isArray(data._array) && parseInt(data._length) > 0)
-        {
-          //cody
-        }
-        else if(data == 1)
-        {
-          dispatch({
-            type : SUBJECT_LOADING_ERROR,
-            msg : 'No file'
-          })
-        }
-        else
-        {
-          dispatch({
-            type: SUBJECT_GET_MULTIPLE,
-            payload: data._array
-          })
-        }
-        
-      })
+
+
+//SELECT SINGLE SUBJECT FROM SUBJECTS
+export const getSubjectOne = (id) => (dispatch) => {
+  dispatch({ type: SUBJECT_LOADING})
+  dispatch({ type: SUBJECT_GET_ONE, payload: id})
 };
 
+//SELECT ONE SUBJECT FROMDB
 export const getSubject = (id) => (dispatch, getState) => {
   dispatch({ type: SUBJECT_LOADING})
   db.select(TABLE_NAME, TABLE_STRUCTURE, id)
@@ -107,6 +88,8 @@ export const getSubject = (id) => (dispatch, getState) => {
 };
 
 loadSubjects  = (data) =>{
+  
+  db.initDB(TABLE_NAME, TABLE_STRUCTURE);
   return new Promise((resolve) => {
     data.forEach(element => {
       db.insert(TABLE_NAME, TABLE_STRUCTURE, element, (dat)=>{
@@ -125,6 +108,7 @@ loadSubjects  = (data) =>{
 loadData  = (data, tables, callback) =>{
   const TABLES_NAME = SCHEME[tables].name;
   const TABLES_STRUCTURE = SCHEME[tables].schema;
+  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
   let dt  = [];
     data.forEach(element => {
       db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (data)=>{
