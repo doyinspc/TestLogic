@@ -1,21 +1,22 @@
 import {
+    TOPIC_GET_MULTIPLE,
+    TOPIC_GET_SELECTED,
     TOPIC_GET_ONE, 
-    TOPIC_LOADING_ONLINE, 
-    TOPIC_LOADING_ONLINE_ERROR, 
     TOPIC_LOADING,
     TOPIC_LOADING_ERROR,
-    TOPIC_GET_MULTIPLE,
-    TOPIC_GET_MULTIPLE_ONLINE,
-    TOPIC_GET_SELECTED
+    TOPIC_DOWNLOADING,
+    TOPIC_DOWNLOADING_SUCCESS,
+    TOPIC_DOWNLOADING_FAIL
 } from "../types/Topic";
 
 const initialState = {
     isLoading: false,
-    isLoadingOnline: false,
+    isDownloading: false,
     topics: [],
     topic: {},
     msg: null,
     isEdit: 0,
+    ids: [],
     isForm: false,
     showActions: false
 }
@@ -25,12 +26,15 @@ export default function(state = initialState, action){
         case TOPIC_LOADING:
             return {
                 ...state,
-                isLoading: true
+                isLoading: true,
+                topics:[],
+                topic:{},
+                ids:[]
             };
-         case TOPIC_LOADING_ONLINE:
+         case TOPIC_DOWNLOADING:
             return {
                 ...state,
-                isLoadingOnline: true
+                isDownloading: true
             };
         case TOPIC_GET_MULTIPLE:
             return {
@@ -38,20 +42,20 @@ export default function(state = initialState, action){
                 topics : action.payload,
                 isLoading: false
             };
-        case TOPIC_GET_MULTIPLE_ONLINE:
-            let newArray = [];
+        case TOPIC_DOWNLOADING_SUCCESS:
+            let newArrayx = [];
             let oldArray = [...state.topics];
             let onlineArray = action.payload;
             oldArray.forEach((row)=>{
                 let f = onlineArray.filter((r)=>r.id == row.id);
-                f && Array.isArray(f) && f.length == 1 ? newArray.push(f[0]) : newArray.push(row);
+                f && Array.isArray(f) && f.length == 1 ? newArrayx.push(f[0]) : newArrayx.push(row);
                 onlineArray = onlineArray.filter((r)=>r.id != row.id);
             })
-            newArray = [...newArray, ...onlineArray];
+            newArrayx = [...newArrayx, ...onlineArray];
             return {
                 ...state,
-                topics : newArray,
-                isLoadingOnline: false
+                topics : newArrayx,
+                isDownloading: false
             };
         case TOPIC_GET_ONE:
             let id = action.payload;
@@ -60,22 +64,22 @@ export default function(state = initialState, action){
             return {
                 ...state,
                 topic : newRow,
-                isLoading: false
+                isEdit : id
             };
         case TOPIC_GET_SELECTED:
-           return {
+            return {
                 ...state,
-                isEdit : action.payload
+                ids : action.payload
             };
         case TOPIC_LOADING_ERROR:
             return {
                 ...state,
                 isLoading: false
             };
-        case TOPIC_LOADING_ONLINE_ERROR:
+        case TOPIC_DOWNLOADING_FAIL:
             return {
                 ...state,
-                isLoadingOnline: false
+                isDownloading: false
             };
         default:
             return state;

@@ -1,23 +1,12 @@
 import * as SQLite from "expo-sqlite";
-//import SQLite from "react-native-sqlite-storage";
-//SQLite.DEBUG(true);
-//SQLite.enablePromise(true);
-//console.log(SQLite.openDatabase);
+var DB_PATH = 'databases/';
 
-// const database_name = "Reactoffline.db";
-// const database_version = "1.0";
-// const database_displayname = "SQLiteDb";
-// const database_size = 200000;
-//The Android's default system path of your application database.
-const DB_PATH = "databases/";
-const DB_NAME = "studentDB";
+var database_name = 'examDB';
+var database_version = '1.0';
+var database_size = 200000; 
+var database_displayname = 'mocktest'; 
 
-var database_name = "cbttest"; // Add your Database name
-var database_version = "1.0"; // Add your Database Version
-var database_size = 200000; // Add your Database Size
-var database_displayname = "SQL Database"; // Add your Database Displayname
 var db; 
-
 const utility = require('./Utility');
 const schema = require('./Schema');
 
@@ -165,22 +154,26 @@ closeDatabase(db) {
       }
 
      
-    selectQuestions(TABLE_NAME, TABLE_STRUCTURE, param, num,  callback) {
-      this.initDB(TABLE_NAME, TABLE_STRUCTURE);
-      let completeQuery = build_in_paramx(param);
+    selectQuestions(TABLE_NAME, TABLE_STRUCTURE, param, num, callback) {
+      
       const query0 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM answers WHERE  answers.questionID = questions.id GROUP BY questionID ";
       const query1 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM distractors WHERE  distractors.questionID = questions.id GROUP BY questionID ";
-      const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id ${ completeQuery } LIMIT ${num}`;
-      console.log(query);
+      const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id WHERE instructions.topicID IN (${param}) ORDER BY RANDOM() LIMIT ${num}`;
+      
+      const q = `(SELECT * FROM instructions WHERE instructions.topicID IN (${param}))`;
+      const q1 = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN ${q} as instr ON questions.instructionID = instr.id LIMIT ${num}`;
+
+
+      console.log(q1)
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
-                      console.log(result.rows);
-                      callback(result.rows);
+                    console.log(result.rows); 
+                    callback(result.rows._array);
                     },
                     (t, error) => {
-                      console.log(error);
                       callback(1);
+                      console.log(error)
                     }
                   ) 
                 }, 
@@ -208,7 +201,7 @@ closeDatabase(db) {
       );
     }
 
-  insert(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
+  inserts(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
     let completeQuery = insert_param(param);
     const query = `INSERT OR IGNORE INTO ${TABLE_NAME} ${completeQuery[0]} VALUES ${completeQuery[1]}`;
     this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) => {
@@ -223,6 +216,39 @@ closeDatabase(db) {
                   (t, error)=>{
                     callback('xx');
                     console.log(error.message)
+                  },     
+          )
+      }
+
+  insert(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
+        let insert_array = []
+        let quxs = [];
+        let nuxs = [];
+        Object.keys(param).forEach((para)=>{
+            nuxs.push(para);
+            quxs.push(`?`);
+            insert_array.push(param[para]);
+        })
+        let nux = `${nuxs.toString()}`; 
+        let qux = `${quxs.toString()}`; 
+
+    const query = `INSERT OR IGNORE INTO ${TABLE_NAME} (${nux}) VALUES (${qux})`;
+    
+    this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {
+                          if(result.insertId > 0)
+                          {
+                            callback(result.insertId)
+                          }
+                      },
+                      (t, error) => {
+                        callback('xx');
+                        
+                      }
+                    ) 
+                  }, 
+                  (t, error)=>{
+                    callback('xx');
+                   
                   },     
           )
       }
@@ -288,7 +314,6 @@ closeDatabase(db) {
   update(TABLE_NAME, TABLE_STRUCTURE, param, id, callback) {
         let insert_array = []
         let qux = '';
-
         let quxs = [];
         Object.keys(param).forEach((para)=>{
             quxs.push(` ${para} = ? `);
@@ -368,10 +393,11 @@ closeDatabase(db) {
                       },
                       (t, error) => {
                         console.log(error.message);
+                        callback(0)
                       }
                     ) 
                   }, 
-                  (error)=>{console.log(error.message)}, 
+                  (error)=>{callback(0); console.log(error.message)}, 
                   //this.closeDatabase(this.db)
           );
       }

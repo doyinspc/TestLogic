@@ -1,21 +1,22 @@
 import {
+    THEME_GET_MULTIPLE,
+    THEME_GET_SELECTED,
     THEME_GET_ONE, 
-    THEME_LOADING_ONLINE, 
-    THEME_LOADING_ONLINE_ERROR, 
     THEME_LOADING,
     THEME_LOADING_ERROR,
-    THEME_GET_MULTIPLE,
-    THEME_GET_MULTIPLE_ONLINE,
-    THEME_GET_SELECTED
+    THEME_DOWNLOADING,
+    THEME_DOWNLOADING_SUCCESS,
+    THEME_DOWNLOADING_FAIL
 } from "../types/Theme";
 
 const initialState = {
     isLoading: false,
-    isLoadingOnline: false,
+    isDownloading: false,
     themes: [],
     theme: {},
     msg: null,
     isEdit: 0,
+    ids: [],
     isForm: false,
     showActions: false
 }
@@ -25,12 +26,15 @@ export default function(state = initialState, action){
         case THEME_LOADING:
             return {
                 ...state,
-                isLoading: true
+                isLoading: true,
+                themes:[],
+                theme:{},
+                ids:[]
             };
-         case THEME_LOADING_ONLINE:
+         case THEME_DOWNLOADING:
             return {
                 ...state,
-                isLoadingOnline: true
+                isDownloading: true
             };
         case THEME_GET_MULTIPLE:
             return {
@@ -38,20 +42,20 @@ export default function(state = initialState, action){
                 themes : action.payload,
                 isLoading: false
             };
-        case THEME_GET_MULTIPLE_ONLINE:
-            let newArray = [];
+        case THEME_DOWNLOADING_SUCCESS:
+            let newArrayx = [];
             let oldArray = [...state.themes];
             let onlineArray = action.payload;
             oldArray.forEach((row)=>{
-                let f = onlineArray.filter((r)=>r.id == row.id);
-                f && Array.isArray(f) && f.length == 1 ? newArray.push(f[0]) : newArray.push(row);
+                let f = onlineArray && Array.isArray(onlineArray) && onlineArray.length > 0  ? onlineArray.filter((r)=>r.id == row.id) : null;
+                f && Array.isArray(f) && f.length == 1 ? newArrayx.push(f[0]) : newArrayx.push(row);
                 onlineArray = onlineArray.filter((r)=>r.id != row.id);
             })
-            newArray = [...newArray, ...onlineArray];
+            newArrayx = onlineArray && Array.isArray(onlineArray) && onlineArray.length > 0  ? [...newArrayx, ...onlineArray]: onlineArray;
             return {
                 ...state,
-                themes : newArray,
-                isLoadingOnline: false
+                themes : newArrayx,
+                isDownloading: false
             };
         case THEME_GET_ONE:
             let id = action.payload;
@@ -60,22 +64,23 @@ export default function(state = initialState, action){
             return {
                 ...state,
                 theme : newRow,
+                isEdit : id,
                 isLoading: false
             };
         case THEME_GET_SELECTED:
             return {
                 ...state,
-                isEdit : action.payload
+                ids : action.payload
             };
         case THEME_LOADING_ERROR:
             return {
                 ...state,
                 isLoading: false
             };
-        case THEME_LOADING_ONLINE_ERROR:
+        case THEME_DOWNLOADING_FAIL:
             return {
                 ...state,
-                isLoadingOnline: false
+                isDownloading: false
             };
         default:
             return state;

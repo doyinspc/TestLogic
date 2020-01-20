@@ -3,7 +3,7 @@ import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ImageBackground , ScrollView, TouchableHighlight} from 'react-native';
 import {Icon } from 'react-native-elements';
 import { ThemeProvider, Button } from 'react-native-elements';
-import { getSubjectsClear, getTableClear } from './actions/Subject';
+import { getSubjectsClear, getTableClear, dropTable } from './actions/Subject';
 
 
 // Your App
@@ -70,6 +70,7 @@ class HomeScreen extends React.Component {
         
         <View style={{backgroundColor:local_color.color4,  flex:1, justifyContent:'space-between'}}>
         <ScrollView>
+
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('LoginScreen')}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='lock' padding={10}  paddingLeft={30} color='teal' size={80} type="material"/>
@@ -80,20 +81,32 @@ class HomeScreen extends React.Component {
         </View>
         </View>
         </TouchableHighlight>
+
+       
          
-        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen')}} underlayColor="grey">
+        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen',{'sid':1})}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='spellcheck' padding={10}  paddingLeft={30} color= 'red' size={80} type="material"/>
         <View style={{padding:10}}>
           <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Subjects Pool</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Learn with a focus</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12 , color:'grey'}}>Online or offline</Text>
+          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Learn with a focus, get thousands of test questions online andoffline</Text>  
         </View>
         </View>
         </TouchableHighlight>
-        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen')}} underlayColor="grey">
+
+        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen',{'sid':2})}} underlayColor="grey">
         <View style={styles.home_list_container}>
-        <Icon name='redeem' padding={10}  paddingLeft={30} color= 'skyblue' size={80} type="material"/>
+        <Icon name='book' padding={10}  paddingLeft={30} color='green' size={80} type="material"/>
+        <View style={{padding:10}}>
+          <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Academic Resources</Text>
+          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Access thousands of relevant academic resources literatures, videos, images etc.</Text>
+        </View>
+        </View>
+        </TouchableHighlight>
+
+        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen', {'sid':3})}} underlayColor="grey">
+        <View style={styles.home_list_container}>
+        <Icon name='ios-trophy' padding={10}  paddingLeft={35} color= 'skyblue' size={80} type="ionicon"/>
         <View style={{padding:10}}>
           <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Mock Test</Text>
           <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Simulate test</Text>
@@ -101,7 +114,7 @@ class HomeScreen extends React.Component {
         </View>
         </View>
         </TouchableHighlight>
-        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('MockScreen')}} underlayColor="grey">
+        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen')}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='payment' padding={10}  paddingLeft={30} color= {local_color.color2} size={80} type="fontawesome"/>
         <View style={{padding:10}}>
@@ -111,45 +124,28 @@ class HomeScreen extends React.Component {
         </View>
         </View>
         </TouchableHighlight>
-        <Button 
-          title="Subjects" 
-          onPress={()=>{this.props.navigation.navigate('SubjectScreen')}}
-          />
-
-          <View>
-            <Button 
-              title="Register" 
-              onPress={()=>{this.props.navigation.navigate('RegisterScreen')}}
-              />
-          </View>
-          <View>
-            <Button 
-              title="Login" 
-              onPress={()=>{this.props.navigation.navigate('LoginScreen')}}
-              />
-          </View>
-          <View>
-          <Button 
-              title='DROP ALL'
-              
-              />
-          </View>
-          <View>
-          <Button 
-              title='DROP Subject Table'
-              onPress={()=>{this.dropTable('subject')}}
-              />
-          </View>
           <View>
           <Button 
               title='DROP Test Table'
-              onPress={()=>{this.dropTable('test')}}
+              onPress={()=>{this.props.dropTable('test')}}
               />
           </View>
           <View>
           <Button 
               title='DROP Scores Table'
-              onPress={()=>{this.dropTable('score')}}
+              onPress={()=>{this.props.dropTable('score')}}
+              />
+          </View>
+          <View>
+          <Button 
+              title='DROP Themes Table'
+              onPress={()=>{this.props.dropTable('theme')}}
+              />
+          </View>
+          <View>
+          <Button 
+              title='DROP Topic Table'
+              onPress={()=>{this.props.dropTable('topic')}}
               />
           </View>
           <View>
@@ -181,4 +177,4 @@ const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
   subject: state.subjectReducer
 })
-export default connect(mapStateToProps, { getSubjectsClear, getTableClear})(HomeScreen);
+export default connect(mapStateToProps, { getSubjectsClear, getTableClear, dropTable })(HomeScreen);

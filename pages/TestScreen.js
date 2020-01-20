@@ -32,6 +32,8 @@ class TestScreen extends React.Component{
  
   async componentDidMount() {
     this.props.getTests(JSON.stringify(this.props.navigation.getParam('subjectID')));
+
+    
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
       'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Light.ttf")
@@ -61,10 +63,20 @@ class TestScreen extends React.Component{
 
 render(){
  const { tests, isLoading } = this.props.test;
+ const { name } = this.props.subject.subject;
  const { fontLoaded , selectedIndex} = this.state;
  const buttons = [{element:this.comp1}, {element:this.comp2}];
   return (
     <ThemeProvider >
+      <View style={styles.topSection}>
+          <Text style={styles.h1}>{name}</Text>
+          <View style={{flexDirection:'row', justifyContent:'center'}}>
+                  <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
+                  <Icon reverse raised name='ios-list' type='ionicon' color='#517fa4' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('ThemeScreen',{'subjectID':this.props.navigation.getParam('subjectID')})}}/>
+                  <Icon reverse raised name='ios-stats' type='ionicon' color='#517fa4' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
+                  <Icon reverse raised name='help-circle' type='ionicon' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
+          </View>
+      </View>
         <View style={{flex:1}}>
         {fontLoaded  && !isLoading ?  
          <ScrollView>
@@ -114,6 +126,9 @@ render(){
 const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
-  test: state.testReducer
+  test: state.testReducer,
+  topic: state.topicReducer,
+  theme: state.themeReducer,
+  subject: state.subjectReducer,
 })
 export default connect(mapStateToProps,{ getTests })(TestScreen);

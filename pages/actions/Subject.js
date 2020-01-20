@@ -1,52 +1,54 @@
 import { 
     SUBJECT_GET_ONE, 
-    SUBJECT_LOADING_ONLINE, 
-    SUBJECT_LOADING_ONLINE_ERROR, 
     SUBJECT_LOADING,
     SUBJECT_LOADING_ERROR,
     SUBJECT_GET_MULTIPLE,
-    SUBJECT_GET_MULTIPLE_ONLINE,
+    SUBJECT_DOWNLOADING, 
+    SUBJECT_DOWNLOADING_SUCCESS, 
+    SUBJECT_DOWNLOADING_FAIL,
        
 } from "../types/Subject";
 
 import axios from 'axios';
-import { API_PATH, DB_PATH, CONFIG } from './Common';
+import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
 
 const db = DB_PATH;
 const path = API_PATH;
 const config = CONFIG;
+const loadData = LOADDATA;
+const dropData = DROPDATA;
 
 const TABLE_NAME = SCHEME.subject.name;
 const TABLE_STRUCTURE = SCHEME.subject.schema;
 
 //GET SUBJECTS FROM ONLINE DATABANK
-export const getSubjectsCloud = () => (dispatch, getState) => {
+export const getSubjectsDownload = () => (dispatch, getState) => {
   let paths = `${path}/subject/`
-  dispatch({ type: SUBJECT_LOADING_ONLINE });
+  dispatch({ type: SUBJECT_DOWNLOADING });
   axios.get(paths, config(getState))
-      .then(res => {
-        loadData(res.data, 'subject', ()=>{
-          res.data ? dispatch({type: SUBJECT_GET_MULTIPLE_ONLINE, payload: res.data }) : dispatch({type : SUBJECT_LOADING_ONLINE_ERROR,  msg : 'Not Sac' }) ;
+      .then(async res => {
+        await loadData(res.data, 'subject', async (d)=>{
+          res.data ? await dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data }) : await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
         });
       })
-      .catch(err => {dispatch({type : SUBJECT_LOADING_ERROR_ONLINE, msg : err })
+      .catch(err => {dispatch({type : SUBJECT_DOWNLOADING_FAIL, msg : err })
       })
 };
 
 //GET ALL SUBJECT 
-export const getSubjects = () => (dispatch, getState) => {
+export const getSubjects = () => (dispatch) => {
   let PARAM= {};
   dispatch({ type: SUBJECT_LOADING });
-  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-    data && Array.isArray(data._array) && parseInt(data._length) > 0 ? dispatch({type: SUBJECT_GET_MULTIPLE, payload: data._array}): dispatch({ type : SUBJECT_LOADING_ERROR, msg : 'No file'});
+  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
+    data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: SUBJECT_GET_MULTIPLE, payload: data._array}): await dispatch({ type : SUBJECT_LOADING_ERROR, msg : 'No file'});
   })
 };
 
-
-
-
-
+//SELECT SINGLE SUBJECT FROM SUBJECTS
+export const getSubject = (id) => (dispatch) => {
+  dispatch({ type: SUBJECT_GET_ONE, payload: id})
+};
 
 //GET SUBJECTS FROM ONLINE DATABANK
 export const getSubjectsClear = () => (dispatch, getState) => {
@@ -59,19 +61,12 @@ export const getSubjectsClear = () => (dispatch, getState) => {
           dropData('distractor');
 };
 
-export const getTableClear = table => (dispatch, getState) => {
+export const dropTable = table => (dispatch, getState) => {
   dropData(table);        
 };
 
-
-//SELECT SINGLE SUBJECT FROM SUBJECTS
-export const getSubjectOne = (id) => (dispatch) => {
-  dispatch({ type: SUBJECT_LOADING})
-  dispatch({ type: SUBJECT_GET_ONE, payload: id})
-};
-
-//SELECT ONE SUBJECT FROMDB
-export const getSubject = (id) => (dispatch, getState) => {
+//SELECT ONE SUBJECT FROM DB
+export const getSubjectDB = (id) => (dispatch, getState) => {
   dispatch({ type: SUBJECT_LOADING})
   db.select(TABLE_NAME, TABLE_STRUCTURE, id)
   .then((res) => {
@@ -87,70 +82,3 @@ export const getSubject = (id) => (dispatch, getState) => {
   })
 };
 
-loadSubjects  = (data) =>{
-  
-  db.initDB(TABLE_NAME, TABLE_STRUCTURE);
-  return new Promise((resolve) => {
-    data.forEach(element => {
-      db.insert(TABLE_NAME, TABLE_STRUCTURE, element, (dat)=>{
-        console.log(dat);
-      })
-      .then((dat) => {
-        resolve(dat);
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-   });
-  })
-};
-
-loadData  = (data, tables, callback) =>{
-  const TABLES_NAME = SCHEME[tables].name;
-  const TABLES_STRUCTURE = SCHEME[tables].schema;
-  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-  let dt  = [];
-    data.forEach(element => {
-      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (data)=>{
-        if(data == 'xx')
-        {
-          // failed to insert
-        }
-        else if(data > 0)
-        {
-          console.log(`${TABLES_NAME} DONE ${data}`)
-          dt.push(data);
-        }
-      })
-   });
-   callback(dt);
-   console.log(dt);
-};
-
-dropData  = (tables) =>{
-  const TABLES_NAME = SCHEME[tables].name;
-  const TABLES_STRUCTURE = SCHEME[tables].schema;
-  return new Promise((resolve) => {
-    db.drop(TABLES_NAME, TABLES_STRUCTURE, (data)=>{
-        console.log(`Table Droped : ${TABLES_NAME}`);
-    })
-    .then((dat) => {
-      console.log(dat);
-      resolve(dat);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
-  })
-};
-
-  //SET TOKEN AND HEADER - HELPER FUNCTION
-export const subjectSetConfig = () => {
-  // headers
-  const config ={
-      headers:{
-          
-      }
-  }
-  return config
-}

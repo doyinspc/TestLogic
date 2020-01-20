@@ -66,6 +66,7 @@ class ScoresScreen extends React.Component{
       maxScore: 0,
       testQuantity:0,
       description: null,
+      isVisible:false,
     };
   }
 

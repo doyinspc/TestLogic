@@ -13,6 +13,8 @@ import LoginScreen from './pages/LoginScreen';
 import SubjectScreen from './pages/SubjectScreen';
 import ThemeScreen from './pages/ThemeScreen';
 import TopicScreen from './pages/TopicScreen';
+import ResourcesScreen from './pages/ResourcesScreen';
+import ResourceScreen from './pages/ResourceScreen';
 import ChangePasswordScreen from './pages/ChangePasswordScreen';
 import ForgotPasswordScreen from './pages/ForgotPasswordScreen';
 import TestSettingsScreen from './pages/TestSettingsScreen';
@@ -103,6 +105,24 @@ const AppStack = createStackNavigator({
       screen: TopicScreen,
       navigationOptions: {
         title: 'Topics',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    ResourcesScreen: {
+      screen: ResourcesScreen,
+      navigationOptions: {
+        title: 'Resources',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    ResourceScreen: {
+      screen: ResourceScreen,
+      navigationOptions: {
+        title: 'Resources',
         headerStyle: pgArr,
         headerTitleStyle: phArr,
         headerTintColor: tintColor,

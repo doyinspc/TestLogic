@@ -1,13 +1,12 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { ThemeProvider, Button, ButtonGroup} from 'react-native-elements';
+import { ThemeProvider, Button, ButtonGroup, Icon, Overlay} from 'react-native-elements';
 import { TextInput, View, Text, StyleSheet } from 'react-native';
 import { RadioButton } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Font from 'expo-font';
 import Activity from './components/LoaderTest';
-import { getTest } from './actions/Test';
-import { getQuestions, getQuestionsSave, getQuestionsUpdate } from './actions/Topic';
+import { getTest, insertTest, updateTest } from './actions/Test';
+import { getQuestions } from './actions/Question';
 import { ScrollView } from 'react-native-gesture-handler';
 
 const tools = require('./components/Style');
@@ -38,25 +37,28 @@ class TestSettingsScreen extends React.Component{
       userID:1,
       subjectID:1,
       isEdit: null,
-      selectedIndex: null
+      selectedIndex: null,
+      name:'',
     };
+     this.onPrepare= this.onPrepare.bind(this);
   }
 
   async componentDidMount() {
     //get topics id
     if(this.props.navigation.getParam('topics')){
       let arry = this.props.navigation.getParam('topics');
-      let arr = arry.toString().split(',');
-      this.setState({isEdit:false, topics:arr.join()});
+      this.setState({isEdit:false, topics:arry});
       //get last test saved
       //add one to id
       //create new title Text + id + 1
       //save in state
-      this.setState({ title: 'Test 1' });
+      this.setState({ 
+        title: this.props.subject.subject.name,
+        description: this.props.subject.subject.name,
+      });
     }
     
     if(this.props.navigation.getParam('testID')){
-
       let testID = this.props.navigation.getParam('testID');
       this.props.getTest(JSON.stringify(testID));
       let test_data = this.props.test.test;
@@ -105,47 +107,45 @@ class TestSettingsScreen extends React.Component{
   }
 
   onSubmit = () =>{
-    this.props.navigation.navigate('ScoresScreen', {'testID':this.state.testID});
+    this.props.navigation.navigate('TestSheetScreen', {'testID':this.state.testID});
   }
 
-  onPrepare = () =>{
+  onPrepare(){
+    
     //activity pulling questions
-    const { isLoadingTest, isInsertingTest, testRawQuestions, activeTestID } = this.props.topic;
-    const {  selectedIndex } = this.state;
+    const { isLoading } = this.props.question;
+
     this.setState({statePos:'Loading Questions', fontLoaded: false});
     let arry = this.props.navigation.getParam('topics');
-    let arr = arry.toString().split(',');
-    this.props.getQuestions(arr.join(),);
-
-    if(!isLoadingTest){
-      if(testRawQuestions &&  testRawQuestions.length > 0)
+    this.props.getQuestions(arry, this.state.noq, q=>{
+      if(q){
+          this.setState({statePos: 'Preparing Test'});
+          this.deConstruct(q, (data) =>{
+            if(data){
+              //saving test 
+              this.setState({statePos: 'Saving Test'});
+              this.saveTest(data, tID =>{
+                this.setState({testID: tID});
+                if(tID > 0)
+                {
+                  this.setState({ fontLoaded: true });
+                  this.setState({ statePos:'Done'});
+                }else{
+                  this.setState({ fontLoaded: true });
+                  this.setState({statePos:'Failed to save '});
+                }
+              }); 
+            }  
+          });
+        
+      }
+      else
       {
-        //preparing questions
-        this.setState({statePos: 'Preparing Test'});
-        let data = this.deConstruct(testRawQuestions);
-        if(data){
-          //saving test 
-          this.setState({statePos: 'Saving Test'});
-          let tID = this.saveTest(data);
-          console.log(tID);
-          this.setState({testID: tID});
-          if(!isInsertingTest && tID > 0)
-          {
-            this.setState({ fontLoaded: true });
-            this.setState({ statePos:'Done'});
-          }else{
-            this.setState({ fontLoaded: true });
-            this.setState({statePos:'Failed to save '});
-          }
-        }  
-      }else{
         this.setState({ fontLoaded: false });
       }
-    }
-    else
-    {
-      this.setState({ fontLoaded: false });
-    }
+    });
+
+    
 
    
   }
@@ -165,10 +165,10 @@ class TestSettingsScreen extends React.Component{
      $f['testtime'] = total_time;
      $f['settings'] = settings;
     
-     this.props.getQuestionsUpdate($f);
-     if(!this.props.topic.isInsertingTest)
+     this.props.updateTest($f);
+     if(!this.props.test.isUpdating)
       {
-        if(this.props.topic.activeTestID   && parseInt(this.props.topic.activeTestID) > 0)
+        if(this.props.test.activeTestID   && parseInt(this.props.test.activeTestID) > 0)
         {
           //saved
         }else{
@@ -179,7 +179,7 @@ class TestSettingsScreen extends React.Component{
   }
   
   
-deConstruct = (arr) =>{
+deConstruct = (arr, callback) =>{
     //creat array to store items
     let idStore = [];
     let answerStore = {};
@@ -272,14 +272,14 @@ deConstruct = (arr) =>{
     struct['options'] = optionStore;
     struct['answers'] = answerStore;
     struct['instructions'] = instructionStore;
-    return struct;
+    callback(struct);
 }
 
 shuffle=(array) => {
   return array.sort(() => Math.random() - 0.5);
 }
 
-saveTest=(data)=>{
+saveTest= (data, callback) =>{
   let{ title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
   
   let total_hours = hours * 60 * 60;
@@ -303,17 +303,11 @@ saveTest=(data)=>{
    $f['options'] = JSON.stringify(data.options);
    $f['answers'] = JSON.stringify(data.answers);
    $f['questionweigth'] = JSON.stringify(data.questionweight);
-   this.props.getQuestionsSave($f);
-   if(!this.props.topic.isInsertingTest)
-   {
-     if(this.props.topic.activeTestID  && this.props.topic.activeTestID && parseInt(this.props.topic.activeTestID) > 0)
-     {
-      return this.props.topic.activeTestID;
-     }else{
-       return null;
-     }
-    
-   }
+
+   this.props.insertTest($f, (id)=>{
+        console.log('saved');
+        callback(id);
+   });
    
 }
 
@@ -325,9 +319,10 @@ updateIndex = (selectedIndex) =>{
   }
   else if(selectedIndex == 1 )
   {
+    console.log(this.state.testID);
     if(this.state.testID && this.state.testID > 0)
     {
-      this.props.navigation.navigate('TestSheetScreen', { 'testID':testID })
+      this.props.navigation.navigate('TestSheetScreen', { 'testID':this.state.testID })
     } else
     {
       //alert
@@ -338,7 +333,7 @@ updateIndex = (selectedIndex) =>{
   {
     if(this.state.testID && this.state.testID > 0)
     {
-      this.onEditPrepare();
+      this.onEditPrepare;
     }
   }
  
@@ -349,9 +344,14 @@ comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Ne
 comp3 = () => <Icon name='save' color='white' type='material' style={styles.section_icon} />
 
 render(){
-  const { theme } = this.props;
-  const { fontLoaded , statePos, selectedIndex } = this.state;
+  const { themes } = this.props;
+  const { topics } = this.props;
+  const { fontLoaded , statePos, selectedIndex} = this.state;
+  const { name } = this.props.subject.subject;
   const buttons = this.state.testID > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}] ;
+  const list_themes = themes && Array.isArray(themes) && themes.length > 0  ? themes.filter((row)=>ids.includes(row.id)) : null;
+  const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
+
 
   let data =[
     {
@@ -367,7 +367,6 @@ render(){
       'name':'Do not show any answers' 
     }
   ]
-
 
   let datax =[
     {
@@ -387,7 +386,79 @@ render(){
   
   return (
     <View style={{flex:1}}>
-      {fontLoaded?
+      <View style={styles.topSection_small}>
+          <Text style={styles.h1}>{name}</Text>
+          <View style={{flexDirection:'row', justifyContent:'center'}}>
+                  <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
+                  <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.changeVisibility()}}/>
+          </View>
+      </View>
+      <Overlay
+          isVisible={this.state.isVisible}
+          windowBackgroundColor="rgba(7, 7, 7, .3)"
+          overlayBackgroundColor= {local_color.color1}
+          style={{minHeight:200, activeOpacity:0.3}}
+          margin={15}
+          padding={15}
+          width="auto"
+        >
+          <View style={{flex:1, justifyContent:'space-between', alignContent:'space-between'}}>
+          <Text style={styles.h1_overlay}>Info.</Text>
+          <ScrollView>
+          <View style={{flexDirection:'column', flexWrap:'wrap', margin:0, padding:10, justifyContent:'center', alignContent:'center'}}>
+          <View style={{ marginBottom:10}} >
+                <Text style={styles.h2_overlay}>Subject</Text>
+                <Text style={{color:'white', fontFamily:'PoiretOne', marginTop:2 }}>
+                  {name}
+                </Text>
+             </View>
+             <View style={{borderTopColor:local_color.color2, borderTopWidth:1, marginBottom:10}}>
+                <Text style={styles.h2_overlay}>Themes</Text>
+                <View style={{flexDirection:'column' }}>
+                  {list_data}
+                </View>
+             </View>
+             <View style={{borderTopColor:local_color.color2, borderTopWidth:1}}>
+                <Text style={styles.h2_overlay}>Instruction</Text>
+                <Text style={{color:'white', fontFamily:'PoiretOne', marginTop:2 }}>
+                  Select at least one topic and move to the next page.
+                </Text>
+             </View>
+
+             <View >
+                
+                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
+                  <Icon name='home' type='material' color='white' />
+                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Move to home Page</Text>
+                </View>
+                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
+                  <Icon name='cloud-download' type='material' color='white' />
+                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Download/Update topics</Text>
+                </View>
+                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
+                  <Icon name='book' type='material' color='white' />
+                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Switch to resources</Text>
+                </View>
+                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
+                  <Icon name='spellcheck' type='material' color='white' />
+                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Switch to test</Text>
+                </View>
+                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
+                  <Icon name='ios-stats' type='ionicon' color='white' />
+                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} >  View statistics</Text>
+                </View>
+             </View>
+          </View>
+          </ScrollView>
+          <Button
+                title='Close'
+                style={styles.but_overlay}
+                onPress={()=>this.setState({isVisible:false})}
+                buttonStyle={{backgroundColor:local_color.color3}}
+            />
+          </View>
+        </Overlay>
+      {fontLoaded ?
         <View style={{flex:1, flexDirection:'column'}} >
               <ScrollView>
               <View style={styles.section_container}>
@@ -544,6 +615,8 @@ const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
   test: state.testReducer,
-  topic: state.topicReducer
+  topic: state.topicReducer,
+  question: state.questionReducer,
+  subject: state.subjectReducer,
 })
-export default connect(mapStateToProps, { getTest, getQuestions, getQuestionsSave, getQuestionsUpdate })(TestSettingsScreen);
+export default connect(mapStateToProps, { getTest, getQuestions, insertTest, updateTest })(TestSettingsScreen);

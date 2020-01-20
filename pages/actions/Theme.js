@@ -3,34 +3,36 @@ import {
     THEME_GET_ONE, 
     THEME_LOADING,
     THEME_LOADING_ERROR,
-    THEME_GET_MULTIPLE_ONLINE,
-    THEME_LOADING_ERROR_ONLINE,
-    THEME_LOADING_ONLINE,
+    THEME_DOWNLOADING,
+    THEME_DOWNLOADING_SUCCESS,
+    THEME_DOWNLOADING_FAIL,
     THEME_GET_SELECTED
 } from "../types/Theme";
 
 import axios from 'axios';
-import { API_PATH, DB_PATH, CONFIG } from './Common';
+import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
 
 const db = DB_PATH;
 const path = API_PATH;
 const config = CONFIG;
+const loadData = LOADDATA;
+const dropData = DROPDATA;
 
 const TABLE_NAME = SCHEME.theme.name;
 const TABLE_STRUCTURE = SCHEME.theme.schema;
 
 //GET THEMES FROM ONLINE DATABANK
-export const getThemesCloud = (subjectID) => (dispatch, getState) => {
-  let paths = `${path}/theme/mult/n`;
-  dispatch({ type: THEME_LOADING_ONLINE });
-  axios.patch(paths, subjectID, config(getState))
-      .then(res => {
-          loadData(res.data, 'theme', ()=>{
-          res.data ? dispatch({type: THEME_GET_MULTIPLE_ONLINE, payload: res.data }) : dispatch({type : THEME_LOADING_ERROR_ONLINE,  msg : 'Not Sac' }) ;
+export  const getThemesDownload = (subjectID) => (dispatch, getState) => {
+  let paths = `${path}/theme/cat/${subjectID}`;
+  dispatch({ type: THEME_DOWNLOADING });
+  axios.get(paths, config(getState))
+      .then(async res => {
+            await loadData(res.data, 'theme', async (d)=>{
+            res.data  ? await dispatch({type: THEME_DOWNLOADING_SUCCESS, payload: res.data }) : await dispatch({type : THEME_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
         });
       })
-      .catch(err => {dispatch({type : THEME_LOADING_ERROR_ONLINE, msg : err })
+      .catch(err => {dispatch({type : THEME_DOWNLOADING_SUCCESS, msg : err })
       })
 };
 
@@ -38,8 +40,8 @@ export const getThemesCloud = (subjectID) => (dispatch, getState) => {
 export const getThemes = (subject) => (dispatch) => {
   let PARAM = {subjectID : subject};
   dispatch({ type: THEME_LOADING });
-  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-    data && Array.isArray(data._array) && parseInt(data._length) > 0 ? dispatch({type: THEME_GET_MULTIPLE, payload: data._array}): dispatch({ type : THEME_LOADING_ERROR, msg : 'No file'});
+  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
+    data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: THEME_GET_MULTIPLE, payload: data._array}): dispatch({ type : THEME_LOADING_ERROR, msg : 'No file'});
   })
 };
 
@@ -48,28 +50,9 @@ export const getTheme = (id) => (dispatch) => {
   dispatch({ type: THEME_GET_ONE, payload: id})
 };
 
-//KEEP SELECTED THEMES
-export const getThemesSelected = (ids) => (dispatch) => {
+//SELECT SINGLE THEME FROM THEMES
+export const getThemeSelected = (ids) => (dispatch) => {
   dispatch({ type: THEME_GET_SELECTED, payload: ids})
 };
 
-loadData  = (data, tables, callback) =>{
-  const TABLES_NAME = SCHEME[tables].name;
-  const TABLES_STRUCTURE = SCHEME[tables].schema;
-  db.initDB(TABLES_NAME, TABLES_STRUCTURE);
-  let dt  = [];
-    data.forEach(element => {
-      db.insert(TABLES_NAME, TABLES_STRUCTURE, element, (data)=>{
-        if(data == 'xx')
-        {
-          // failed to insert
-        }
-        else if(data > 0)
-        {
-          dt.push(data);
-        }
-      })
-   });
-   callback(dt);
-};
 

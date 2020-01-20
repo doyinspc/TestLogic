@@ -7,12 +7,15 @@ import {
 } from "../types/Score";
 
 
-import Database from './../api/Database';
 import axios from 'axios';
-import { API_PATH } from './Common';
+import { API_PATH, DB_PATH, CONFIG, LOADDATA, LOADDATASTRIP } from './Common';
 import  SCHEME  from './../api/Schema';
-const db = new Database();
-const path = API_PATH;
+
+const db = DB_PATH;
+const path = API_PATH;   
+const config = CONFIG;
+const loadData = LOADDATA;
+const loadDataStrip = LOADDATA;
 
 const TABLE_NAME = SCHEME.score.name;
 const TABLE_STRUCTURE = SCHEME.score.schema;

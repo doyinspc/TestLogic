@@ -1,45 +1,50 @@
 import {
-    SUBJECT_GET_ONE, 
-    SUBJECT_LOADING,
-    SUBJECT_LOADING_ERROR,
-    SUBJECT_GET_MULTIPLE,
-    SUBJECT_DOWNLOADING, 
-    SUBJECT_DOWNLOADING_SUCCESS, 
-    SUBJECT_DOWNLOADING_FAIL,
-} from "../types/Subject";
+    RESOURCE_GET_MULTIPLE,
+    RESOURCE_GET_SELECTED,
+    RESOURCE_GET_ONE, 
+    RESOURCE_LOADING,
+    RESOURCE_LOADING_ERROR,
+    RESOURCE_DOWNLOADING,
+    RESOURCE_DOWNLOADING_SUCCESS,
+    RESOURCE_DOWNLOADING_FAIL
+} from "../types/Resource";
 
 const initialState = {
     isLoading: false,
     isDownloading: false,
-    subjects: [],
-    subject: {},
+    resources: [],
+    resource: {},
     msg: null,
     isEdit: 0,
+    ids: [],
     isForm: false,
     showActions: false
 }
 
 export default function(state = initialState, action){
     switch (action.type) {
-        case SUBJECT_LOADING:
+        case RESOURCE_LOADING:
             return {
                 ...state,
-                isLoading: true
+                isLoading: true,
+                resources:[],
+                resource:{},
+                ids:[]
             };
-         case SUBJECT_DOWNLOADING:
+         case RESOURCE_DOWNLOADING:
             return {
                 ...state,
                 isDownloading: true
             };
-        case SUBJECT_GET_MULTIPLE:
+        case RESOURCE_GET_MULTIPLE:
             return {
                 ...state,
-                subjects : action.payload,
+                resources : action.payload,
                 isLoading: false
             };
-        case SUBJECT_DOWNLOADING_SUCCESS:
+        case RESOURCE_DOWNLOADING_SUCCESS:
             let newArrayx = [];
-            let oldArray = [...state.subjects];
+            let oldArray = [...state.resources];
             let onlineArray = action.payload;
             oldArray.forEach((row)=>{
                 let f = onlineArray.filter((r)=>r.id == row.id);
@@ -49,24 +54,30 @@ export default function(state = initialState, action){
             newArrayx = [...newArrayx, ...onlineArray];
             return {
                 ...state,
-                subjects : newArrayx,
+                resources : newArrayx,
                 isDownloading: false
             };
-        case SUBJECT_GET_ONE:
+        case RESOURCE_GET_ONE:
             let id = action.payload;
-            let newArray = [...state.subjects];
+            let newArray = [...state.resources];
             let newRow = newArray && Array.isArray(newArray) ? newArray.filter(row => row.id == id )[0] : {};
             return {
                 ...state,
-                subject : newRow,
+                resource : newRow,
+                isEdit : id,
                 isLoading: false
             };
-        case SUBJECT_LOADING_ERROR:
+        case RESOURCE_GET_SELECTED:
+            return {
+                ...state,
+                ids : action.payload
+            };
+        case RESOURCE_LOADING_ERROR:
             return {
                 ...state,
                 isLoading: false
             };
-        case SUBJECT_DOWNLOADING_FAIL:
+        case RESOURCE_DOWNLOADING_FAIL:
             return {
                 ...state,
                 isDownloading: false

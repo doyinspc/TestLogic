@@ -23,7 +23,7 @@ import {
   
     TEST_DELETE_SUCCESS,
     TEST_DELETE_FAIL
-} from "../types/Topic";
+} from "../types/Test";
 
 const initialState = {
     isLoading: false,
@@ -91,6 +91,7 @@ export default function(state = initialState, action){
                 isInserting: false
             };
         case TEST_GET_MULTIPLE:
+            console.log(55555555555);
             return {
                 ...state,
                 isLoading: false,
@@ -98,8 +99,8 @@ export default function(state = initialState, action){
         };
        case TEST_GET_ONE:
             let id = action.payload;
-            let newArray = [...state.tests];
-            let newRow = newArray && Array.isArray(newArray) ? newArray.filter(row => row.id == id )[0] : {};
+            let newArrayx = [...state.tests];
+            let newRow = newArrayx && Array.isArray(newArrayx) ? newArrayx.filter(row => row.id == id )[0] : {};
             return {
                 ...state,
                 test : newRow,
@@ -121,31 +122,33 @@ export default function(state = initialState, action){
                 isLoadingOnline: false
             };
         case TEST_UPDATE_SUCCESS:
-            let oldArray = [...state.tests];
+            let oldArrayz = [...state.tests];
             let updatedRow = action.payload;
-            let filterRows = oldArray.filter((row)=>row.id != id);
-            let filterRow = oldArray.filter((row)=>row.id == id)[0];
+            let filterRows = oldArrayz.filter((row)=>row.id != id);
+            let filterRow = oldArrayz.filter((row)=>row.id == id)[0];
             Object.keys(filterRow).forEach(r=>{
                     if(updatedRow[r])
                     {
                         filterRow[r] = updatedRow[r];
                     }
                 });
-            let newArray = [...filterRows, ...filterRow];
+            let newArrayz = [...filterRows, ...filterRow];
             return {
                 ...state,
-                tests : newArray,
-                isLoadingOnline: false
+                tests : newArrayz,
+                isDownloading: false
             };
         case TEST_INSERT_SUCCESS:
-            let newArray = [];
-            let oldArray = [...state.tests];
-            let newRow = action.payload;
-            newArray = [...oldArray, ...newRow];
+            let newArrayy = [];
+            let oldArrayy = [...state.tests];
+            let newRowy = action.payload;
+            newRowy['id'] = action.id,
+            newArrayy = oldArrayy.push(newRowy);
             return {
                 ...state,
-                tests : newArray,
-                isLoadingOnline: false
+                tests : newArrayy,
+                isInserting: false,
+                activeTestID: action.id
             };
         default:
             return state;

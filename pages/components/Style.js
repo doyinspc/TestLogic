@@ -33,7 +33,8 @@ module.exports = {
         color2: color2, 
         color3: color3,
         color4: color4,
-        color5: color5
+        color5: color5,
+        color_icon: '#517fa4'
     },
     Style:{
           container: {
@@ -94,12 +95,29 @@ module.exports = {
             alignSelf: 'center',
             fontFamily: 'SulphurPoint'
           },
+          h1_overlay: {
+            fontSize: 22,
+            padding:3,
+            color: color5,
+            margin: 1,
+            alignSelf:'center',
+            fontFamily: 'SulphurPoint'
+          },
           h2: {
             fontSize: 15,
             marginTop:20,
             color: color4,
             margin: 1,
             alignSelf: 'center',
+            alignContent: 'center',
+            fontFamily: 'SulphurPointNormal'
+          },
+          h2_overlay: {
+            fontSize: 17,
+            marginTop:5,
+            color: color5,
+            margin: 1,
+            alignSelf: 'flex-start',
             alignContent: 'center',
             fontFamily: 'SulphurPointNormal'
           },
@@ -138,6 +156,15 @@ module.exports = {
               marginRight:50,
               marginTop :20
           },
+          but_overlay:{
+            height: 40,
+            width:UNIT_WIDTH * 20,
+            backgroundColor : color3,
+            marginLeft :50,
+            marginRight:50,
+            marginTop :20,
+            bottom:2
+        },
           butSetting:{
             height: 40,
             backgroundColor : color1,
@@ -245,6 +272,7 @@ module.exports = {
           genButtonStyle:{backgroundColor:color2},
           genButtonTextStyle:{color:color5},
           topSection:{flex:.4, backgroundColor:color1, borderBottomRightRadius: 25, borderBottomLeftRadius:25, alignContent:'center', justifyContent:'center'},
+          topSection_small:{flex:.2, backgroundColor:color1, borderBottomRightRadius: 25, borderBottomLeftRadius:25, alignContent:'center', justifyContent:'center'},
           home_list_container: {
             flexDirection:'row',  
             alignSelf:'center', 

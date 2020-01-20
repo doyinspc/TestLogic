@@ -1,33 +1,22 @@
 import {
   TEST_GET_ONE,
-
   TEST_UPLOADING, 
   TEST_UPLOADING_FAIL, 
   TEST_UPLOADING_SUCCESS,
-
   TEST_DOWNLOADING, 
   TEST_DOWNLOADING_FAIL, 
   TEST_DOWNLOADING_SUCCESS,
-
-  TEST_LOADING, 
-  TEST_LOADING_ERROR, 
-  TEST_GET_MULTIPLE,
-
   TEST_LOADING,
   TEST_LOADING_ERROR,
   TEST_GET_MULTIPLE,
-
   TEST_INSERT_SUCCESS,
   TEST_INSERT_LOADING,
   TEST_INSERT_FAIL,
-
   TEST_UPDATE_SUCCESS,
   TEST_UPDATE_LOADING,
   TEST_UPDATE_FAIL,
-
   TEST_DELETE_SUCCESS,
-  TEST_DELETE_FAIL
-
+  TEST_DELETE_FAIL  
 } from "../types/Test";
 
 
@@ -89,10 +78,10 @@ export const getTestUpload = (subjectID) => (dispatch) =>{
 
 //GET ALL TEST
 export const getTests = (testID) => (dispatch) => {
-    let PARAM = {subjectID : testID,};
+    let PARAM = {subjectID : [testID],};
     dispatch({ type: TEST_LOADING});
     db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      data && Array.isArray(data) && data.length > 0 ? dispatch({type: TEST_GET_MULTIPLE, payload: data._array}) : dispatch({type: TEST_LOADING_ERROR, msg:'error'});
+      data == 1 ?  dispatch({type: TEST_LOADING_ERROR, msg:'error'}) : dispatch({type: TEST_GET_MULTIPLE, payload:data._array});
     })
 };
 
@@ -101,10 +90,11 @@ export const getTest = (id) => (dispatch) => {
   dispatch({ type: TEST_GET_ONE, payload: id})
 };
 
-export const insertTest = (data) => (dispatch) => {
+export const insertTest = (data, callback) => (dispatch) => {
   dispatch({ type: TEST_INSERT_LOADING});
   db.insertTest(TABLE_NAME, TABLE_STRUCTURE, data, 1, (dat) => {
-    dat == 0 ? dispatch({type: TEST_INSERT_FAIL, msg: 'none'}) : dispatch({type: TEST_INSERT_SUCCESS, payload: data, id:dat});
+    callback(dat);
+    dat == 0 ? dispatch({type: TEST_INSERT_FAIL, msg: 'none'}) : dispatch({type: TEST_INSERT_SUCCESS, payload:data, id:dat});
   })
 };
 

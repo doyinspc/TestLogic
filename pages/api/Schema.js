@@ -51,6 +51,19 @@ module.exports = {
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
     },
+    resource: {
+        name:'resources',
+        schema: `   id INTEGER PRIMARY KEY ,
+                    topicID INTEGER NOT NULL,
+                    data1 TEXT, 
+                    data2 TEXT,
+                    topic TEXT,
+                    discription TEXT,
+                    source TEXT,
+                    author TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
+    },
     user: {
         name:'users',
         schema: `   id INTEGER PRIMARY KEY ,
@@ -59,7 +72,7 @@ module.exports = {
                     password TEXT, 
                     hashkey TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL `
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL `
     }
 
 

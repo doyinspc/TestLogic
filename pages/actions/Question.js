@@ -6,12 +6,14 @@ import {
 
 
 import axios from 'axios';
-import { API_PATH, DB_PATH, CONFIG } from './Common';
+import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
 
 const db = DB_PATH;
-const path = API_PATH;   
+const path = API_PATH;
 const config = CONFIG;
+const loadData = LOADDATA;
+const dropData = DROPDATA;
 
 const TABLE_NAME = SCHEME.question.name;
 const TABLE_STRUCTURE = SCHEME.question.schema;
@@ -21,11 +23,13 @@ const TABLE_STRUCTURE = SCHEME.question.schema;
 //ARGUMENTS TOPICS AND NUMBER OF QUESTIONS;
 //ENGLISH PASSAGES AND CLOZE BE TREATED DIFFERENTLY
 //OTHERS CAN BE SELECTED RANDOMLY
-export const getQuestions = (topicsID, NUM) => (dispatch, getState) => {
-  let topics_array = topicsID.split(',');
-  let PARAM = {'instructions.topicID' : topics_array};
+export const getQuestions = (topicsID, NUM, callback) => (dispatch) => {
+  let topics_array = topicsID.toString();
+  let PARAM = topicsID;
   dispatch({ type: QUESTION_LOADING});
   db.selectQuestions(TABLE_NAME, TABLE_STRUCTURE, PARAM, NUM, (data)=>{
-    data == 1 ? dispatch({type: QUESTION_LOADING_ERROR, msg: 'error'}) : dispatch({type: QUESTION_GET_MULTIPLE, payload: data._array});
+    console.log(data);
+    callback(data);
+    data == 1 ?  dispatch({type: QUESTION_LOADING_ERROR, msg:'error'}) :  dispatch({type: QUESTION_GET_MULTIPLE, payload: data._array});
   })
 };
