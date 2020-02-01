@@ -203,30 +203,122 @@ comp2 = () => <Icon name='book'color='white' type='material' />
 comp3 = () => <Icon name='delete' color='white' type='material' />
 
 render(){
-  
- 
- const { test, score, isLoading } = this.props;
- const { fontLoaded, selectedIndex,  timeSetting, testQuantity, description } = this.state;
- const buttons = testQuantity > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}];
+ const { themes, ids } = this.props.theme;
+ const { topics} = this.props.topic;
+ const { name } = this.props.subject.subject;
+ const { fontLoaded, selectedIndex } = this.state;
 
  this.getCurrentTime;
  this.getFutureTime;
  let time_shared = 0;
 
+  let title = '';
+  let description = '';
+  let hour = 0;
+  let min = 0;
+  let sec = 0;
+  let noq = 0;
+  let settings = [];
+  let timer_arr = '';
+  let answ_arr = '';
+  let testQuantity = 0;
+  let maxScore = 0;
+  let test_data = this.props.test.test;
+  let timeSetting = 1;
+  let topic = [];
+
+    if(test_data && Object.keys(test_data).length > 0){
+        let hours = test_data.testtime/(60 * 60);
+        hour = Math.floor(hours);
+        let mins = (test_data.testtime - (hour * 60 * 60)) / 60;
+        min = Math.floor(mins);
+        sec = test_data.testtime - ((hour * 60 * 60) + (min * 60)) ;
+        settings = test_data.settings?  test_data.settings.split(':::'): [0, 0, 0];
+        noq = settings[0];
+        timeSetting = settings[1];
+        timer_arr = dataxb.filter(a => a.id == settings[1])[0];
+        answ_arr = datab.filter(a => a.id == settings[2])[0];
+        title = test_data.title;
+        description = test_data.description;
+        topic = test_data.topics ? JSON.parse(test_data.topics): [];
+        
+    }
+
+    
+    if(!this.props.score.isLoading)
+    {
+      let scores = this.props.score.scores;
+      if(scores && Array.isArray(scores) && scores.length > 0 ){
+         testQuantity = scores.length;
+         let maxScoreArray = [];
+         scores.forEach((row)=>{
+               maxScoreArray.push(row.score);
+         })
+         maxScore = Math.max(...maxScoreArray) * 100;
+         
+      }
+      
+
+    }
+    const buttons = testQuantity > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}];
+    const list_topics = topics && Array.isArray(topics) && topics.length > 0 && topic ? topics.filter((row)=>topic.includes(row.id)) : null;
+    const list_data_topics = list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
+    const list_topics_filter_themes = [];
+    list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map((row) =>list_topics_filter_themes.push(row.themeID)) : null;
+    const list_themes = themes && Array.isArray(themes) && themes.length > 0 && list_topics_filter_themes  ? themes.filter((row)=>list_topics_filter_themes.includes(row.id)) : null;
+    const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
+    
  let state = this.state;
   return (
     <ThemeProvider>
-       {fontLoaded && !isLoading ?  
+      <View style={styles.topSection_small}>
+          <Text style={styles.h1}>{name}</Text>
+          <View style={{flexDirection:'row', justifyContent:'center'}}>
+                  <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
+                  <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.changeVisibility()}}/>
+          </View>
+      </View>
+       {fontLoaded?  
         <View style={{margins:0,  flex: 1, flexDirection:'column', justifyContent:'space-between'}}>
          <View style={styles.table_container}>
-            <Table borderStyle={{borderWidth: 1}}>
-            <Row data={state.tableHead} flexArr={[1, 2]} style={styles.table_head} textStyle={styles.table_text_white}/>
-            <TableWrapper style={styles.table_wrapper}>
-                <Col data={state.tableTitle} style={styles.table_title} heightArr={[28,28]} textStyle={styles.table_text}/>
-                <Rows data={state.tableData} flexArr={[1, 2]} style={styles.table_row} textStyle={styles.table_text}/>
-            </TableWrapper>
-            </Table>
-       <Text style={{fontFamily:'SulphurPoint', marginTop:15, textAlign:'left'}}>{description ? description : 'No desciption just testing the dorr. my current psychological space you a re we track down the lady that got your name' }</Text>
+         <ScrollView>
+          <View style={{flexDirection:'column', flexWrap:'wrap', margin:0, padding:10, justifyContent:'center', alignContent:'center'}}>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Title</Text><Text style={styles.h2_sheets}>{title}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Number of Questions</Text><Text style={styles.h2_sheets}>{noq}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Duration of Test</Text><Text style={styles.h2_sheets}>{`${hour}hrs:${min}mins:${sec}sec`}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Time in seconds</Text><Text style={styles.h2_sheets}>{name}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Number of Attempts</Text><Text style={styles.h2_sheets}>{testQuantity}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Maximum score obtained</Text><Text style={styles.h2_sheets}>{maxScore}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Timer Preference</Text><Text style={styles.h2_sheets}>{timer_arr.name}</Text>
+              </View>
+              <View style={styles.row_sheet} >
+                <Text style={styles.h2_sheet}>Answer Preference</Text><Text style={styles.h2_sheets}>{answ_arr.name}</Text>
+              </View>
+              <View style={styles.col_sheet} >
+                <Text style={styles.h2_sheet}>Description</Text><Text style={styles.h2_sheets}>{description}</Text>
+              </View>
+              <View style={styles.col_sheet} >
+                <Text style={styles.h2_sheet}>Themes</Text><Text style={styles.h2_sheets}>{list_data}</Text>
+              </View>
+              <View style={styles.col_sheet} >
+                <Text style={styles.h2_sheet}>Topics</Text><Text style={styles.h2_sheets}>{list_data_topics}</Text>
+              </View>
+            </View>
+        </ScrollView>
+       
         </View>
         
              { timeSetting == 1 ?
@@ -286,6 +378,9 @@ render(){
 const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
+  subject: state.subjectReducer,
+  theme: state.themeReducer,
+  topic: state.topicReducer,
   test: state.testReducer,
   score: state.scoreReducer
 })

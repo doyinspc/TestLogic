@@ -115,10 +115,9 @@ closeDatabase(db) {
   };
 
   select(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
-    this.initDB(TABLE_NAME, TABLE_STRUCTURE);
     let completeQuery = build_param(param);
     const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
-    console.log(query);
+    
     db.transaction(
               (tx) => { 
                 tx.executeSql(query, [], (transaction, result) => {
@@ -138,9 +137,26 @@ closeDatabase(db) {
     }
 
     selectIN(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
+      
       let completeQuery = build_in_param(param);
       const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
       
+      this.db.transaction(
+                (tx) => { 
+                  tx.executeSql(query, [], (transaction, result) => {
+                      callback(result.rows);
+                    },
+                    (t, error) => {console.log(error); callback(1)}
+                  ) 
+                }, 
+                (t, error)=>{callback(1)}, 
+        );
+      }
+
+      selectINS(TABLE_NAME, TABLE_STRUCTURE, param, num, callback) {
+      let completeQuery = build_in_param(param);
+      const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery } LIMIT ${num}`;
+      console.log(query);
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
@@ -162,13 +178,11 @@ closeDatabase(db) {
       
       const q = `(SELECT * FROM instructions WHERE instructions.topicID IN (${param}))`;
       const q1 = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN ${q} as instr ON questions.instructionID = instr.id LIMIT ${num}`;
-
-
-      console.log(q1)
+      console.log(query);
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
-                    console.log(result.rows); 
+                     
                     callback(result.rows._array);
                     },
                     (t, error) => {
@@ -254,7 +268,7 @@ closeDatabase(db) {
       }
 
   update(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
-    this.initDB(TABLE_NAME, TABLE_STRUCTURE);
+    
     let completeQuery = insert_param(param);
     const query = `INSERT OR IGNORE INTO ${TABLE_NAME} ${completeQuery[0]} VALUES ${completeQuery[1]}`;
     this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) => {
@@ -348,11 +362,12 @@ closeDatabase(db) {
     let qux = '';
     let nux = '';
     if(status == 1){
-    qux = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    nux = '(id, userID, subjectID, title, description, testtime, settings, ids, instructions, questions, answers, options, questionweigth, active, updated_at, created_at)';
+    qux = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    nux = '(id, userID, topics, subjectID, title, description, testtime, settings, ids, instructions, questions, answers, options, questionweigth, active, updated_at, created_at)';
     insert_array = [
             null,
             param.userID,
+            param.topics,
             param.subjectID,
             param.title,
             param.description,
@@ -394,8 +409,7 @@ closeDatabase(db) {
                       (t, error) => {
                         console.log(error.message);
                         callback(0)
-                      }
-                    ) 
+                      }) 
                   }, 
                   (error)=>{callback(0); console.log(error.message)}, 
                   //this.closeDatabase(this.db)
@@ -418,7 +432,7 @@ closeDatabase(db) {
                     ) 
                   }, 
                   (error)=>{console.log(error.message)}, 
-                  this.closeDatabase(this.db)
+                  
           );
       }
 
@@ -428,7 +442,8 @@ closeDatabase(db) {
     return new Promise((resolve) => {
       this.initDB(TABLE_NAME, TABLE_STRUCTURE).then((db) => {
         db.transaction((tx) => {
-          tx.executeSql(`DELETE FROM ${TABLE_NAME} WHERE id = ?`, [id]).then(([tx, results]) => {
+          tx.executeSql(`DELETE FROM ${TABLE_NAME} WHERE id = ?`, [id])
+          .then(([tx, results]) => {
             console.log(results);
             resolve(results);
           });
@@ -447,14 +462,17 @@ closeDatabase(db) {
   drop(TABLE_NAME, TABLE_STRUCTURE) {
    
     const query = `DROP TABLE ${TABLE_NAME} `;
-    this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) => {
+    this.db.transaction((tx) => {
+      tx.executeSql(query, [], (transaction, result) => {
                   console.log(`DROP ${TABLE_NAME}`);
               },
-              (t, error) => {console.log(error.message);}
+              (t, error) => {
+                console.log(error.message);
+                callback(0)
+              }
             ) 
           }, 
-          (t, error)=>{console.log(error.message)
-          }
+          (t, error)=>{console.log(error.message)}
         );
       }
 

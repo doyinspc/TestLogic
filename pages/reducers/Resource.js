@@ -9,10 +9,67 @@ import {
     RESOURCE_DOWNLOADING_FAIL
 } from "../types/Resource";
 
+let r = [
+    {
+        id:1,
+        topicID: 1,
+        title: 'Method of growing vegetables',
+        author: 'L. Ron Hubbard',
+        type: 1,
+        data1: '',
+        data2: '',
+        source: 'www.jickaduna.com.ng',
+        description: ''
+    },
+    {
+        id:2,
+        topicID: 2,
+        title: 'Method of growing vegetables',
+        author: 'L. Ron Hubbard',
+        type: 1,
+        data1: '',
+        data2: '',
+        source: 'www.jickaduna.com.ng',
+        description: ''
+    },
+    {
+        id:3,
+        topicID: 3,
+        title: 'Method of growing vegetables',
+        author: 'L. Ron Hubbard',
+        type: 1,
+        data1: '',
+        data2: '',
+        source: 'www.jickaduna.com.ng',
+        description: ''
+    },
+    {
+        id:4,
+        topicID: 4,
+        title: 'Method of growing vegetables',
+        author: 'L. Ron Hubbard',
+        type: 1,
+        data1: '',
+        data2: '',
+        source: 'www.jickaduna.com.ng',
+        description: ''
+    },
+    {
+        id:5,
+        topicID: 5,
+        title: 'How to make a farm',
+        author: 'L. Ron Hubbard',
+        type: 1,
+        data1: '',
+        data2: '',
+        source: 'www.jickaduna.com.ng',
+        description: ''
+    },
+]
 const initialState = {
     isLoading: false,
     isDownloading: false,
-    resources: [],
+    resources: r,
     resource: {},
     msg: null,
     isEdit: 0,

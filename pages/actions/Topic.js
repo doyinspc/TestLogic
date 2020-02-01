@@ -83,13 +83,26 @@ export const getTopicsDownload = (themeID) => (dispatch, getState) => {
 
 //GET ALL TOPIC
 export const getTopics = (theme) => (dispatch) => {
-    let thm = theme.toString();
-    let PARAM = {themeID : theme,};
-    dispatch({ type: TOPIC_LOADING})
-    db.selectIN(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      data == 1 ? dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'}) : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array}); 
-    })
+  dispatch({ type: TOPIC_LOADING})
+      theme.forEach(id => {
+      let PARAM = {themeID : id};
+      db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+        console.log(data.length);
+        data == 1 ? null : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3}); 
+      })
+      dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'})
+    });
+    
  
+};
+
+//GET ALL TOPIC
+export const getTopicsDB = (topics) => (dispatch) => {
+  let PARAM = {id : topics};
+  db.selectIN(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+    data == 1 ? dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'}) : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array}); 
+  })
+
 };
 
 //SELECT SINGLE THEME FROM TOPICS

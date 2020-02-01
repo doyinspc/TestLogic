@@ -20,10 +20,10 @@ class TestSettingsScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      topics:'',
+      topics:[],
       title:'Test',
       description: '',
-      noq: 10,
+      noq: 5,
       hours: 1,
       minutes: 30,
       seconds: 0,
@@ -39,6 +39,7 @@ class TestSettingsScreen extends React.Component{
       isEdit: null,
       selectedIndex: null,
       name:'',
+      isVisible:false,
     };
      this.onPrepare= this.onPrepare.bind(this);
   }
@@ -47,12 +48,9 @@ class TestSettingsScreen extends React.Component{
     //get topics id
     if(this.props.navigation.getParam('topics')){
       let arry = this.props.navigation.getParam('topics');
-      this.setState({isEdit:false, topics:arry});
-      //get last test saved
-      //add one to id
-      //create new title Text + id + 1
-      //save in state
       this.setState({ 
+        isEdit:false, 
+        topics: arry,
         title: this.props.subject.subject.name,
         description: this.props.subject.subject.name,
       });
@@ -64,7 +62,6 @@ class TestSettingsScreen extends React.Component{
       let test_data = this.props.test.test;
 
       if(test_data && Object.keys(test_data).length > 0){
-        
         let hours = test_data.testtime/(60 * 60);
         let hour = Math.floor(hours);
         let mins = (test_data.testtime - (hour * 60 * 60)) / 60;
@@ -96,20 +93,20 @@ class TestSettingsScreen extends React.Component{
     });
     this.setState({ fontLoaded: true });
     
-  }
+  } 
 
-  
+  changeVisibility = () =>{
+    this.setState({isVisible:true})
+  }
   valueTimer = (a) =>{
     this.setState({valueTimers:a})
   }
   valueAnswer = (a) =>{
     this.setState({valueAnswers:a})
   }
-
   onSubmit = () =>{
     this.props.navigation.navigate('TestSheetScreen', {'testID':this.state.testID});
   }
-
   onPrepare(){
     
     //activity pulling questions
@@ -117,7 +114,9 @@ class TestSettingsScreen extends React.Component{
 
     this.setState({statePos:'Loading Questions', fontLoaded: false});
     let arry = this.props.navigation.getParam('topics');
-    this.props.getQuestions(arry, this.state.noq, q=>{
+    this.setState({statePos: this.props.question.msg});
+    this.props.getQuestions(arry, this.state.noq, q =>{
+      console.log(q)
       if(q){
           this.setState({statePos: 'Preparing Test'});
           this.deConstruct(q, (data) =>{
@@ -130,18 +129,18 @@ class TestSettingsScreen extends React.Component{
                 {
                   this.setState({ fontLoaded: true });
                   this.setState({ statePos:'Done'});
+                  this.props.navigation.navigate('TestSheetScreen', { 'testID':tID })
                 }else{
                   this.setState({ fontLoaded: true });
-                  this.setState({statePos:'Failed to save '});
+                  this.setState({ statePos:'Failed to save '});
                 }
               }); 
             }  
-          });
-        
+          });  
       }
       else
       {
-        this.setState({ fontLoaded: false });
+        this.setState({ fontLoaded: true });
       }
     });
 
@@ -151,7 +150,7 @@ class TestSettingsScreen extends React.Component{
   }
 
   onEditPrepare = () =>{
-    let { title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
+    let { testID, title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
     let total_hours = hours * 60 * 60;
     let total_minutes = minutes * 60;
     let total_seconds = seconds;
@@ -159,23 +158,15 @@ class TestSettingsScreen extends React.Component{
     let settings = `${noq}:::${valueTimers}:::${valueAnswers}`;
   
      let $f = {};
-     $f['id'] = this.state.testID;
+     $f['id'] = testID;
      $f['title'] = title;
      $f['description'] = description;
      $f['testtime'] = total_time;
      $f['settings'] = settings;
     
-     this.props.updateTest($f);
-     if(!this.props.test.isUpdating)
-      {
-        if(this.props.test.activeTestID   && parseInt(this.props.test.activeTestID) > 0)
-        {
-          //saved
-        }else{
-          //failed
-        } 
-      }
-   
+     this.props.updateTest($f, (d)=>{
+        d == 1 ? this.props.navigation.navigate('TestSheetScreen', { 'testID':tID }) : null ;
+     });
   }
   
   
@@ -280,7 +271,7 @@ shuffle=(array) => {
 }
 
 saveTest= (data, callback) =>{
-  let{ title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
+  let{ topics, title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
   
   let total_hours = hours * 60 * 60;
   let total_minutes = minutes * 60;
@@ -291,6 +282,7 @@ saveTest= (data, callback) =>{
   let subjectID = "1";
 
    let $f = {};
+   $f['topics'] = JSON.stringify(topics);
    $f['userID'] = userID;
    $f['subjectID'] = subjectID;
    $f['title'] = title;
@@ -303,7 +295,7 @@ saveTest= (data, callback) =>{
    $f['options'] = JSON.stringify(data.options);
    $f['answers'] = JSON.stringify(data.answers);
    $f['questionweigth'] = JSON.stringify(data.questionweight);
-
+   console.log($f);
    this.props.insertTest($f, (id)=>{
         console.log('saved');
         callback(id);
@@ -344,14 +336,20 @@ comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Ne
 comp3 = () => <Icon name='save' color='white' type='material' style={styles.section_icon} />
 
 render(){
-  const { themes } = this.props;
-  const { topics } = this.props;
+  const { themes, ids } = this.props.theme;
+  const { topics} = this.props.topic;
   const { fontLoaded , statePos, selectedIndex} = this.state;
   const { name } = this.props.subject.subject;
   const buttons = this.state.testID > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}] ;
+  const list_topics = topics && Array.isArray(topics) && topics.length > 0  ? topics.filter((row)=>this.props.topic.ids.includes(row.id)) : null;
+  const list_data_topics = list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
   const list_themes = themes && Array.isArray(themes) && themes.length > 0  ? themes.filter((row)=>ids.includes(row.id)) : null;
   const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
-
+  if(!this.props.question.isLoading)
+  {
+    //this.setState({statePos: this.props.question.msg});
+  }
+  
 
   let data =[
     {
@@ -418,6 +416,12 @@ render(){
                   {list_data}
                 </View>
              </View>
+             <View style={{borderTopColor:local_color.color2, borderTopWidth:1, marginBottom:10}}>
+                <Text style={styles.h2_overlay}>Topics</Text>
+                <View style={{flexDirection:'column' }}>
+                  {list_data_topics}
+                </View>
+             </View>
              <View style={{borderTopColor:local_color.color2, borderTopWidth:1}}>
                 <Text style={styles.h2_overlay}>Instruction</Text>
                 <Text style={{color:'white', fontFamily:'PoiretOne', marginTop:2 }}>
@@ -426,7 +430,6 @@ render(){
              </View>
 
              <View >
-                
                 <View style={{flexDirection:'row', flexWrap:'wrap', }}>
                   <Icon name='home' type='material' color='white' />
                   <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Move to home Page</Text>
@@ -462,7 +465,7 @@ render(){
         <View style={{flex:1, flexDirection:'column'}} >
               <ScrollView>
               <View style={styles.section_container}>
-                  <Icon name='gear' type='octicon' style={styles.section_icon}/>
+                  <Icon name='gear' color='white'  type='octicon' style={styles.section_icon}/>
                   <Text style={styles.section_text}>Basic Settings </Text>
               </View>
 
@@ -507,7 +510,7 @@ render(){
                     </View>
         </View>
         <View style={styles.section_container}>
-              <Icon name='clock-o' type='octicon' style={styles.section_icon}/>
+              <Icon name='watch' color='white' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Timer </Text>
         </View>
         <View style={{flex:1, marginLeft:30, flexDirection:'row'  , alignItems: 'center'}} >
@@ -573,7 +576,7 @@ render(){
           }
         </View>
         <View style={styles.section_container}>
-              <Icon name='list' type='octicon' style={styles.section_icon}/>
+              <Icon name='info' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Answer </Text>
         </View>
         <View style={{flex: 1,  marginLeft:30}} >
@@ -616,6 +619,7 @@ const styles = StyleSheet.create(local_style)
 const mapStateToProps = state => ({ 
   test: state.testReducer,
   topic: state.topicReducer,
+  theme: state.themeReducer,
   question: state.questionReducer,
   subject: state.subjectReducer,
 })

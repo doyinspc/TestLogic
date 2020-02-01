@@ -67,29 +67,25 @@ changeVisibility = () =>{
 //2. SWITCH TO RESOURCES
 updateIndex = (selectedIndex) =>{
   this.setState({ selectedIndex });
-  if(selectedIndex == 0 )
+ if(selectedIndex == 0 )
   {
-      this.props.navigation.navigate('HomeScreen');
+    var p = this.state.page == 1 ? 2 : 1;
+    this.setState({page:p});
   }
   else if(selectedIndex == 1 )
   {
       this.updateSubjects();
   }
-  else if(selectedIndex == 2 )
-  {
-      var p = this.state.page == 1 ? 2 : 1;
-      this.setState({page:p});
-  }
 }
 
-comp1 = () => <Icon name='home' color='white' type='material' />
+//comp1 = () => <Icon name='home' color='white' type='material' />
 comp2 = () => <Icon name='cloud-download' color='white' type='material' />
 comp3 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
 comp2a = () => <Icon name='spinner' color='white' type='evilicon' />
 render(){
   const { subjects, isLoading, isDownloading } = this.props.subject;
   const { fontLoaded, selectedIndex, page } = this.state;
-  const buttons = isDownloading ? [{element:this.comp1}, {element:this.comp2a}, {element:this.comp3}] :  [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
+  const buttons = isDownloading ? [{element:this.comp3}, {element:this.comp2a}] :  [{element:this.comp3}, {element:this.comp2}];
 
   return (
     

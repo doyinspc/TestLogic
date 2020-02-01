@@ -69,7 +69,7 @@ class ThemeScreen extends React.Component{
     {
       var arr = []
       this.props.getThemeSelected(arr.push(values));
-      this.props.navigation.navigate('TopicScreen', {'themeID':values, 'sid':this.state.page})
+      this.props.navigation.navigate('TopicScreen', {'themeID':arr.push(values), 'sid':this.state.page})
     }
   }
   
@@ -105,19 +105,15 @@ class ThemeScreen extends React.Component{
   this.setState({ selectedIndex });
   if(selectedIndex == 0 )
   {
-      this.props.navigation.navigate('HomeScreen');
-  }
-  else if(selectedIndex == 1 )
-  {
     var p = this.state.page == 1 ? 2 : 1;
     this.setState({page:p});
   }
-  else if(selectedIndex == 2 )
+  else if(selectedIndex == 1 )
   {
       const subs = JSON.stringify(this.props.navigation.getParam('subjectID'));
       this.updateTheme(subs)
   }
-  else if(selectedIndex == 3 )
+  else if(selectedIndex == 2 )
   {
     if(this.state.values.length > 0)
     {
@@ -128,17 +124,16 @@ class ThemeScreen extends React.Component{
  
 }
 
-comp1 = () => <Icon name='home' color='white' type='material' />
 comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
 comp3 = () => <Icon name='cloud-download' color='white' type='material' />
 comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next</Text>
-
+comp3a = () => <Icon name='spinner' color='white' type='evilicon' />
 
 render(){
- const { themes, isLoading } = this.props.theme;
+ const { themes, isLoading, isDownloading } = this.props.theme;
  const { name } = this.props.subject.subject;
  const { fontLoaded, selectedIndex, values, page } = this.state;
- const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3} , {element:this.comp4}] : [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
+ const buttons = values && Object.keys(values).length > 0 && page == 1 ? [ {element:this.comp2}, {element: isDownloading ? this.comp3a: this.comp3} , {element:this.comp4}] : [ {element:this.comp2}, {element:isDownloading ? this.comp3a: this.comp3}];
  
   return (
     <ThemeProvider >

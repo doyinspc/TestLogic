@@ -34,14 +34,29 @@ export default function(state = initialState, action){
          case TOPIC_DOWNLOADING:
             return {
                 ...state,
-                isDownloading: true
+                isDownloading: true,
+                msg:action.payload
             };
         case TOPIC_GET_MULTIPLE:
+            let newTopics = [];
+            if(action.status == 3)
+            {
+                let OldTop = [...state.topics];
+                let oldTopicsID = [];
+                OldTop.map((row) =>(oldTopicsID.push(row.id)));
+                let newTop = action.payload;
+                newTop && Array.isArray(newTop) && newTop.length > 0 ? newTop.filter((row) => !oldTopicsID.includes(row.id)) : [];
+                newTopics = [...OldTop, ...newTop];
+            }else{
+                newTopics  = action.payload
+            }
+           
             return {
                 ...state,
-                topics : action.payload,
+                topics :newTopics,
                 isLoading: false
             };
+        
         case TOPIC_DOWNLOADING_SUCCESS:
             let newArrayx = [];
             let oldArray = [...state.topics];

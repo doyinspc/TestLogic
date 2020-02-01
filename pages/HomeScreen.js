@@ -74,32 +74,29 @@ class HomeScreen extends React.Component {
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('LoginScreen')}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='lock' padding={10}  paddingLeft={30} color='teal' size={80} type="material"/>
-        <View style={{padding:10}}>
-          <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Login</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Reset password.</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12 , color:'grey'}}>Online or offline</Text>
+        <View style={{padding:10, flexShrink:1}}>
+          <Text style={styles.home_h1}>Login</Text>
+          <Text style={styles.home_h2}>Reset password.</Text>
         </View>
         </View>
         </TouchableHighlight>
-
-       
          
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen',{'sid':1})}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='spellcheck' padding={10}  paddingLeft={30} color= 'red' size={80} type="material"/>
-        <View style={{padding:10}}>
-          <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Subjects Pool</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Learn with a focus, get thousands of test questions online andoffline</Text>  
+        <View style={{padding:10, flexShrink:1}}>
+          <Text style={styles.home_h1}>Subjects Pool</Text>
+          <Text style={styles.home_h2}>Learn with a focus, get thousands of test questions online and offline</Text>  
         </View>
         </View>
         </TouchableHighlight>
 
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen',{'sid':2})}} underlayColor="grey">
         <View style={styles.home_list_container}>
-        <Icon name='book' padding={10}  paddingLeft={30} color='green' size={80} type="material"/>
-        <View style={{padding:10}}>
-          <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Academic Resources</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Access thousands of relevant academic resources literatures, videos, images etc.</Text>
+        <Icon name='book' padding={10}  paddingLeft={20} color='green' size={80} type="material"/>
+        <View style={{padding:10, flexShrink:1}}>
+          <Text style={styles.home_h1}>Academic Resources</Text>
+          <Text style={styles.home_h2}>Access thousands of relevant academic resources literatures, videos, images etc.</Text>
         </View>
         </View>
         </TouchableHighlight>
@@ -107,23 +104,23 @@ class HomeScreen extends React.Component {
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen', {'sid':3})}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='ios-trophy' padding={10}  paddingLeft={35} color= 'skyblue' size={80} type="ionicon"/>
-        <View style={{padding:10}}>
-          <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Mock Test</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Simulate test</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12 , color:'grey'}}>Win prizes</Text>
+        <View style={{padding:10, flexShrink:1}}>
+          <Text style={styles.home_h1}>Mock Test</Text>
+          <Text style={styles.home_h2}>Simulate test</Text>
         </View>
         </View>
         </TouchableHighlight>
+        
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen')}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='payment' padding={10}  paddingLeft={30} color= {local_color.color2} size={80} type="fontawesome"/>
-        <View style={{padding:10}}>
-          <Text style={{fontFamily:'SulphurPoint', fontSize:20, marginBottom: 5}}>Online Payment</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' }}>Easy simple</Text>
-          <Text style={{fontFamily:'SulphurPointNormal', fontSize:12 , color:'grey'}}>Get to prepare your test.</Text>
+        <View style={{padding:10, flexShrink:1}}>
+          <Text style={styles.home_h1}>Online Payment</Text>
+          <Text style={styles.home_h2}>Easy simple</Text>
         </View>
         </View>
         </TouchableHighlight>
+        
           <View>
           <Button 
               title='DROP Test Table'
@@ -148,6 +145,13 @@ class HomeScreen extends React.Component {
               onPress={()=>{this.props.dropTable('topic')}}
               />
           </View>
+          <View>
+          <Button 
+              title='DROP Subject Table'
+              onPress={()=>{this.props.dropTable('subject')}}
+              />
+          </View>
+
           <View>
           <Button 
               title='Show Test Settings'

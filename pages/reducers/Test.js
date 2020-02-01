@@ -91,7 +91,6 @@ export default function(state = initialState, action){
                 isInserting: false
             };
         case TEST_GET_MULTIPLE:
-            console.log(55555555555);
             return {
                 ...state,
                 isLoading: false,
@@ -99,7 +98,7 @@ export default function(state = initialState, action){
         };
        case TEST_GET_ONE:
             let id = action.payload;
-            let newArrayx = [...state.tests];
+            let newArrayx = state.tests;
             let newRow = newArrayx && Array.isArray(newArrayx) ? newArrayx.filter(row => row.id == id )[0] : {};
             return {
                 ...state,
@@ -140,13 +139,15 @@ export default function(state = initialState, action){
             };
         case TEST_INSERT_SUCCESS:
             let newArrayy = [];
-            let oldArrayy = [...state.tests];
+            let oldArrayy = state.tests.length > 0 ? [...state.tests] : [];
             let newRowy = action.payload;
             newRowy['id'] = action.id,
+            newRowy['created_at'] = new Date().getTime().toLocaleString(),
             newArrayy = oldArrayy.push(newRowy);
             return {
                 ...state,
                 tests : newArrayy,
+                test : action.payload,
                 isInserting: false,
                 activeTestID: action.id
             };

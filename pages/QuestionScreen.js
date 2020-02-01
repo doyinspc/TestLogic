@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
 import { ThemeProvider, Icon, Button, ButtonGroup, Overlay  } from 'react-native-elements';
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { RadioButton } from 'react-native-paper';
@@ -10,6 +10,7 @@ import * as Font from 'expo-font';
 
 import { getTest } from './actions/Test';
 import { getScore, insertScore, updateScore } from './actions/Score';
+import WebView from 'react-native-webview';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -341,9 +342,19 @@ this.getCurrentTime
                <View style={{borderBottomWidth: 0.5, borderBottomColor:local_color.color4, marginBottom: 5}}>
                 <Text style={{fontFamily:'PoiretOne', marginBottom:10, color:local_color.color2}}>{ questions[mainID][0] && instructions[questions[mainID][0]][0] ? instructions[questions[mainID][0]][0]: 'Choose the Right option'}</Text>
                </View>
-               <View>
+                 <View style={{flex:1}}>
                   <Text style={styles.questionContent}>{instructions[questions[mainID][0]][1]}</Text>
-                </View> 
+                </View>
+                <View style={{flex:1}} >
+                  <WebView 
+                    originWhitelist={['*']}
+                    source={{ html: instructions[questions[mainID][0]][2] }}
+                    scalesPageToFit={false}
+                    style={{minHeight:90}}
+                    scrollEnabled={true}
+                  />
+                  </View>
+                 
                 <View>
                   <Text style={styles.questionQuestion}>{questions[mainID][1]}</Text>
                 </View> 

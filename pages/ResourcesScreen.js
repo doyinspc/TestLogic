@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ResourceProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
+import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
@@ -30,19 +30,12 @@ class ResourceScreen extends React.Component{
     };
   }
 
-  //AWESOME ALERT
-  //SHOW SELECTED TOPICS
-  showAlert = () =>{
-    this.setState({showAlert: true});
-  }
-  hideAlert = () =>{
-    this.setState({showAlert: false});
-  }
+ 
  
   async componentDidMount() {
-    this.props.getResources(JSON.stringify(this.props.navigation.getParam('topicID')));
-    this.props.getResourcesDownload(JSON.stringify(this.props.navigation.getParam('topicID')));
-    var page = this.props.navigation.param('sid');
+    //this.props.getResources(JSON.stringify(this.props.navigation.getParam('topicID')));
+    //this.props.getResourcesDownload(JSON.stringify(this.props.navigation.getParam('topicID')));
+    var page = this.props.navigation.getParam('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
       'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -58,7 +51,6 @@ class ResourceScreen extends React.Component{
     if(values)
     {
       var arr = []
-      this.props.getResourceSelected(arr.push(values));
       this.props.navigation.navigate('ResourceScreen', {'resourceID':values, 'sid':this.state.page})
     }
   }
@@ -137,21 +129,31 @@ render(){
           <Text style={styles.h2}>{page == 1 ? 'Test': `Resources`}: pick at least one resource</Text>
       </View>
       <View style={{flex:1}}>
-        {fontLoaded  && !isLoading ?  
+        {fontLoaded   ?  
          <ScrollView>
             {resources  && Object.keys(resources).length > 0 ? resources.map((l, i) => 
             (<ListItem
-                key={i}
-                titleStyle={styles.listItem}  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
-                title={l.name}
-                bottomDivider
-                friction={90}
-                tension={100}
-                activeScale={0.85}
-                onPress={()=>{this.relocateOne(l.id)}}
-                chevron
-            />
+              key={i}
+              titleStyle={styles.listItem}  
+              leftAvatar={ 
+                l.type  == 1 ? 
+                      <Avatar overlayContainerStyle={{backgroundColor: local_color.color2}} activeOpacity={0.7} color='white' rounded  icon={{ name: 'tv', type:'material', color:local_color.color1, backgroundColor:'red' }} /> 
+                      : l.type == 2 ? 
+                          <Avatar overlayContainerStyle={{backgroundColor: 'red'}} activeOpacity={0.7}  rounded  icon={{ name: 'delete', color:'white', backgroundColor:'red' }} />
+                          : l.type  >= 3  ?  <Avatar overlayContainerStyle={{backgroundColor: 'blue'}} activeOpacity={0.7}  rounded  icon={{ name: 'done', color:'white', backgroundColor:'red' }} />
+                            : <Avatar overlayContainerStyle={{backgroundColor:local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: 'done-all', color:'white', backgroundColor:'red' }} />
+            }
+              title={l.title}
+              subtitle={l.author}
+              titleStyle={styles.listItem}
+              subtitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color4}}
+              bottomDivider
+              friction={90}
+              tension={100}
+              activeScale={0.85}
+              onPress={()=>{this.relocateOne(l.id)}}
+              chevron
+          />
             )           
             )
           :

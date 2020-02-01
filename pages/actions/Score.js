@@ -76,8 +76,8 @@ export const insertScore = (PARAM, callback) =>(dispatch, getState) =>{
 };
 
 //GET SINGLE SCORE
-export const updateScore = (PARAM, st, callback) =>(dispatch, getState) =>{
-  db.updateScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, st, (data)=>{
+export const updateScore = (PARAM, id, callback) =>(dispatch, getState) =>{
+  db.update(TABLE_NAME, TABLE_STRUCTURE, PARAM, id, (data)=>{
     dispatch({
       type: SCORE_GET_ONE,
       id: data

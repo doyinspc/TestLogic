@@ -150,18 +150,15 @@ module.exports = {
           },
           but:{
               height: 40,
-              width:UNIT_WIDTH * 20,
+              width: UNIT_WIDTH * 20,
               backgroundColor : color1,
-              marginLeft :50,
-              marginRight:50,
+              marginHorizontal :50,
               marginTop :20
           },
           but_overlay:{
             height: 40,
-            width:UNIT_WIDTH * 20,
             backgroundColor : color3,
-            marginLeft :50,
-            marginRight:50,
+            marginHorizontal : UNIT_WIDTH * 3,
             marginTop :20,
             bottom:2
         },
@@ -278,7 +275,8 @@ module.exports = {
             alignSelf:'center', 
             height:100, 
             width:'90%', 
-            margin:15, 
+            marginHorizontal:15,
+            marginVertical:10, 
             backgroundColor:'white',
             shadowColor: "#000",
               shadowOffset: {
@@ -289,5 +287,12 @@ module.exports = {
             shadowRadius: 4.65,
             elevation: 16,
             },
+
+          row_sheet:{flexDirection:'row', margin:2, justifyContent:'center'},
+          h2_sheet:{fontFamily:'SulphurPoint', marginRight: 10, color:color2},
+          h2_sheets:{flex:1, fontFamily:'PoiretOne', flexWrap: 'wrap',}, 
+          home_h1:{fontFamily:'SulphurPoint', fontSize:18, marginBottom: 5},
+          home_h2:{flex:1, fontFamily:'SulphurPointNormal', fontSize:12, color:'grey', flexWrap:'wrap', position:'relative' },
+
         }
 };

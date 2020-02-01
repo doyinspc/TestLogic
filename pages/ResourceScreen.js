@@ -1,20 +1,19 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ResourceProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
+import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
 import { getResources, getResourceSelected, getResourcesDownload} from './actions/Resource';
 import Activity from './components/LoaderTest';
+import WebView from 'react-native-webview';
 
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
 const local_size = tools.Sizes;
-
-
 
 class ResourceScreen extends React.Component{
 
@@ -40,8 +39,7 @@ class ResourceScreen extends React.Component{
   }
  
   async componentDidMount() {
-    this.props.getResources(JSON.stringify(this.props.navigation.getParam('topicID')));
-    this.props.getResourcesDownload(JSON.stringify(this.props.navigation.getParam('topicID')));
+    this.props.getResource(JSON.stringify(this.props.navigation.getParam('resourceID')));
     var page = this.props.navigation.param('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -125,35 +123,21 @@ comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Ne
 
 
 render(){
- const { resources, isLoading } = this.props.resource;
+ const { source, title, data1, data2, author } = this.props.resource.resource;
  const { name } = this.props.subject.subject;
  const { fontLoaded, selectedIndex, values, page } = this.state;
  const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3} , {element:this.comp4}] : [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
- 
+ let res = source;
   return (
     <ThemeProvider >
-      <View style={styles.topSection}>
-          <Text style={styles.h1}>{name}</Text>
-          <Text style={styles.h2}>{page == 1 ? 'Test': `Resources`}: pick at least one resource</Text>
-      </View>
       <View style={{flex:1}}>
         {fontLoaded  && !isLoading ?  
          <ScrollView>
-            {resources  && Object.keys(resources).length > 0 ? resources.map((l, i) => 
-            (<ListItem
-                key={i}
-                titleStyle={styles.listItem}  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
-                title={l.name}
-                bottomDivider
-                friction={90}
-                tension={100}
-                activeScale={0.85}
-                onPress={()=>{this.relocateOne(l.id)}}
-                chevron
+            {resource.type == 1 ? 
+            <WebView
+                source={{uri:url}}
+                style={{marginTop:20}}
             />
-            )           
-            )
           :
         <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
           <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />

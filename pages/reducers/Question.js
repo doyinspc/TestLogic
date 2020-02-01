@@ -6,7 +6,8 @@ import {
 
 const initialState = {
     isLoading: false,
-    questions: []
+    questions: [],
+    msg:'None'
 }
 
 export default function(state = initialState, action){
@@ -20,13 +21,13 @@ export default function(state = initialState, action){
         case QUESTION_GET_MULTIPLE:
             return {
                 ...state,
-                questions : action.payload,
-                isLoading: false
+                questions : action.payload
             };
         case QUESTION_LOADING_ERROR:
             return {
                 ...state,
-                isLoading: false
+                isLoading: false,
+                msg:action.msg
             };
         default:
             return state;

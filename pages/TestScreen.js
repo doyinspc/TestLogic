@@ -4,7 +4,8 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 
-import { getTests } from './actions/Test';
+import { getTests, getTest } from './actions/Test';
+import { getTopicsDB } from './actions/Topic';
 import Activity from './components/LoaderTest';
 
 const tools = require('./components/Style');
@@ -23,10 +24,12 @@ class TestScreen extends React.Component{
     };
   }
 
-  relocate = (value) =>{
+  relocate = (value, topics) =>{
     if(value && value > 0)
     {
-     this.props.navigation.navigate('TestSheetScreen', {'testID':value})
+     let top = topics ? JSON.parse(topics): null;
+     this.props.getTopicsDB(top);
+     this.props.navigation.navigate('TestSheetScreen', {'subjectID':this.props.navigation.getParam('subjectID'), 'testID':value})
     }
   }
  
@@ -58,9 +61,8 @@ class TestScreen extends React.Component{
    
   }
   
-  comp1 = () => <Icon name='home' color='white' type='material' />
+  comp1 = () => <Icon name='cloud-download' color='white' type='material' />
   comp2 = () => <Icon name='cloud-upload' color='white' type='material' />
-
 render(){
  const { tests, isLoading } = this.props.test;
  const { name } = this.props.subject.subject;
@@ -74,7 +76,7 @@ render(){
                   <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
                   <Icon reverse raised name='ios-list' type='ionicon' color='#517fa4' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('ThemeScreen',{'subjectID':this.props.navigation.getParam('subjectID')})}}/>
                   <Icon reverse raised name='ios-stats' type='ionicon' color='#517fa4' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
-                  <Icon reverse raised name='help-circle' type='ionicon' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
+                  <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
           </View>
       </View>
         <View style={{flex:1}}>
@@ -97,7 +99,7 @@ render(){
                 friction={90}
                 tension={100}
                 activeScale={0.85}
-                onPress={()=>{this.relocate(l.id)}}
+                onPress={()=>{this.relocate(l.id, l.topics)}}
                 chevron
             />
             ))
@@ -131,4 +133,4 @@ const mapStateToProps = state => ({
   theme: state.themeReducer,
   subject: state.subjectReducer,
 })
-export default connect(mapStateToProps,{ getTests })(TestScreen);
+export default connect(mapStateToProps,{ getTests, getTest, getTopicsDB })(TestScreen);
