@@ -45,7 +45,7 @@ android {
   dexOptions {
     javaMaxHeapSize System.getenv("DISABLE_DEX_MAX_HEAP") ? null : "8g"
   }
-
+ 
   signingConfigs {
     debug {
       storeFile file('../debug.keystore')
@@ -103,6 +103,7 @@ apply from: 'expo.gradle'
 apply from: "../../node_modules/react-native-unimodules/gradle.groovy"
 
 dependencies {
+    implementation project(':react-native-google-signin')
     implementation project(':react-native-webview')
     compile project(':react-native-vector-icons')
     compile project(':react-native-screens')

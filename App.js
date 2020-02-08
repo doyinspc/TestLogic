@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Alert } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator, createDrawerNavigator} from 'react-navigation-stack';
 import { DrawerItems } from 'react-navigation-drawer';
@@ -7,6 +7,7 @@ import { Provider }from 'react-redux';
 import store from "./store";
 import * as Font from 'expo-font';
 
+import GoogleScreen from './pages/GoogleScreen';
 import HomeScreen from './pages/HomeScreen';
 import RegisterScreen from './pages/RegisterScreen';
 import LoginScreen from './pages/LoginScreen';
@@ -31,9 +32,19 @@ const bgColor = '#003B46';
 const tintColor  ='#f4f4f4';
 const pgArr = { backgroundColor: bgColor }
 const phArr = { fontFamily: 'PoiretOne',   color: 'white', justifyContent : 'center', alignItems:'center' }
-const cname = 'TestXpo : ';
+const cname = 'Test Tricks : ';
 const AppStack = createStackNavigator({
 
+  GoogleScreen: {
+    screen: GoogleScreen,
+    navigationOptions: {
+      title: `${cname }Login`,
+      icon: 'Login',
+      headerStyle: pgArr,
+      headerTitleStyle: phArr,
+      headerTintColor: tintColor,
+    },
+  },
   HomeScreen: {
     screen: HomeScreen,
     navigationOptions: {
@@ -196,17 +207,20 @@ const AppStack = createStackNavigator({
 
 const AppContainer = createAppContainer(AppStack);
 
-
-
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      fontLoaded: false
+      fontLoaded: false,
+      userInfo: null,
+      error: null,
     };
   }
   
+
   async componentDidMount(){
+   
+    
     await Font.loadAsync({
       'PoiretOne': require("./assets/fonts/PoiretOne-Regular.ttf"),
       'SulphurPoint': require("./assets/fonts/SulphurPoint-Bold.ttf"),
@@ -214,9 +228,10 @@ export default class App extends React.Component {
     });
     this.setState({ fontLoaded: true });
   }
+
+
   render() {
-    return (
-      
+    return (    
       <Provider store={store}>
         { this.state.fontLoaded ? <AppContainer />   :  null  }
       </Provider>

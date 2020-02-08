@@ -63,6 +63,7 @@ class TestScreen extends React.Component{
   
   comp1 = () => <Icon name='cloud-download' color='white' type='material' />
   comp2 = () => <Icon name='cloud-upload' color='white' type='material' />
+  
 render(){
  const { tests, isLoading } = this.props.test;
  const { name } = this.props.subject.subject;

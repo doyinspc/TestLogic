@@ -13,6 +13,7 @@ import okhttp3.OkHttpClient;
 import org.pgsqlite.SQLitePluginPackage;
 // Needed for `react-native link`
 // import com.facebook.react.ReactApplication;
+import co.apptailor.googlesignin.RNGoogleSigninPackage;
 import com.reactnativecommunity.webview.RNCWebViewPackage;
 
 public class MainApplication extends ExpoApplication implements AppLoaderPackagesProviderInterface<ReactPackage> {
@@ -29,6 +30,7 @@ public class MainApplication extends ExpoApplication implements AppLoaderPackage
         // TODO: add native modules!
         new SQLitePluginPackage(),   // register SQLite Plugin here
         new MainReactPackage(),
+            new RNGoogleSigninPackage(),
             new RNCWebViewPackage());
         // Needed for `react-native link`
         // new MainReactPackage()

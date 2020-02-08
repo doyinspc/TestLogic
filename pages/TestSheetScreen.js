@@ -241,9 +241,8 @@ render(){
         title = test_data.title;
         description = test_data.description;
         topic = test_data.topics ? JSON.parse(test_data.topics): [];
-        
     }
-
+ 
     
     if(!this.props.score.isLoading)
     {
