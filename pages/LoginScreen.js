@@ -1,6 +1,6 @@
 import React from 'react';
-import { ThemeProvider,  Avatar, Icon, Button } from 'react-native-elements';
-import { TextInput, View, Text, StyleSheet,  TouchableHighlight } from 'react-native';
+import {  Button } from 'react-native-elements';
+import { TextInput, View, Text, StyleSheet } from 'react-native';
 import * as Font from 'expo-font';
 const tools = require('./components/Style');
 const local_style = tools.Style;

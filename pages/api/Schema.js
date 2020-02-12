@@ -66,11 +66,14 @@ module.exports = {
     },
     user: {
         name:'users',
-        schema: `   id INTEGER PRIMARY KEY ,
-                    username TEXT,
-                    fullname TEXT,
-                    password TEXT, 
-                    hashkey TEXT,
+        schema: `   id INTEGER PRIMARY KEY,
+                    uniqueid TEXT,
+                    name TEXT,
+                    photourl TEXT NULL,
+                    token TEXT NULL,
+                    social INTEGER NULL,
+                    category INTEGER DEFAULT 0,
+                    active INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL `
     }

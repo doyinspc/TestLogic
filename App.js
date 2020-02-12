@@ -35,8 +35,8 @@ const phArr = { fontFamily: 'PoiretOne',   color: 'white', justifyContent : 'cen
 const cname = 'Test Tricks : ';
 const AppStack = createStackNavigator({
 
-  GoogleScreen: {
-    screen: GoogleScreen,
+  LoginShowScreen: {
+    screen: LoginShowScreen,
     navigationOptions: {
       title: `${cname }Login`,
       icon: 'Login',
@@ -219,8 +219,7 @@ export default class App extends React.Component {
   
 
   async componentDidMount(){
-   
-    
+    await this.props.getUser();
     await Font.loadAsync({
       'PoiretOne': require("./assets/fonts/PoiretOne-Regular.ttf"),
       'SulphurPoint': require("./assets/fonts/SulphurPoint-Bold.ttf"),

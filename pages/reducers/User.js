@@ -7,6 +7,7 @@ import {
 
 const initialState = {
     isLoading: false,
+    isActive: false,
     users: [],
     user: {},
     msg: null,
@@ -24,9 +25,15 @@ export default function(state = initialState, action){
                 isLoading: true
             };
         case USER_GET_MULTIPLE:
+            let arr = action.payload;
+            let use = arr && Array.isArray(arr) && arr.length > 0 ? arr.filter((row)=>row.active == 1) : null;
+            let ar = use && Array.isArray(use) && use.length > 0 ? use[0] : null;
+            let act = ar ? true : false;
             return {
                 ...state,
                 users : action.payload,
+                user : ar,
+                isActive : act,
                 isLoading: false
             };
         case USER_GET_ONE:

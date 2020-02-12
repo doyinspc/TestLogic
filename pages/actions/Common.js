@@ -3,6 +3,10 @@ import  SCHEME  from './../api/Schema';
 
 export const DB_PATH = new Database();
 export const API_PATH = 'http://192.168.43.193:3001';
+export const CLIENT_PATH = 'http://192.168.43.193:3001';
+export const IMAGE_PATH = 'http://192.168.43.193:3001';
+export const GOOGLE_PATH = '159610177254-5euec0rreq4qhhuekm83tbe8tfcrqjsj.apps.googleusercontent.com';
+export const FACEBOOK_PATH = 537525200303016;
 //export const API_PATH = 'http://192.168.0.102:3001'; 
 //export const API_PATH = 'http://192.168.42.35:3001';
 

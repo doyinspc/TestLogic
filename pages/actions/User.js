@@ -6,12 +6,15 @@ import {
 } from "../types/User";
 
 
-import Database from './../api/Database';
 import axios from 'axios';
-import { API_PATH } from './Common';
+import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
-const db = new Database();
+
+const db = DB_PATH;
 const path = API_PATH;
+const config = CONFIG;
+const loadData = LOADDATA;
+const dropData = DROPDATA;
 
 const TABLE_NAME = SCHEME.user.name;
 const TABLE_STRUCTURE = SCHEME.user.schema;
@@ -35,41 +38,27 @@ const TABLE_STRUCTURE = SCHEME.user.schema;
 //SAVE USER DEBIT ONLINE
 
 //GET ALL USER
-export const getUsers = (userID) => (dispatch, getState) => {
-    let PARAM = {
-      subjectID : userID,
-    };
-    dispatch({ type: USER_LOADING});
-    db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      dispatch({
-        type: USER_GET_MULTIPLE,
-        payload: data._array
+export const postUser = (user) => (dispatch, getState) => {
+    let paths = `${path}/user/post`
+    dispatch({ type: USER_UPLOADING });
+    let body = {user:user};
+    axios.patch(paths, body, config(getState))
+      .then(async res => {
+        await loadData(res.data, 'user', async (d)=>{
+          res.data ? await dispatch({type: USER_UPLOADING_SUCCESS, payload: res.data }) : await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
+        });
       })
-    })
+      .catch(err => {dispatch({type : USER_UPLOADING_FAIL, msg : err })
+      })
 };
 
-//GET SINGLE USER
-export const getUser = (thm) => (dispatch, getState) => {
-    let PARAM = {
-      id : parseInt(thm)
-    };
-    dispatch({ type: USER_LOADING})
-    db.selectOne(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-      dispatch({
-        type: USER_GET_ONE,
-        payload: data._array[0],
-        id: thm
-      })
-    })
+//GET ALL THEME 
+export const getUser = () => (dispatch) => {
+  let PARAM = {};
+  dispatch({ type: USER_LOADING });
+  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
+    data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: USER_GET_MULTIPLE, payload: data._array}): dispatch({ type : USER_LOADING_ERROR, msg : 'No file'});
+  })
 };
 
-//SET TOKEN AND HEADER - HELPER FUNCTION
-export const userSetConfig = () => {
-  // headers
-  const config ={
-      headers:{
-          
-      }
-  }
-  return config
-}
+
