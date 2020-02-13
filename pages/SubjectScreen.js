@@ -200,5 +200,4 @@ export default connect(mapStateToProps,
     getSubjects, 
     getSubjectsDownload,
     getSubject
-  
   })(SubjectScreen);

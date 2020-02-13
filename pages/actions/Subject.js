@@ -28,6 +28,7 @@ export const getSubjectsDownload = () => (dispatch, getState) => {
   dispatch({ type: SUBJECT_DOWNLOADING });
   axios.get(paths, config(getState))
       .then(async res => {
+        console.log(res.data)
         await loadData(res.data, 'subject', async (d)=>{
           res.data ? await dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data }) : await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
         });

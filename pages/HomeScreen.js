@@ -1,10 +1,16 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ImageBackground , ScrollView, TouchableHighlight} from 'react-native';
+import { StyleSheet, Text, View, ImageBackground , ScrollView, TouchableHighlight, SafeAreaView} from 'react-native';
 import {Icon } from 'react-native-elements';
 import { ThemeProvider, Button } from 'react-native-elements';
 import { getSubjectsClear, getTableClear, dropTable } from './actions/Subject';
-
+import {
+  setTestDeviceIDAsync,
+  AdMobBanner,
+  AdMobInterstitial,
+  PublisherBanner,
+  AdMobRewarded
+} from 'expo-ads-admob';
 
 // Your App
 
@@ -22,6 +28,14 @@ class HomeScreen extends React.Component {
       fontLoaded: false,
       selectedIndex: null
     };
+  }
+
+  componentDidMount(){
+    this.initAds().catch((error) => console.log(error));
+  }
+  
+  initAds = async () => {
+   await setTestDeviceIDAsync('EMULATOR');
   }
    dropSubjects =()=>{
     this.props.getSubjectsClear();
@@ -69,18 +83,16 @@ class HomeScreen extends React.Component {
         </ImageBackground>
         
         <View style={{backgroundColor:local_color.color4,  flex:1, justifyContent:'space-between'}}>
+        <SafeAreaView>
+        <AdMobBanner
+          bannerSize="fullBanner"
+          adUnitID='ca-app-pub-5431380497963954/5927443820'
+          servePersonalizedAds
+          onDidFailToReceiveAdWithError={this.bannerError} />
+        </SafeAreaView>
         <ScrollView>
-
-        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('LoginScreen')}} underlayColor="grey">
-        <View style={styles.home_list_container}>
-        <Icon name='lock' padding={10}  paddingLeft={30} color='teal' size={80} type="material"/>
-        <View style={{padding:10, flexShrink:1}}>
-          <Text style={styles.home_h1}>Login</Text>
-          <Text style={styles.home_h2}>Reset password.</Text>
-        </View>
-        </View>
-        </TouchableHighlight>
-         
+        
+       
         <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen',{'sid':1})}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='spellcheck' padding={10}  paddingLeft={30} color= 'red' size={80} type="material"/>
@@ -115,8 +127,8 @@ class HomeScreen extends React.Component {
         <View style={styles.home_list_container}>
         <Icon name='payment' padding={10}  paddingLeft={30} color= {local_color.color2} size={80} type="fontawesome"/>
         <View style={{padding:10, flexShrink:1}}>
-          <Text style={styles.home_h1}>Online Payment</Text>
-          <Text style={styles.home_h2}>Easy simple</Text>
+          <Text style={styles.home_h1}>Upgrade to Pro.</Text>
+          <Text style={styles.home_h2}>Remove adverts, get frequent question updates, full access to all mock test</Text>
         </View>
         </View>
         </TouchableHighlight>
@@ -179,6 +191,7 @@ class HomeScreen extends React.Component {
 
 const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
-  subject: state.subjectReducer
+  subject: state.subjectReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, { getSubjectsClear, getTableClear, dropTable })(HomeScreen);

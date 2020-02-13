@@ -8,9 +8,11 @@ import store from "./store";
 import * as Font from 'expo-font';
 
 import GoogleScreen from './pages/GoogleScreen';
+import FacebookScreen from './pages/FacebookScreen';
 import HomeScreen from './pages/HomeScreen';
 import RegisterScreen from './pages/RegisterScreen';
 import LoginScreen from './pages/LoginScreen';
+import LoginShowScreen from './pages/LoginShowScreen';
 import SubjectScreen from './pages/SubjectScreen';
 import ThemeScreen from './pages/ThemeScreen';
 import TopicScreen from './pages/TopicScreen';
@@ -202,7 +204,24 @@ const AppStack = createStackNavigator({
         headerTintColor: tintColor,
       },
     },
-  
+    GoogleScreen: {
+      screen: GoogleScreen,
+      navigationOptions: {
+        title: 'Google',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    FacebookScreen: {
+      screen: FacebookScreen,
+      navigationOptions: {
+        title: 'Facebook',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
 });
 
 const AppContainer = createAppContainer(AppStack);
@@ -219,7 +238,6 @@ export default class App extends React.Component {
   
 
   async componentDidMount(){
-    await this.props.getUser();
     await Font.loadAsync({
       'PoiretOne': require("./assets/fonts/PoiretOne-Regular.ttf"),
       'SulphurPoint': require("./assets/fonts/SulphurPoint-Bold.ttf"),
@@ -238,3 +256,5 @@ export default class App extends React.Component {
   }
 } 
 
+
+ 

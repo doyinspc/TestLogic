@@ -5,7 +5,7 @@ import { View,  StyleSheet } from 'react-native';
 import { connect }from 'react-redux';
 
 import { FACEBOOK_PATH } from './actions/Common';
-import { postUser } from './actions/User';
+import { postUser, getUser } from './actions/User';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -14,19 +14,29 @@ const local_size = tools.Sizes;
 
 
 class FacebookSignin extends Component {
-    state = {
+  constructor(props) {
+    super(props);
+    this.state = {
       signedIn: false,
-      name: null,
-      email: '',
+      name: 'Adedoyin Charles',
+      email: 'doyinspc2@yahoo.com',
       photoUrl: null,
       token: ''
     };
+  }
+    
 
- componentDidMount(){
+ async componentDidMount(){
+   await this.props.getUser();
+   this.setState({signedIn:true});
    if(this.props.user.isActive)
    {
     this.setState({signedIn:true});
    } 
+ }
+
+ relocate = () =>{
+  this.props.navigation.navigate('HomeScreen');
  }
 
   signIn = async() =>{
@@ -77,7 +87,7 @@ class FacebookSignin extends Component {
       return (
         <View>
           {signedIn ? 
-          this.props.navigation.navigate('HomeScreen', {'data':this.state}) :
+          this.relocate() :
           <Button 
             title='LogIn with Facebook'
             style={{marginHorizontal:5}}
@@ -96,4 +106,4 @@ const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
     user: state.userReducer
   })
-export default connect(mapStateToProps, { postUser })(FacebookSignin);
+export default connect(mapStateToProps, { postUser, getUser })(FacebookSignin);

@@ -3,7 +3,8 @@ import {  Button } from 'react-native-elements';
 import { TextInput, View, Text, StyleSheet } from 'react-native';
 import * as Font from 'expo-font';
 import GoogleScreen from './GoogleScreen';
-
+import FacebookScreen from './FacebookScreen';
+import { postUser, getUser } from './actions/User';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -20,7 +21,8 @@ export default class App extends React.Component{
     fontLoaded: false,
     password:'',
     email:'',
-    error:''
+    error:'',
+    isActive: false,
   }
   
   async componentDidMount() {
@@ -43,19 +45,25 @@ export default class App extends React.Component{
   }
 
   render(){
-    const { fontLoaded,  email, password } = this.state;
+    const { fontLoaded,  email, password, isActive } = this.state;
     return (
       <View style={{flex:1}}>
-      {fontLoaded ? <View style={{flex:1}}>
+      {fontLoaded ? 
+       isActive ?
+      <View style={{flex:1}}>
         <View style={styles.topContainer}>
           <Text style={styles.h1}>Login</Text>
           <Text style={styles.h2}>Select a Login method</Text>
        </View>
-       <View style={styles.bottomContainer}>
+       <View style={[styles.bottomContainer, {marginVertical:5}]}>
+         <View style={{marginVertical:10}}>
            <GoogleScreen/>
+         </View>
+         <View>
            <FacebookScreen/>
+          </View>
        </View>
-       </View> : null}
+       </View>: this.props.navigation.navigate('HomeScreen')  : null}
        </View>
    
   );
