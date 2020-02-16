@@ -2,6 +2,9 @@ import {
     USER_GET_MULTIPLE,
     USER_GET_ONE, 
     USER_LOADING,
+    USER_UPLOADING,
+    USER_UPLOADING_SUCCESS,
+    USER_UPLOADING_FAIL,
     USER_LOADING_ERROR 
 } from "../types/User";
 
@@ -13,7 +16,8 @@ const initialState = {
     msg: null,
     isEdit: 0,
     isForm: false,
-    showActions: false
+    showActions: false,
+    isPro:false
 }
 
 export default function(state = initialState, action){
@@ -23,6 +27,11 @@ export default function(state = initialState, action){
                 ...state,
                 user: {},
                 isLoading: true
+            };
+        case USER_UPLOADING:
+            return {
+                ...state,
+                
             };
         case USER_GET_MULTIPLE:
             let arr = action.payload;
@@ -41,6 +50,12 @@ export default function(state = initialState, action){
                 ...state,
                 user: action.payload,
                 isLoading: false
+            };
+         case USER_UPLOADING_SUCCESS:
+            return {
+                ...state,
+                user: action.payload,
+                isActive: true
             };
         case USER_LOADING_ERROR:
             return {

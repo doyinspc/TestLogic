@@ -622,5 +622,6 @@ const mapStateToProps = state => ({
   theme: state.themeReducer,
   question: state.questionReducer,
   subject: state.subjectReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, { getTest, getQuestions, insertTest, updateTest })(TestSettingsScreen);

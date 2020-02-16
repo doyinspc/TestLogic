@@ -37,14 +37,14 @@ const phArr = { fontFamily: 'PoiretOne',   color: 'white', justifyContent : 'cen
 const cname = 'Test Tricks : ';
 const AppStack = createStackNavigator({
 
-  LoginShowScreen: {
-    screen: LoginShowScreen,
+  LoginScreen: {
+    screen: LoginScreen,
     navigationOptions: {
-      title: `${cname }Login`,
-      icon: 'Login',
-      headerStyle: pgArr,
+      title: 'Login',
+      icon: 'home',
+      headerStyle: { backgroundColor: 'black' },
       headerTitleStyle: phArr,
-      headerTintColor: tintColor,
+      headerTintColor: 'white',
     },
   },
   HomeScreen: {
@@ -67,16 +67,7 @@ const AppStack = createStackNavigator({
       headerTintColor: 'white',
     },
   },
-  LoginScreen: {
-    screen: LoginScreen,
-    navigationOptions: {
-      title: 'Login',
-      icon: 'home',
-      headerStyle: { backgroundColor: 'black' },
-      headerTitleStyle: phArr,
-      headerTintColor: 'white',
-    },
-  },
+  
   ChangePasswordScreen: {
     screen: ChangePasswordScreen,
     navigationOptions: {

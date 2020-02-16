@@ -1,7 +1,10 @@
 import React from 'react';
 import { ThemeProvider,  Avatar, Icon, Button } from 'react-native-elements';
 import { TextInput, View, Text, StyleSheet,  TouchableHighlight } from 'react-native';
+
+import { connect }from 'react-redux';
 import * as Font from 'expo-font';
+import { postUser, getUser } from './actions/User';
 const tools = require('./components/Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
@@ -12,16 +15,18 @@ const theme = {
 
 
 // Your App
-export default class App extends React.Component{
+class Register extends React.Component{
   state = {
     fontLoaded: false,
-    username:'',
+    name:'',
     password:'',
     reppassword:'',
     email:'',
+    social:3,
+    active:1,
+    token:'',
     error:''
   }
-  
   async componentDidMount() {
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -31,10 +36,10 @@ export default class App extends React.Component{
   }
 
   onSubmit = () =>{
-    const { username, password, email } = this.state;
-    const user = { username, password, email };
+    const { name, password, email, social,  active, token } = this.state;
+    const user = { name, email, uniqueid:email, passw:password, social, active, token };
     if(this.state.password && this.state.password == this.state.reppassword){
-
+        this.props.postUser(user);
     }else{
       this.setState({ error: 'passwords do not match'});
     }
@@ -42,7 +47,7 @@ export default class App extends React.Component{
   }
 
   render(){
-    const { fontLoaded, username, email, password, reppassword } = this.state;
+    const { fontLoaded, name, email, password, reppassword } = this.state;
     return (
       <View style={{flex:1}}>
       {fontLoaded ? <View style={{flex:1}}>
@@ -52,14 +57,14 @@ export default class App extends React.Component{
        </View>
        <View style={styles.bottomContainer}>
             <View style={styles.textwidthx}>
-              <Text style={styles.label}>Username</Text> 
+              <Text style={styles.label}>Fullname</Text> 
               </View>   
             <TextInput
                 style={styles.textplace}
-                placeholder='Username'
+                placeholder='Fullname'
                 type='text'
-                value={username}
-                onChangeText={(text) => this.setState({username: text})}
+                value={name}
+                onChangeText={(text) => this.setState({name: text})}
               />
               <View style={styles.textwidthx}>
               <Text style={styles.label}>Email</Text> 
@@ -105,7 +110,7 @@ export default class App extends React.Component{
               <Button
                 color='#fff'
                 icon={{name: 'arrow-left', type: 'octicon', color:local_color.MAIN }}
-                title='Back to login' 
+                title='Back to Login' 
                 textStyle={{color:local_color.MAIN}}
                 buttonStyle={styles.butlink}
                 onPress={()=>{this.props.navigation.navigate('LoginScreen')}}
@@ -119,3 +124,7 @@ export default class App extends React.Component{
 };
 
 const styles = StyleSheet.create(local_style);
+const mapStateToProps = state => ({ 
+  user: state.userReducer
+})
+export default connect(mapStateToProps, { postUser, getUser })(Register);

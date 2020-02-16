@@ -414,6 +414,7 @@ this.getCurrentTime
 const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
   test: state.testReducer,
-  score: state.scoreReducer
+  score: state.scoreReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, { getTest, getScore, insertScore, updateScore })(QuestionScreen);

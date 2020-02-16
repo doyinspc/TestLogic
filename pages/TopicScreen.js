@@ -4,6 +4,8 @@ import { StyleSheet, Text, View, ScrollView, ListView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon , Overlay, Button} from 'react-native-elements';
 import * as Font from 'expo-font';
 import AwesomeAlert from 'react-native-awesome-alerts';
+import Admob from "./advert/Admob";
+import Adinter from "./advert/Adinter";
 
 import { getTopics, getTopicSelected, getTopicsDownload } from './actions/Topic';
 import Activity from './components/LoaderTest';
@@ -169,6 +171,7 @@ render(){
           </View>
       </View>
        <View style={{flex:1}}>
+       <Admob type='fullbanner'/>
        <Overlay
           isVisible={this.state.isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -283,7 +286,8 @@ const styles = StyleSheet.create(local_style)
 const mapStateToProps = state => ({ 
   topic: state.topicReducer,
   theme: state.themeReducer,
-  subject:state.subjectReducer
+  subject:state.subjectReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, 
   { 

@@ -151,6 +151,7 @@ const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
   score: state.scoreReducer,
-  test: state.testReducer
+  test: state.testReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps,{ getTest, getScores })(ScoresScreen);

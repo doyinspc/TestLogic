@@ -3,6 +3,8 @@ import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon, Overlay, Button } from 'react-native-elements';
 import * as Font from 'expo-font';
+import Admob from "./advert/Admob";
+import Adinter from "./advert/Adinter";
 
 import { getSubjectsDownload, getSubjects, getSubject} from './actions/Subject';
 import Activity from './components/LoaderTest';
@@ -41,6 +43,7 @@ class SubjectScreen extends React.Component{
 relocate = (value) =>{
   if(value && value > 0)
   {
+    <Adinter/>
     this.props.getSubject(value);
     this.props.navigation.navigate('ThemeScreen', {'subjectID':value, 'sid':this.state.page})
   }
@@ -152,6 +155,7 @@ render(){
             />
           </View>
         </Overlay>
+        <Admob type='fullbanner'/>
         {fontLoaded  && !isLoading ?  
          <ScrollView>
          {subjects  && Object.keys(subjects).length > 0 ?
@@ -161,13 +165,15 @@ render(){
                 titleStyle={styles.listItem}  
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
                 title={l.name}
+                subtitle={l.active == 1 ? null : 'Coming Soon...'}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
                 onPress={()=>{this.relocate(l.id)}}
+                disabled={l.active == 1 ? false : true}
+                disabledStyle={{opacity:0.4}}
                 chevron
-                badge={{  value: 'New', textStyle: { color: 'white', backgroundColor: 'red', padding:4, borderRadius:20, fontFamily:'PoiretOne' }, containerStyle: { marginTop: 10 } }}
             />
             ))
         : 
@@ -193,7 +199,8 @@ render(){
 
 const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
-  subject: state.subjectReducer
+  subject: state.subjectReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, 
   { 

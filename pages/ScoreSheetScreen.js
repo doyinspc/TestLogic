@@ -77,6 +77,7 @@ render(){
 const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
-  score: state.scoreReducer
+  score: state.scoreReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps,{ getScores })(ScoresScreen);

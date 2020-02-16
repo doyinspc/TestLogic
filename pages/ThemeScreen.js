@@ -4,7 +4,8 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon, Overlay, Button } from 'react-native-elements';
 import * as Font from 'expo-font';
 import AwesomeAlert from 'react-native-awesome-alerts';
-
+import Admob from "./advert/Admob";
+import Adinter from "./advert/Adinter";
 import { getThemes, getThemeSelected, getThemesDownload} from './actions/Theme';
 import Activity from './components/LoaderTest';
 
@@ -56,6 +57,7 @@ class ThemeScreen extends React.Component{
     let values = this.state.values;
     if(values && values.length > 0)
     {
+      <Adinter/>
       this.props.getThemeSelected(values);
       this.props.navigation.navigate('TopicScreen', {'themeID':values, 'sid':this.state.page})
     }
@@ -147,6 +149,7 @@ render(){
           </View>
       </View>
       <View style={{flex:1}}>
+      <Admob type='fullbanner'/>
       <Overlay
           isVisible={this.state.isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -273,7 +276,8 @@ const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
   theme: state.themeReducer,
-  subject: state.subjectReducer
+  subject: state.subjectReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, 
   { 

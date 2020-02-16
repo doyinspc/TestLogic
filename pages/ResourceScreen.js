@@ -165,7 +165,8 @@ const mapStateToProps = state => ({
   resource: state.resourceReducer,
   topic: state.topicReducer,
   theme: state.themeReducer,
-  subject: state.subjectReducer
+  subject: state.subjectReducer,
+  user: state.userReducer
 })
 export default connect(mapStateToProps, 
   { 

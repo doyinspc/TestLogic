@@ -1,5 +1,8 @@
 import {
     USER_GET_MULTIPLE,
+    USER_UPLOADING,
+    USER_UPLOADING_FAIL,
+    USER_UPLOADING_SUCCESS,
     USER_GET_ONE, 
     USER_LOADING,
     USER_LOADING_ERROR
@@ -39,12 +42,13 @@ const TABLE_STRUCTURE = SCHEME.user.schema;
 
 //GET ALL USER
 export const postUser = (user) => (dispatch, getState) => {
-    let paths = `${path}/user/post`
+    let paths = `${path}/user/post/1`;
     dispatch({ type: USER_UPLOADING });
     let body = {user:user};
     axios.patch(paths, body, config(getState))
       .then(async res => {
         await loadData(res.data, 'user', async (d)=>{
+          console.log(res.data);
           res.data ? await dispatch({type: USER_UPLOADING_SUCCESS, payload: res.data }) : await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
         });
       })
@@ -52,12 +56,25 @@ export const postUser = (user) => (dispatch, getState) => {
       })
 };
 
-//GET ALL THEME 
+//GET ALL USER 
 export const getUser = () => (dispatch) => {
   let PARAM = {};
   dispatch({ type: USER_LOADING });
   db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
     data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: USER_GET_MULTIPLE, payload: data._array}): dispatch({ type : USER_LOADING_ERROR, msg : 'No file'});
+  })
+};
+
+//GET ALL USER 
+export const getUse = (user) => (dispatch) => {
+  let PARAM = {
+    email:user.email,
+    password:user.password,
+    social: 3,
+  };
+  dispatch({ type: USER_LOADING });
+  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
+    data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: USER_GET_ONE, payload: data._array}): dispatch({ type : USER_LOADING_ERROR, msg : 'No file'});
   })
 };
 

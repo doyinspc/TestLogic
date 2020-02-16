@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import * as Facebook from 'expo-facebook';
-import { Button } from 'react-native-elements';
+import { Button, SocialIcon } from 'react-native-elements';
 import { View,  StyleSheet } from 'react-native';
 import { connect }from 'react-redux';
 
@@ -28,7 +28,7 @@ class FacebookSignin extends Component {
 
  async componentDidMount(){
    await this.props.getUser();
-   this.setState({signedIn:true});
+   //this.setState({signedIn:true});
    if(this.props.user.isActive)
    {
     this.setState({signedIn:true});
@@ -87,12 +87,8 @@ class FacebookSignin extends Component {
       return (
         <View>
           {signedIn ? 
-          this.relocate() :
-          <Button 
-            title='LogIn with Facebook'
-            style={{marginHorizontal:5}}
-            onPress={()=>{this.signIn()}}
-          />
+          ()=>{this.props.navigation.navigate('HomeScreen', {'data':this.state}) }:
+          <SocialIcon reverse raised  type='facebook'  onPress={()=>{this.signIn()}} />
           }
         </View>
       );

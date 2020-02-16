@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import * as Google from 'expo-google-app-auth'
-import { Button } from 'react-native-elements';
+import { Button, SocialIcon } from 'react-native-elements';
 import { View,  StyleSheet } from 'react-native';
 import { connect }from 'react-redux';
 
@@ -14,13 +14,16 @@ const local_size = tools.Sizes;
 
 
 class GoogleSignin extends Component {
-    state = {
+  constructor(props) {
+  super(props); 
+  this.state = {
       signedIn: false,
       name: null,
       email: '',
       photoUrl: null,
       token: ''
     };
+  }
 
  componentDidMount(){
    if(this.props.user.isActive)
@@ -70,12 +73,8 @@ class GoogleSignin extends Component {
       return (
         <View>
           {signedIn ? 
-          this.props.navigation.navigate('HomeScreen', {'data':this.state}) :
-          <Button 
-            title='LogIn with Google'
-            style={{marginHorizontal:5}}
-            onPress={()=>{this.signIn()}}
-          />
+          () =>{this.props.navigation.navigate('HomeScreen', {'data':this.state}) }:
+          <SocialIcon reverse raised  type='google'  onPress={()=>{this.signIn()}} />
           }
         </View>
       );
