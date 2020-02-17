@@ -1,5 +1,6 @@
 import {
     TOPIC_GET_MULTIPLE,
+    TOPIC_EDIT_SUCCESS,
     TOPIC_GET_SELECTED,
     TOPIC_GET_ONE, 
     TOPIC_LOADING,
@@ -80,6 +81,16 @@ export default function(state = initialState, action){
                 ...state,
                 topic : newRow,
                 isEdit : id
+            };
+        case TOPIC_EDIT_SUCCESS:
+            var idc = action.id;
+            var datac = action.data.active;
+            var newArrayc = [...state.topics];
+            newArrayc && Array.isArray(newArrayc) ? newArrayc[idc].active =  datac: {};
+            return {
+                ...state,
+                topics : newArrayc,
+                isEdit : idc
             };
         case TOPIC_GET_SELECTED:
             return {

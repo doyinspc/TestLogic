@@ -7,6 +7,8 @@ import * as Font from 'expo-font';
 import { getTests, getTest } from './actions/Test';
 import { getTopicsDB } from './actions/Topic';
 import Activity from './components/LoaderTest';
+import Admob from "./advert/Admob";
+import Adinter from "./advert/Adinter";
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -81,6 +83,7 @@ render(){
           </View>
       </View>
         <View style={{flex:1}}>
+        <Admob type='fullbanner'/>
         {fontLoaded  && !isLoading ?  
          <ScrollView>
             {tests  && Object.keys(tests).length > 0 ?

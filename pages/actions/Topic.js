@@ -1,6 +1,7 @@
 import {
   TOPIC_GET_MULTIPLE,
   TOPIC_GET_SELECTED,
+  TOPIC_EDIT_SUCCESS, 
   TOPIC_GET_ONE, 
   TOPIC_LOADING,
   TOPIC_LOADING_ERROR,
@@ -10,15 +11,14 @@ import {
 } from "../types/Topic";
 
 import axios from 'axios';
-import { API_PATH, DB_PATH, CONFIG, LOADDATAS, DROPDATA } from './Common';
+import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
 
 const db = DB_PATH;
 const path = API_PATH;
 const config = CONFIG;
-const loadData = LOADDATAS;
+const loadData = LOADDATA;
 const dropData = DROPDATA;
-
 
 const TABLE_NAME = SCHEME.topic.name;
 const TABLE_STRUCTURE = SCHEME.topic.schema;
@@ -80,6 +80,21 @@ export const getTopicsDownload = (themeID) => (dispatch, getState) => {
           }).catch(err => {console.log(err); dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
 }
 
+//GET TOPICS FROM ONLINE DATABANK
+export const getTopicsDBs = (themeID) => (dispatch, getState) => {
+  dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
+
+  let topic_paths = `${path}/topic/mult/n`;
+  let theme_id_string = '';
+  theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : ' ';
+  axios.patch(topic_paths, {themeID:theme_id_string}, config(getState)).then(top => {
+        dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:top.data, id:themeID});
+        loadData(top.data, 'topic', (d)=>{
+              //load after loading
+        });
+          }).catch(err => {console.log(err); dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+}
+
 
 //GET ALL TOPIC
 export const getTopics = (theme) => (dispatch) => {
@@ -115,3 +130,14 @@ export const getTopicSelected = (ids) => (dispatch) => {
   dispatch({ type: TOPIC_GET_SELECTED, payload: ids})
 };
 
+//GET SINGLE TOPIC
+export const updateTopic = (PARAM, id, callback) =>(dispatch, getState) =>{
+  db.update(TABLE_NAME, TABLE_STRUCTURE, PARAM, id, (data)=>{
+    dispatch({
+      type: TOPIC_EDIT_SUCCESS,
+      data: PARAM,
+      id:id
+    })
+    callback(id);
+  })
+};

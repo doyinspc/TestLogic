@@ -38,7 +38,7 @@ class QuestionScreen extends React.Component{
       noq: null,
       tim: null,
       ans: null,
-      activeNumber: 1 ,
+      activeNumber: 1,
       activeIndex: 0,
       activeTime: 0,
       gestureName: 'none',

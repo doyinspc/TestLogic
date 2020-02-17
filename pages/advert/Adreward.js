@@ -48,8 +48,8 @@ componentWillUnmount() {
     AdMobRewarded.removeAllListeners();
 }
 
-bannerError() {
-    console.log('An error');
+bannerError(e) {
+    console.log(e);
     return;
 }
 
@@ -59,9 +59,11 @@ showRewarded() {
 }
   
   render() {
-    !this.props.user.isPro ? this.showRewarded() : '';
+    
     return (
-      <View></View>
+      <View>
+        {!this.props.user.isPro ? this.showRewarded() : this.showRewarded()}
+      </View>
     );
   }
 };

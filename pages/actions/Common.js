@@ -46,21 +46,20 @@ export const LOADDATAS  = (data, tables, callback) =>{
      console.log(dt);
   };
 
-  export const LOADDATA  = (data, tables) =>{
-    const TABLES_NAME = SCHEME[tables].name;
-    const TABLES_STRUCTURE = SCHEME[tables].schema;
+  export const LOADDATA  =  (data, tables, callback) =>{
     const TABLES_EDITS = SCHEME[tables].edits;
     let dt  = [];
-      data.forEach(element => {
+      data.forEach(async element => {
         if(element.id && parseInt(element.id) > 0){
-        selectInsert(element.id, tables, (dat)=>{
+        await selectInsert(element.id, tables, (dat)=>{
           compare(dat, element, TABLES_EDITS, (col)=>{
             if(col[0] === 0)
             {
-              loadUpdate(col[1], tables, element.id,  (da)=>{})
-            }else
+              dt.push(element.id)
+              loadUpdate(col[1], tables, element.id,  (da)=>{dt.push(element.id)})
+            }else if(col[0] === 1)
             {
-              loadInsert(element, tables, (da)=>{})
+              loadInsert(element, tables, (da)=>{dt.push(da)})
             }
           })
         })

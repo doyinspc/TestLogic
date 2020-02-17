@@ -267,10 +267,11 @@ closeDatabase(db) {
           )
       }
 
-  update(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
-    
+  updatex(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
     let completeQuery = insert_param(param);
+    console.log(completeQuery);
     const query = `INSERT OR IGNORE INTO ${TABLE_NAME} ${completeQuery[0]} VALUES ${completeQuery[1]}`;
+    console.log(query);
     this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) => {
                           callback(result)
                       },
@@ -336,6 +337,7 @@ closeDatabase(db) {
         qux = `${quxs.toString()}`;   
        
         let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
+        
         this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {
                             if (callback)
                             {

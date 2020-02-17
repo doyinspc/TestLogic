@@ -4,6 +4,8 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 import AwesomeAlert from 'react-native-awesome-alerts';
+import Admob from "./advert/Admob";
+import Adinter from "./advert/Adinter";
 
 import { getResources, getResourceSelected, getResourcesDownload} from './actions/Resource';
 import Activity from './components/LoaderTest';
