@@ -7,7 +7,7 @@ import AwesomeAlert from 'react-native-awesome-alerts';
 import Admob from "./advert/Admob";
 import Adinter from "./advert/Adinter";
 
-import { getResources, getResourceSelected, getResourcesDownload} from './actions/Resource';
+import { getResourcesDownload, getResourceSelected} from './actions/Resource';
 import Activity from './components/LoaderTest';
 
 
@@ -35,8 +35,7 @@ class ResourceScreen extends React.Component{
  
  
   async componentDidMount() {
-    //this.props.getResources(JSON.stringify(this.props.navigation.getParam('topicID')));
-    //this.props.getResourcesDownload(JSON.stringify(this.props.navigation.getParam('topicID')));
+    this.props.getResourcesDownload(this.props.navigation.getParam('topicID'));
     var page = this.props.navigation.getParam('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -190,8 +189,6 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getResources,
-    getResourceSelected,
     getResourcesDownload,
-  
+    getResourceSelected,
   })(ResourceScreen);

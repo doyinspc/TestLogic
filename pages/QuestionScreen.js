@@ -60,6 +60,7 @@ class QuestionScreen extends React.Component{
   if(!this.props.test.isLoading && test_data && Object.keys(test_data).length > 0)
   {
     //set sata in state
+    console.log(test_data)
     let settings = test_data.settings.split(':::');
     this.setState({
         ids: JSON.parse(test_data.ids),
@@ -277,7 +278,7 @@ render(){
   };
   
   let mainIDs = activeNumber;
-  let mainID = mainIDs.toString();
+  let mainID = mainIDs && mainIDs != undefined ? mainIDs.toString() : '1';
  
   let li = ids && Array.isArray(ids) ? ids.map((l, i)=>(
           <Button 

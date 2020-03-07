@@ -25,6 +25,7 @@ const TABLE_STRUCTURE = SCHEME.topic.schema;
 
 //GET TOPICS FROM ONLINE DATABANK
 export const getTopicsDownload = (themeID) => (dispatch, getState) => {
+  console.log(`activating ${themeID}`)
   dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
   
   let topicID =  [];
@@ -43,42 +44,121 @@ export const getTopicsDownload = (themeID) => (dispatch, getState) => {
   let question_id_string = '';
 
   theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : ' ';
+  
   axios.patch(topic_paths, {themeID:theme_id_string}, config(getState)).then(top => {
         dispatch({ type: TOPIC_DOWNLOADING, payload: 2});
         dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:top.data, id:themeID});
-        loadData(top.data, 'topic');
-        let topics = top.data;
-        topics.map((row) =>(topicID.push(row.id)));
-        topic_id_string = topicID && Array.isArray(topicID) ? topicID.join(',') : '';
+        console.log(top.data);
+        loadData(top.data, 'topic', (ex) =>{
+          console.log(ex);
+          let topics = top.data;
+            topics.map((row) =>(topicID.push(row.id)));
+            topic_id_string = topicID && Array.isArray(topicID) ? topicID.join(',') : '';
 
-        axios.patch(instruction_paths, {topicID:topic_id_string}, config(getState)).then(async inst => {
-            dispatch({ type: TOPIC_DOWNLOADING, payload: 3});
-            await loadData(inst.data, 'instruction');
-            let instructions = inst.data;
-            instructions.map((row) =>(instructionID.push(row.id)));
-            instruction_id_string = instructionID && Array.isArray(instructionID) ? instructionID.toString() : '';
-            
-            axios.patch(question_paths, {instructionID:instruction_id_string}, config(getState)).then(async ques => {
-              dispatch({ type: TOPIC_DOWNLOADING, payload: 4});
-              await loadData(ques.data, 'question');
-              let questions = ques.data;
-              questions.map((row) =>(questionID.push(row.id)));
-              question_id_string = questionID && Array.isArray(questionID) ? questionID.toString() : '';
-              
-              axios.patch(answer_paths, {questionID :question_id_string}, config(getState)).then(async ques => {
-                dispatch({ type: TOPIC_DOWNLOADING, payload: 6});
-                await loadData(ques.data, 'answer');
+            axios.patch(instruction_paths, {topicID:topic_id_string}, config(getState)).then(async inst => {
+                dispatch({ type: TOPIC_DOWNLOADING, payload: 3});
+                await loadData(inst.data, 'instruction', (ex1) =>{
+                  console.log(ex1);
+                  let instructions = inst.data;
+                    instructions.map((row) =>(instructionID.push(row.id)));
+                    instruction_id_string = instructionID && Array.isArray(instructionID) ? instructionID.toString() : '';
+                    
+                    axios.patch(question_paths, {instructionID:instruction_id_string}, config(getState)).then(async ques => {
+                      dispatch({ type: TOPIC_DOWNLOADING, payload: 4});
+                      await loadData(ques.data, 'question', (ex2)=>{
+
+                        let questions = ques.data;
+                        questions.map((row) =>(questionID.push(row.id)));
+                        question_id_string = questionID && Array.isArray(questionID) ? questionID.toString() : '';
+                        
+                        axios.patch(answer_paths, {questionID :question_id_string}, config(getState)).then(async ques => {
+                          dispatch({ type: TOPIC_DOWNLOADING, payload: 6});
+                          await loadData(ques.data, 'answer');
+                          }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+
+                        axios.patch(distractor_paths, {questionID :question_id_string}, config(getState)).then(async ques => {
+                          dispatch({ type: TOPIC_DOWNLOADING, payload: 7});
+                          await loadData(ques.data, 'distractor');
+                          }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+                       });
+                    
+                      }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+
+                    });
+                
                 }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
-
-              axios.patch(distractor_paths, {questionID :question_id_string}, config(getState)).then(async ques => {
-                dispatch({ type: TOPIC_DOWNLOADING, payload: 7});
-                await loadData(ques.data, 'distractor');
-                }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
-
-              }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
-            }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+            });
+        
           }).catch(err => {console.log(err); dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
 }
+
+//GET TOPICS FROM ONLINE DATABANK
+export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
+  console.log(`activating ${ topi }`);
+  dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
+  
+  let topicID =  [];
+  let instructionID =  [];
+  let questionID =  [];
+
+  let topic_paths = `${path}/topic/${topi}`;
+  let instruction_paths = `${path}/instruction/mult/n`;
+  let question_paths = `${path}/question/mult/n`;
+  let answer_paths = `${path}/answer/mult/n`;
+  let distractor_paths = `${path}/distractor/mult/n`;
+
+  let topic_id_string = '';
+  let instruction_id_string = '';
+  let question_id_string = '';
+  axios.get(topic_paths, config(getState)).then(top => {
+        dispatch({ type: TOPIC_DOWNLOADING, payload: 2});
+        dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:top.data, id:topi});
+        loadData(top.data, 'topic', (ex) =>{
+          console.log(ex);
+          let topics = top.data;
+            topics.map((row) =>(topicID.push(row.id)));
+            topic_id_string = topicID && Array.isArray(topicID) ? topicID.join(',') : '';
+            console.log(topic_id_string);
+            axios.patch(instruction_paths, {topicID:topic_id_string}, config(getState)).then( inst => {
+                dispatch({ type: TOPIC_DOWNLOADING, payload: 3});
+                 loadData(inst.data, 'instruction', (ex1) =>{
+                  console.log(ex1);
+                  let instructions = inst.data;
+                    instructions.map((row) =>(instructionID.push(row.id)));
+                    instruction_id_string = instructionID && Array.isArray(instructionID) ? instructionID.toString() : '';
+                    
+                    axios.patch(question_paths, {instructionID:instruction_id_string}, config(getState)).then( ques => {
+                      dispatch({ type: TOPIC_DOWNLOADING, payload: 4});
+                      loadData(ques.data, 'question', (ex2)=>{
+
+                        let questions = ques.data;
+                        questions.map((row) =>(questionID.push(row.id)));
+                        question_id_string = questionID && Array.isArray(questionID) ? questionID.toString() : '';
+                        
+                        axios.patch(answer_paths, {questionID :question_id_string}, config(getState)).then( ques => {
+                          dispatch({ type: TOPIC_DOWNLOADING, payload: 6});
+                           loadData(ques.data, 'answer', (ex3)=>{
+                            axios.patch(distractor_paths, {questionID :question_id_string}, config(getState)).then( ques => {
+                              dispatch({ type: TOPIC_DOWNLOADING, payload: 7});
+                               loadData(ques.data, 'distractor', ()=>{
+                                //non
+                                callback(1);
+                              });
+                              }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+                           });
+                          });
+                          }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+
+                      }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+
+                    });
+                
+                }).catch(err => {dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+            });
+        
+          }).catch(err => {console.log(err); dispatch({type : TOPIC_DOWNLOADING_FAIL, payload: 10})})
+}
+
 
 //GET TOPICS FROM ONLINE DATABANK
 export const getTopicsDBs = (themeID) => (dispatch, getState) => {
@@ -99,16 +179,19 @@ export const getTopicsDBs = (themeID) => (dispatch, getState) => {
 //GET ALL TOPIC
 export const getTopics = (theme) => (dispatch) => {
   dispatch({ type: TOPIC_LOADING})
-      theme.forEach(id => {
+  theme && Array.isArray(theme) ? 
+  theme.forEach(id => {
       let PARAM = {themeID : id};
-      db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
-        console.log(data.length);
+      db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, PARAM, id, (data)=>{
+        console.log(data)
         data == 1 ? null : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3}); 
       })
       dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'})
-    });
-    
- 
+    }): db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, {themeID : theme}, theme, (data)=>{
+      console.log(data);
+      data == 1 ? null : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3}); 
+    })
+
 };
 
 //GET ALL TOPIC
@@ -119,6 +202,16 @@ export const getTopicsDB = (topics) => (dispatch) => {
   })
 
 };
+
+//GET ALL TOPIC
+const getTopicsDB1 = (topics) => (dispatch) => {
+  let PARAM = {id : topics};
+  db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+    data == 1 ? dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'}) : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array}); 
+  })
+
+};
+
 
 //SELECT SINGLE THEME FROM TOPICS
 export const getTopic = (id) => (dispatch) => {

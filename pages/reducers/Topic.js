@@ -86,7 +86,9 @@ export default function(state = initialState, action){
             var idc = action.id;
             var datac = action.data.active;
             var newArrayc = [...state.topics];
-            newArrayc && Array.isArray(newArrayc) ? newArrayc[idc].active =  datac: {};
+            const isIndex = newArrayc.findIndex(x => x.id === idc);
+            console.log(isIndex);
+            newArrayc && Array.isArray(newArrayc) && newArrayc[isIndex] ? newArrayc[isIndex].active =  datac: {};
             return {
                 ...state,
                 topics : newArrayc,

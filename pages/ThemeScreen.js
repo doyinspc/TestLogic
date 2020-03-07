@@ -59,7 +59,7 @@ class ThemeScreen extends React.Component{
     {
       <Adinter/>
       this.props.getThemeSelected(values);
-      this.props.navigation.navigate('TopicScreen', {'themeID':values, 'sid':this.state.page})
+      this.props.navigation.navigate('TopicScreen', {'themezID':values, 'sid':this.state.page})
     }
   }
 
@@ -70,8 +70,10 @@ class ThemeScreen extends React.Component{
     if(values)
     {
       var arr = []
-      this.props.getThemeSelected(arr.push(values));
-      this.props.navigation.navigate('TopicScreen', {'themeID':arr.push(values), 'sid':this.state.page})
+      arr.push(values);
+      console.log(`sssss${arr}`)
+      this.props.getThemeSelected(arr);
+      this.props.navigation.navigate('TopicScreen', {'themezID':id, 'sid':this.state.page})
     }
   }
   

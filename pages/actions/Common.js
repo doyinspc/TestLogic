@@ -5,6 +5,7 @@ export const DB_PATH = new Database();
 export const API_PATH = 'http://192.168.43.193:3001';
 export const CLIENT_PATH = 'http://192.168.43.193:3001';
 export const IMAGE_PATH = 'http://192.168.43.193:3001';
+export const GOOGLE_API_KEY = 'AIzaSyCxF6kwjt3VAxyLJbCH9_V2H52dSWQI_Cw';
 export const GOOGLE_PATH = '159610177254-5euec0rreq4qhhuekm83tbe8tfcrqjsj.apps.googleusercontent.com';
 export const FACEBOOK_PATH = 537525200303016;
 export const ADMOB = 'ca-app-pub-5431380497963954/5927443820';
@@ -43,30 +44,48 @@ export const LOADDATAS  = (data, tables, callback) =>{
         )
      });
      callback(dt);
-     console.log(dt);
   };
 
   export const LOADDATA  =  (data, tables, callback) =>{
-    const TABLES_EDITS = SCHEME[tables].edits;
+    // data : rows from cloud
+    // tables : database table to be used
+    
+    // get the columns of a table that can be edite
+    const editable_rows = SCHEME[tables].edits;
+    // crea an array to store return valuse 
     let dt  = [];
-      data.forEach(async element => {
-        if(element.id && parseInt(element.id) > 0){
-        await selectInsert(element.id, tables, (dat)=>{
-          compare(dat, element, TABLES_EDITS, (col)=>{
-            if(col[0] === 0)
-            {
-              dt.push(element.id)
-              loadUpdate(col[1], tables, element.id,  (da)=>{dt.push(element.id)})
-            }else if(col[0] === 1)
-            {
-              loadInsert(element, tables, (da)=>{dt.push(da)})
-            }
-          })
+    //check if data is available
+    // run through the array
+    data && Array.isArray(data) && data.length > 0 ? data.forEach(async data_row => {
+        //pick a row via id confirm id is not zero
+        if(data_row.id && parseInt(data_row.id) > 0)
+        {
+          //ARG - ROW id , table name
+          // select row from sqlite db usign id and table name
+          await selectPut(data_row.id, tables, (sqlite_row)=>{
+              //COMPARE THE DATA ROW AND THE SQLITE ROW DATA
+              compare(sqlite_row, data_row, editable_rows, (col)=>{
+                console.log(`Comparing ${tables} ${data_row.id} `);
+                if(col[0] === 0)
+                {
+                  dt.push(data_row.id);
+                  loadUpdate(col[1], tables, data_row.id,  (da)=>{dt.push(data_row.id); console.log(`Updating ${tables} ${data_row.id}`);})
+                }else if(col[0] === 1)
+                {
+                  loadInsert(data_row, tables, (da)=>{dt.push(da); console.log(`Inserting ${tables} ${data_row.id}`);})
+                }
+              else if(col[0] === 2)
+              {
+                console.log(`Exist ${tables} row ${data_row.id} no changes required`);
+                //callback(dt)
+              }
+              })
         })
       }
         
-     });
-      return dt;
+     })
+     : null ;
+     callback(dt); 
   };
   
   export const DROPDATA  = (tables) =>{
@@ -117,33 +136,46 @@ export const LOADDATAS  = (data, tables, callback) =>{
         })
   };
 
-  const selectInsert  = async (id, tables, callback) => {
+  const selectPut  = async (id, tables, callback) => {
     const TABLES_NAME = SCHEME[tables].name;
     const TABLES_STRUCTURE = SCHEME[tables].schema;
     const PARAM = {id:id};
         await db.select(TABLES_NAME, TABLES_STRUCTURE, PARAM,  (d)=>{
           if(d)
           {
+            //get single row
             callback(d._array[0]);
           }
         })
   };
+
   const compare  = async(sqldb, insertdb, editable, callback) => {
         if(sqldb)
         {
+          //if row exist in database
           let correctedRow = {};
-         editable.forEach((row) =>{
-            if(insertdb[row] && sqldb[row] !== insertdb[row] && insertdb[row] !== undefined)
+          Object.keys(editable).forEach((key, index)=> {
+            // key: the name of the object key
+            // if approve item in data is not the same as that in DB
+            // store the key and the new data in array correctedRow else ignore
+            if(insertdb[key] && sqldb[key] && sqldb[key] !== insertdb[key] && insertdb[key] !== undefined)
             {
-              correctedRow[row] = insertdb[row];
+              correctedRow[key] = insertdb[key];
             }
-         })
-         if(Object.keys(correctedRow).length > 0){
-          callback([2, correctedRow]);
-         }
-          
-        }else{
-          callback([1, insertdb])
+          });
+          //if any row is corrected return 0 so as to be updated
+            if(Object.keys(correctedRow).length > 0)
+            {
+                callback([0, correctedRow]);
+            }else
+            {
+                callback([2, insertdb]);
+            }
+        }else
+        {
+          //if row does not exist in db
+          //return 1 : row to be inserted
+          callback([1, insertdb]);
         }
        
   };

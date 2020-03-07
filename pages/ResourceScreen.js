@@ -1,11 +1,13 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
+import { YouTubeStandaloneAndroid } from 'react-native-youtube';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
-import { getResources, getResourceSelected, getResourcesDownload} from './actions/Resource';
+import { getResource, getResourceSelected, getResourcesDownload} from './actions/Resource';
+import { GOOGLE_API_KEY } from './actions/Common';
 import Activity from './components/LoaderTest';
 import WebView from 'react-native-webview';
 
@@ -39,8 +41,8 @@ class ResourceScreen extends React.Component{
   }
  
   async componentDidMount() {
-    this.props.getResource(JSON.stringify(this.props.navigation.getParam('resourceID')));
-    var page = this.props.navigation.param('sid');
+    this.props.getResource(this.props.navigation.getParam('resourceID'));
+    var page = this.props.navigation.getParam('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
       'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -115,7 +117,15 @@ class ResourceScreen extends React.Component{
 
  
 }
-
+onMessage = (event) => {
+  const {title, message} = JSON.parse(event.nativeEvent.data)
+  Alert.alert(
+    title,
+    message,
+    [],
+    { cancelable: true }
+  );
+}
 comp1 = () => <Icon name='home' color='white' type='material' />
 comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
 comp3 = () => <Icon name='cloud-download' color='white' type='material' />
@@ -123,28 +133,70 @@ comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Ne
 
 
 render(){
- const { source, title, data1, data2, author } = this.props.resource.resource;
+ const { resource } = this.props.resource;
  const { name } = this.props.subject.subject;
  const { fontLoaded, selectedIndex, values, page } = this.state;
  const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3} , {element:this.comp4}] : [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
- let res = source;
+ let res = resource;
+ const params = 'platform='+Platform.OS;
+    const sourceUri = (Platform.OS === 'android' ? 'file:///android_asset/' : '') + 'Web.bundle/loader.html';
+    const injectedJS = `if (!window.location.search) {
+      var link = document.getElementById('progress-bar');
+      link.href = './site/index.html?${params}';
+      link.click();
+    }`;
   return (
     <ThemeProvider >
       <View style={{flex:1}}>
-        {fontLoaded  && !isLoading ?  
-         <ScrollView>
-            {resource.type == 1 ? 
-            <WebView
-                source={{uri:url}}
-                style={{marginTop:20}}
+        {fontLoaded   ? 
+        <View style={{flex:1}}>
+          <View>
+            <Text style={styles.h2}>{resource.title}</Text>
+            <Text style={styles.h2}>{resource.author}</Text>
+          </View> 
+            {resource.types == 1 ?
+            <View style={{marginTop:2, flex:1}}>
+            <ScrollView style={{flex:1}}>
+            <WebView  
+              source={{ html:[resource.data1, resource.data1] }}
+              injectedJavaScript={injectedJS}
+              javaScriptEnabled={true}
+              originWhitelist={['*']}
+              allowFileAccess={true}
+              onMessage={this.onMessage}
+              style={{marginTop:2, flex:1, height: Math.floor(local_size.HEIGHTS * 80)}}
             />
-          :
-        <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
-          <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />
-          <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Resources</Text>
-        </View>
-        }
-        </ScrollView>:<Activity title='Resource' onPress={()=>{this.onPress(1)}} />}
+            </ScrollView>
+            </View>
+            : null } 
+            {resource.types == 2 ?
+            <View style={{marginTop:2, flex:1}}>
+            <ScrollView style={{flex:1}}>
+            <WebView  
+              source={{ uri:resource.sources }}
+              javaScriptEnabled={true}
+              originWhitelist={['*']}
+              allowFileAccess={true}
+              onMessage={this.onMessage}
+              style={{marginTop:2, flex:1, height: Math.floor(local_size.HEIGHTS * 80)}}
+            />
+            </ScrollView>
+            </View>
+            : null } 
+            {resource.types == 3 ?
+            <View style={{marginTop:2, flex:1}}>
+            {YouTubeStandaloneAndroid.playVideo({
+            apiKey: GOOGLE_API_KEY, // Your YouTube Developer API Key
+            videoId: resource.sources, // YouTube video ID
+            autoplay: true, // Autoplay the video
+            startTime: 120, // Starting point of video (in seconds)
+          })
+            .then(() => console.log('Standalone Player Exited'))
+            .catch(errorMessage => console.error(errorMessage))}
+            </View>
+            : null }
+          
+          </View>:<Activity title='Resource' onPress={()=>{this.onPress(1)}} />}
         <ButtonGroup
             onPress={this.updateIndex}
             selectedIndex={selectedIndex}
@@ -170,7 +222,7 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getResources,
+    getResource,
     getResourceSelected,
     getResourcesDownload,
   

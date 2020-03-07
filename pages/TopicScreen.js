@@ -3,10 +3,10 @@ import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView, ListView } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon , Overlay, Button, SocialIcon} from 'react-native-elements';
 import * as Font from 'expo-font';
-import AwesomeAlert from 'react-native-awesome-alerts';
+import ProgressCircular  from './components/Progress';
 import Admob from "./advert/Admob";
 
-import { getTopics, getTopicSelected, getTopicsDownload, getTopicsDBs, updateTopic } from './actions/Topic';
+import { getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic } from './actions/Topic';
 import Activity from './components/LoaderTest';
 import { FlatList } from 'react-native-gesture-handler';
 import {ADMOB, ADINTER, ADREWARD, PUBLISHER, EMU } from './actions/Common';
@@ -29,15 +29,16 @@ class TopicScreen extends React.Component{
     this.state = {
       fontLoaded: false,
       isVisible: false,
+      isDownloading: false,
       selectedIndex: null,
       checked: {},
       values: [],
       page:1,
       showAdvertAlert: false,
       watchVideoTopic: null,
-      isVisible:false,
       selected:false,
-      topics:this.props.topic.topics
+      topics:this.props.topic.topics,
+      downloads:{}
       
     };
   }
@@ -60,7 +61,7 @@ class TopicScreen extends React.Component{
     let values = id;
     if(values)
     {
-      this.props.navigation.navigate('ResourcesScreen', {'topicID':values, 'sid':this.state.page})
+      this.props.navigation.navigate('ResourcesScreen', {'topicID':id, 'sid':this.state.page})
     }
   }
 
@@ -68,10 +69,17 @@ class TopicScreen extends React.Component{
     this.setState({isVisible:true})
   }
 
+  changeDownloading = (id) =>{
+    this.setState({showAdvertAlert:false, isDownloading:true})
+  }
+
 async componentDidMount() {
-  let arry = this.props.navigation.getParam('themeID');
+  
+  let arry = this.props.navigation.getParam('themezID');
   this.props.getTopics(arry);
-  this.props.getTopicsDBs(arry);
+  if(this.props.topic.topics.length > 0){
+    this.props.getTopicsDBs(arry);
+  }
   //this.props.getTopicsDownload(arry);
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
@@ -88,13 +96,13 @@ async componentDidMount() {
       () =>{this.activateTopic()}
   );
   AdMobRewarded.addEventListener('rewardedVideoDidLoad',
-      () =>{this.activateTopic()}
+      () =>{}
   );
   AdMobRewarded.addEventListener('rewardedVideoDidFailToLoad',
       () => console.log('interstitialDidLoad1')
   );
   AdMobRewarded.addEventListener('rewardedVideoDidOpen',
-  () =>{this.activateTopic()}
+      () =>{}
   );
   AdMobRewarded.addEventListener('rewardedVideoDidClose',
       () => console.log('interstitialDidLoad3')
@@ -113,26 +121,31 @@ componentWillUnmount() {
 }
 
 bannerError(e) {
-  console.log(e);
-  return;
+  return e;
 }
 
-activateTopic = async () =>{
- let d = this.state.watchVideoTopic;
- this.props.updateTopic({'active':1}, d, async ()=>{
-  await this.onChange(d, 0, 1);
+activateLoad = async () =>{
+  let d = this.state.watchVideoTopic;
+  await this.props.updateTopic({active: 1}, d, async (g)=>{
  })
- 
 }
 
-showRewarded= async () =>{
-  // first - load ads and only then - show
-  //AdMobRewarded.requestAd(() => AdMobRewarded.showAd());
-  this.setState({showAdvertAlert:false})
-  this.props.getTopicsDownload(this.state.watchVideoTopic);
-  // Display a rewarded ad
+activateTopic = () =>{
+  let d = this.state.watchVideoTopic;
+  this.props.getTopicsDownloadOnly(d, async(c)=>{
+      if(c == 1){
+        this.props.updateTopic({active: 1}, d, async (g)=>{
+          await this.onChange(d, 0, 1 )
+        })
+        
+      }
+  });
+}
+
+showRewarded = async () =>{
+  await this.activateLoad()
+  this.setState({showAdvertAlert:false});
   AdMobRewarded.setAdUnitID(ADINTER); 
-  //AdMobRewarded.setTestDeviceID(EMU);
   await AdMobRewarded.requestAdAsync();
   await AdMobRewarded.showAdAsync();
 
@@ -149,7 +162,6 @@ static getDerivedStateFromProps(nextProps, prevState){
 
 //STORE SELECTED TOPICS IN STATE ARRAY : VALUES
 onChange = async (topicID, advert, topicActive ) => {
-   
     //if the topic active 
     //activate the list
     if(topicActive === 1)
@@ -166,7 +178,8 @@ onChange = async (topicID, advert, topicActive ) => {
         await newValues.splice(currentIndex, 1);
       }
       await this.setState({ checked : news, values:newValues});
-    }else if(topicActive === 0)
+    }
+    else if(topicActive === 0)
     {
       this.setState({ showAdvertAlert:true, watchVideoTopic:topicID });
     }
@@ -175,7 +188,7 @@ onChange = async (topicID, advert, topicActive ) => {
   //DOWNLOAD TOPICS, INSTRUCTIONS, QUESTIONS, ANSWERS, DISTRACTOR
   updateTopicx=()=>{
     let arry = this.props.navigation.getParam('topicID');
-    this.props.getTopicsDownload(arry);
+    this.props.getTopicsDBs(arry);
   }
 
   updateIndex = (selectedIndex) =>{
@@ -188,32 +201,31 @@ onChange = async (topicID, advert, topicActive ) => {
     }
     else if(selectedIndex == 1 )
     {
-        this.updateTopicx();
+        //this.updateTopicx();
     }
     else if(selectedIndex == 2 )
     {
         this.relocate()
     }
-   
   }
   
   keyExtractors = (item, index) =>index.toString();
   renderItems = ({item, index}) =>
     <ListItem
                 key={index}
-                titleStyle={item.active == 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
+                titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
-                title={item.name}
+                title={`${item.name} ${item.id} ${item.active}`}
+                subtitle={ this.state.downloads[item.id] ? 'Downloading' : null}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
-                onPress={()=>{this.onChange(item.id, item.advert, item.active)}}   
+                onPress={()=>{this.state.downloads[item.id] ? this.onDownloading(item.id) :this.onChange(item.id, item.advert, item.active)}}   
             />
   
 
   renderItemsx = ({item, index}) =><Text>{item.id}</Text>
-  
   
   comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
   comp3 = () => <Icon name='cloud-download' color='white' type='material' />
@@ -225,7 +237,7 @@ render(){
   const {isLoading, isDownloading, topics } = this.props.topic;
   const { themes, ids } = this.props.theme;
   const { name } = this.props.subject.subject;
-  const { fontLoaded, selectedIndex, values, page, selected} = this.state;
+  const { fontLoaded, selectedIndex, values, page, selected, downloads} = this.state;
   const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp2}, {element:isDownloading ? this.comp3a: this.comp3} , {element:this.comp4}] : [{element:this.comp2}, {element:isDownloading ? this.comp3a: this.comp3}];
   const list_themes = themes && Array.isArray(themes) && themes.length > 0 && ids  && Array.isArray(ids) ? themes.filter((row)=>ids.includes(row.id)) : null;
   const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
@@ -241,6 +253,25 @@ render(){
       </View>
        <View style={{flex:1}}>
        <Admob type='fullbanner'/>
+       <Overlay
+          isVisible={this.state.isDownloading}
+          windowBackgroundColor="rgba(7, 7, 7, .3)"
+          overlayBackgroundColor= {local_color.color1}
+          style={{minHeight:200, activeOpacity:0.3}}
+          margin={15}
+          padding={15}
+          width={Math.floor(local_size.WIDTHS * 0.75)}
+        >
+          <View style={{flex:1, alignItems:'center', alignContent:'center'}}>
+            <ProgressCircular prog={67} onDownloaded={() => console.log('onAnimationComplete')}/>
+            <Button
+                title='Close'
+                style={styles.but_overlay}
+                onPress={()=>this.setState({isDownloading:false})}
+                buttonStyle={{backgroundColor:local_color.color3}}
+            />
+          </View>
+        </Overlay>
        <Overlay
           isVisible={this.state.isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -344,7 +375,7 @@ render(){
                 tension={100}
                 style={{marginVertical:10}}
                 activeScale={0.85}
-                onPress={()=>{this.relocateOne(1)}}
+                onPress={()=>{this.changeDownloading(1)}}
                 chevron
             />
 
@@ -428,6 +459,6 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getTopics, getTopicSelected, getTopicsDownload, getTopicsDBs, updateTopic,
+    getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic,
    }
    )(TopicScreen);

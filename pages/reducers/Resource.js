@@ -9,67 +9,10 @@ import {
     RESOURCE_DOWNLOADING_FAIL
 } from "../types/Resource";
 
-let r = [
-    {
-        id:1,
-        topicID: 1,
-        title: 'Method of growing vegetables',
-        author: 'L. Ron Hubbard',
-        type: 1,
-        data1: '',
-        data2: '',
-        source: 'www.jickaduna.com.ng',
-        description: ''
-    },
-    {
-        id:2,
-        topicID: 2,
-        title: 'Method of growing vegetables',
-        author: 'L. Ron Hubbard',
-        type: 1,
-        data1: '',
-        data2: '',
-        source: 'www.jickaduna.com.ng',
-        description: ''
-    },
-    {
-        id:3,
-        topicID: 3,
-        title: 'Method of growing vegetables',
-        author: 'L. Ron Hubbard',
-        type: 1,
-        data1: '',
-        data2: '',
-        source: 'www.jickaduna.com.ng',
-        description: ''
-    },
-    {
-        id:4,
-        topicID: 4,
-        title: 'Method of growing vegetables',
-        author: 'L. Ron Hubbard',
-        type: 1,
-        data1: '',
-        data2: '',
-        source: 'www.jickaduna.com.ng',
-        description: ''
-    },
-    {
-        id:5,
-        topicID: 5,
-        title: 'How to make a farm',
-        author: 'L. Ron Hubbard',
-        type: 1,
-        data1: '',
-        data2: '',
-        source: 'www.jickaduna.com.ng',
-        description: ''
-    },
-]
 const initialState = {
     isLoading: false,
     isDownloading: false,
-    resources: r,
+    resources: [],
     resource: {},
     msg: null,
     isEdit: 0,
@@ -104,11 +47,11 @@ export default function(state = initialState, action){
             let oldArray = [...state.resources];
             let onlineArray = action.payload;
             oldArray.forEach((row)=>{
-                let f = onlineArray.filter((r)=>r.id == row.id);
+                let f = onlineArray && Array.isArray(onlineArray) && onlineArray.length > 0  ? onlineArray.filter((r)=>r.id == row.id) : null;
                 f && Array.isArray(f) && f.length == 1 ? newArrayx.push(f[0]) : newArrayx.push(row);
                 onlineArray = onlineArray.filter((r)=>r.id != row.id);
             })
-            newArrayx = [...newArrayx, ...onlineArray];
+            newArrayx = onlineArray && Array.isArray(onlineArray) && onlineArray.length > 0  ? [...newArrayx, ...onlineArray]: onlineArray;
             return {
                 ...state,
                 resources : newArrayx,

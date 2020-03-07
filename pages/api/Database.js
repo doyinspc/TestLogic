@@ -136,6 +136,28 @@ closeDatabase(db) {
       );
     }
 
+    selectTopic(TABLE_NAME, TABLE_STRUCTURE, param, id, callback) {
+      let completeQuery = build_param(param);
+      const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN (SELECT GROUP_CONCAT(id) AS ids FROM instructions WHERE instructions.topicID = ${id} GROUP BY topicID) LIMIT 1) AS numid FROM ${ TABLE_NAME } ${ completeQuery } `;
+      console.log(query);
+      this.db.transaction(
+                (tx) => { 
+                  tx.executeSql(query, [], (transaction, result) => {
+                      callback(result.rows);
+                    },
+                    (t, error) => {
+                      callback(1);
+                      console.log(error)
+                    }
+                  ) 
+                }, 
+                (error)=>{
+                  callback(1)
+                }, 
+               
+        );
+      }
+
     selectIN(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
       
       let completeQuery = build_in_param(param);
@@ -337,14 +359,11 @@ closeDatabase(db) {
         qux = `${quxs.toString()}`;   
        
         let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
-        
-        this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {
-                            if (callback)
-                            {
-                              console.log(`${TABLE_NAME} UPDATED INTO ROW ${result}`);
-                              callback(result)
-                            }
-                          },
+        this.db.transaction((tx) => {tx.executeSql(query, insert_array, 
+          (transaction, result) => {           
+            console.log(`${TABLE_NAME} UPDATED INTO ROW ${JSON.stringify(transaction, undefined, 2)} `);
+            callback(result)                
+          },
                           (t, error) => {
                             callback(0);
                             console.log(error.message);

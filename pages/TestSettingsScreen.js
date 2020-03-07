@@ -116,7 +116,7 @@ class TestSettingsScreen extends React.Component{
     let arry = this.props.navigation.getParam('topics');
     this.setState({statePos: this.props.question.msg});
     this.props.getQuestions(arry, this.state.noq, q =>{
-      console.log(q)
+        console.log(q)
       if(q){
           this.setState({statePos: 'Preparing Test'});
           this.deConstruct(q, (data) =>{

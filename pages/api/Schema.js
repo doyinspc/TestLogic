@@ -77,12 +77,20 @@ module.exports = {
     },
     test: {
         name:'tests',
-        schema: `id INTEGER PRIMARY KEY , topics TEXT, userID TEXT , subjectID TEXT REFERENCES subject,title TEXT ,description TEXT ,testtime TEXT DEFAULT 0,settings TEXT,ids TEXT,
-                    instructions TEXT,
+        schema: `id INTEGER PRIMARY KEY , 
+                topics TEXT, userID TEXT , 
+                subjectID TEXT REFERENCES subject,
+                title TEXT ,description TEXT ,
+                testtime TEXT DEFAULT 0,
+                settings TEXT,
+                ids TEXT,
+                    
+                instructions TEXT,
                     questions TEXT,
                     answers TEXT,
                     options TEXT,
-                    questionweigth TEXT, active INTEGER DEFAULT 0, 
+                    questionweigth TEXT, 
+                    active INTEGER DEFAULT 0, 
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
     },

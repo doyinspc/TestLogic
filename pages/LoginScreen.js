@@ -35,7 +35,7 @@ class LogIn extends React.Component{
     password:'',
     email:'',
     error:'',
-    isActive: true
+    isActive:true
   }
   
   async componentDidMount() {
