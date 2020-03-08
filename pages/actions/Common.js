@@ -1,18 +1,38 @@
 import Database from './../api/Database';
 import  SCHEME  from './../api/Schema';
+import config from './../../config';
+
+// export const DB_PATH = new Database();
+// export const API_PATH = 'http://192.168.43.193:3001';
+// export const CLIENT_PATH = 'http://192.168.43.193:3001';
+// export const IMAGE_PATH = 'http://192.168.43.193:3001';
+// export const GOOGLE_API_KEY = 'AIzaSyCxF6kwjt3VAxyLJbCH9_V2H52dSWQI_Cw';
+// export const GOOGLE_PATH = '159610177254-5euec0rreq4qhhuekm83tbe8tfcrqjsj.apps.googleusercontent.com';
+// export const FACEBOOK_PATH = 537525200303016;
+// export const ADMOB = 'ca-app-pub-5431380497963954/5927443820';
+// export const ADINTER = 'ca-app-pub-5431380497963954/4867333973';
+// export const ADREWARD = 'ca-app-pub-5431380497963954/4867333973';
+// export const PUBLISHER = 'http://192.168.43.193:3001';
+// export const EMU = 'EMULATOR';;
 
 export const DB_PATH = new Database();
-export const API_PATH = 'http://192.168.43.193:3001';
-export const CLIENT_PATH = 'http://192.168.43.193:3001';
-export const IMAGE_PATH = 'http://192.168.43.193:3001';
-export const GOOGLE_API_KEY = 'AIzaSyCxF6kwjt3VAxyLJbCH9_V2H52dSWQI_Cw';
-export const GOOGLE_PATH = '159610177254-5euec0rreq4qhhuekm83tbe8tfcrqjsj.apps.googleusercontent.com';
-export const FACEBOOK_PATH = 537525200303016;
-export const ADMOB = 'ca-app-pub-5431380497963954/5927443820';
-export const ADINTER = 'ca-app-pub-5431380497963954/4867333973';
-export const ADREWARD = 'ca-app-pub-5431380497963954/4867333973';
-export const PUBLISHER = 'http://192.168.43.193:3001';
-export const EMU = 'EMULATOR';;
+export const API_PATH = config.API_PATH;
+export const CLIENT_PATH = config.CLIENT_PATH;
+export const IMAGE_PATH = config.IMAGE_PATH;
+export const GOOGLE_API_KEY = config.GOOGLE_API_KEY;
+export const GOOGLE_PATH = config.GOOGLE_PATH;
+export const FACEBOOK_PATH = config.FACEBOOK_PATH;
+export const ADMOB = config.ADMOB;
+export const ADINTER = cofig.ADINTER;
+export const ADREWARD = config.ADREWARD;
+export const PUBLISHER = config.PUBLISHER;
+export const EMU = config.EMU;
+export const DB_PATH = config.DB_PATH;
+export const DATABASE_NAME = config.DATABASE_NAME;
+export const DATABASE_VERSION = config.DATABASE_VERSION;
+export const DATABASE_SIZE= config.DATABASE_SIZE; 
+export const DATABASE_DISPLAYNAME= config.DATABASE_DISPLAYNAME; 
+
 
 const db = DB_PATH;
 

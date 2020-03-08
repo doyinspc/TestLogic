@@ -1,10 +1,11 @@
 import * as SQLite from "expo-sqlite";
-var DB_PATH = 'databases/';
+import { DATABASE_PATH, DATABASE_NAME, DATABASE_VERSION, DATABASE_SIZE, DATABASE_DISPLAYNAME} from "./../actions/Common";
 
-var database_name = 'examDB';
-var database_version = '1.0';
-var database_size = 200000; 
-var database_displayname = 'mocktest'; 
+
+var database_name = DATABASE_NAME;
+var database_version = DATABASE_VERSION;
+var database_size = DATABASE_SIZE; 
+var database_displayname = DATABASE_DISPLAYNAME; 
 
 var db; 
 const utility = require('./Utility');

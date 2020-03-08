@@ -54,6 +54,11 @@ relocateResources = (loc) =>{
     this.props.navigation.navigate('ThemeScreen');
 }
 
+//REDIRECT TO SUBJECT MOCKS
+relocateMocks = (value) =>{
+  this.props.navigation.navigate('MocksScreen', {'subjectID':value, 'sid':this.state.page});
+}
+
 //DOWNLOAD FROM HOME SERVER
 //RELOAD PAGE WHEN DONE
 updateSubjects =()=>{
@@ -81,10 +86,11 @@ updateIndex = (selectedIndex) =>{
   }
 }
 
-//comp1 = () => <Icon name='home' color='white' type='material' />
+
 comp2 = () => <Icon name='cloud-download' color='white' type='material' />
 comp3 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
 comp2a = () => <Icon name='spinner' color='white' type='evilicon' />
+
 render(){
   const { subjects, isLoading, isDownloading } = this.props.subject;
   const { fontLoaded, selectedIndex, page } = this.state;
@@ -121,9 +127,7 @@ render(){
                   Select at least a subject.
                 </Text>
              </View>
-
-             <View >
-                
+             <View >  
                 <View style={{flexDirection:'row', flexWrap:'wrap', }}>
                   <Icon name='home' type='material' color='white' />
                   <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Move to home Page</Text>
@@ -170,7 +174,7 @@ render(){
                 friction={90}
                 tension={100}
                 activeScale={0.85}
-                onPress={()=>{this.relocate(l.id)}}
+                onPress={page == 3 ? ()=>{this.relocateMock(l.id)} :()=>{this.relocate(l.id)}}
                 disabled={l.active == 1 ? false : true}
                 disabledStyle={{opacity:0.4}}
                 chevron

@@ -7,7 +7,7 @@ import AwesomeAlert from 'react-native-awesome-alerts';
 import Admob from "./advert/Admob";
 import Adinter from "./advert/Adinter";
 
-import { getResourcesDownload, getResourceSelected} from './actions/Resource';
+import { getMocksDownload, getMockSelected} from './actions/Mock';
 import Activity from './components/LoaderTest';
 
 
@@ -18,7 +18,7 @@ const local_size = tools.Sizes;
 
 
 
-class ResourceScreen extends React.Component{
+class MockScreen extends React.Component{
 
   constructor(props) {
     super(props);
@@ -35,7 +35,7 @@ class ResourceScreen extends React.Component{
  
  
   async componentDidMount() {
-    this.props.getResourcesDownload(this.props.navigation.getParam('topicID'));
+    this.props.getMocksDownload(this.props.navigation.getParam('topicID'));
     var page = this.props.navigation.getParam('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -45,21 +45,21 @@ class ResourceScreen extends React.Component{
   }
 
   
-  //REDIRECT TO TOPIC SCREEN : RESOURCES
-  //ARGUMENTS PASSED THE RESOURCE IDS SELECTED
+  //REDIRECT TO TOPIC SCREEN : MOCKS
+  //ARGUMENTS PASSED THE MOCK IDS SELECTED
   relocateOne = (id) =>{
     let values = id;
     if(values)
     {
       var arr = []
-      this.props.navigation.navigate('ResourceScreen', {'resourceID':values, 'sid':this.state.page})
+      this.props.navigation.navigate('MockScreen', {'mockID':values, 'topicID':this.props.navigation.getParam('topicID'), 'sid':this.state.page})
     }
   }
   
-  //DOWNLOAD RESOURCES FROM HOME/ONLINE SERVER
+  //DOWNLOAD MOCKS FROM HOME/ONLINE SERVER
   //ARGUMENT PASSED SUBJECT ID
-  updateResource =(subject)=>{
-    this.props.getResourcesDownload(subject, (response)=>{
+  updateMock =(subject)=>{
+    this.props.getMocksDownload(subject, (response)=>{
     });
   }
 
@@ -98,7 +98,7 @@ class ResourceScreen extends React.Component{
   else if(selectedIndex == 2 )
   {
       const subs = JSON.stringify(this.props.navigation.getParam('topicID'));
-      this.updateResource(subs)
+      this.updateMock(subs)
   }
   else if(selectedIndex == 3 )
   {
@@ -118,7 +118,7 @@ comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Ne
 
 
 render(){
- const { resources, isLoading } = this.props.resource;
+ const { mocks, isLoading } = this.props.mock;
  const { name } = this.props.subject.subject;
  const { fontLoaded, selectedIndex, values, page } = this.state;
  const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3} , {element:this.comp4}] : [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
@@ -127,12 +127,12 @@ render(){
     <ThemeProvider >
       <View style={styles.topSection}>
           <Text style={styles.h1}>{name}</Text>
-          <Text style={styles.h2}>{page == 1 ? 'Test': `Resources`}: pick at least one resource</Text>
+          <Text style={styles.h2}>{page == 1 ? 'Test': `Mocks`}: pick at least one mock</Text>
       </View>
       <View style={{flex:1}}>
         {fontLoaded   ?  
          <ScrollView>
-            {resources  && Object.keys(resources).length > 0 ? resources.map((l, i) => 
+            {mocks  && Object.keys(mocks).length > 0 ? mocks.map((l, i) => 
             (<ListItem
               key={i}
               titleStyle={styles.listItem}  
@@ -160,10 +160,10 @@ render(){
           :
         <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
           <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />
-          <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Resources</Text>
+          <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Mocks</Text>
         </View>
         }
-        </ScrollView>:<Activity title='Resource' onPress={()=>{this.onPress(1)}} />}
+        </ScrollView>:<Activity title='Mock' onPress={()=>{this.onPress(1)}} />}
         <ButtonGroup
             onPress={this.updateIndex}
             selectedIndex={selectedIndex}
@@ -181,7 +181,7 @@ render(){
 const styles = StyleSheet.create(local_style)
 
 const mapStateToProps = state => ({ 
-  resource: state.resourceReducer,
+  mock: state.mockReducer,
   topic: state.topicReducer,
   theme: state.themeReducer,
   subject: state.subjectReducer,
@@ -189,6 +189,6 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getResourcesDownload,
-    getResourceSelected,
-  })(ResourceScreen);
+    getMocksDownload,
+    getMockSelected,
+  })(MockScreen);

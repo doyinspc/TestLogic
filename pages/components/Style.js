@@ -112,6 +112,20 @@ module.exports = {
             alignContent: 'center',
             fontFamily: 'SulphurPointNormal'
           },
+          h2_top: {
+            fontSize: 15,
+            margin:3,
+            color: color1,
+            margin: 1,
+            fontFamily: 'SulphurPointNormal'
+          },
+          h2_top_description: {
+            fontSize: 15,
+            margin:3,
+            color: color2,
+            margin: 1,
+            fontFamily: 'PoiretOne'
+          },
           h2_overlay: {
             fontSize: 17,
             marginTop:5,

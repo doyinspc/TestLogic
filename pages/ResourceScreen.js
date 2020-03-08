@@ -1,15 +1,16 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { Platform, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Platform, StyleSheet, Text, View, ScrollView, Alert } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 import { YouTubeStandaloneAndroid } from 'react-native-youtube';
+import AutoHeightWebView from 'react-native-autoheight-webview';
+import WebView from 'react-native-webview';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
 import { getResource, getResourceSelected, getResourcesDownload} from './actions/Resource';
 import { GOOGLE_API_KEY } from './actions/Common';
 import Activity from './components/LoaderTest';
-import WebView from 'react-native-webview';
 
 
 const tools = require('./components/Style');
@@ -22,6 +23,7 @@ class ResourceScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
+      key:1,
       fontLoaded: false,
       showAlert: false,
       selectedIndex: null,
@@ -99,8 +101,7 @@ class ResourceScreen extends React.Component{
   }
   else if(selectedIndex == 1 )
   {
-    var p = this.state.page == 1 ? 2 : 1;
-    this.setState({page:p});
+    webViewRef.current.reload()
   }
   else if(selectedIndex == 2 )
   {
@@ -126,18 +127,17 @@ onMessage = (event) => {
     { cancelable: true }
   );
 }
-comp1 = () => <Icon name='home' color='white' type='material' />
-comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
-comp3 = () => <Icon name='cloud-download' color='white' type='material' />
-comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next</Text>
+comp1 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Backward</Text>
+comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Reload</Text>
 
 
 render(){
  const { resource } = this.props.resource;
  const { name } = this.props.subject.subject;
  const { fontLoaded, selectedIndex, values, page } = this.state;
- const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3} , {element:this.comp4}] : [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
+ const buttons =  [{element:this.comp1}, {element:this.comp2}] ;
  let res = resource;
+ let WebViewRef;
  const params = 'platform='+Platform.OS;
     const sourceUri = (Platform.OS === 'android' ? 'file:///android_asset/' : '') + 'Web.bundle/loader.html';
     const injectedJS = `if (!window.location.search) {
@@ -150,35 +150,57 @@ render(){
       <View style={{flex:1}}>
         {fontLoaded   ? 
         <View style={{flex:1}}>
-          <View>
-            <Text style={styles.h2}>{resource.title}</Text>
-            <Text style={styles.h2}>{resource.author}</Text>
+          <View style={{marginHorizontal: Math.floor(local_size.WIDTHS * 0.05) }}>
+            <Text style={styles.h2_top}>{`${resource.title} by ${resource.author}`}</Text>
+            <Text style={styles.h2_top_description}>{resource.description ? resource.description: ''}</Text>
           </View> 
             {resource.types == 1 ?
             <View style={{marginTop:2, flex:1}}>
             <ScrollView style={{flex:1}}>
-            <WebView  
-              source={{ html:[resource.data1, resource.data1] }}
-              injectedJavaScript={injectedJS}
-              javaScriptEnabled={true}
-              originWhitelist={['*']}
-              allowFileAccess={true}
-              onMessage={this.onMessage}
-              style={{marginTop:2, flex:1, height: Math.floor(local_size.HEIGHTS * 80)}}
-            />
+            <AutoHeightWebView
+                  style={{ width: Math.floor(local_size.HEIGHTS * 0.80), marginTop: 35 }}
+                  customScript={`document.body.style.background = 'white';`}
+                  customStyle={`
+                    * {
+                      font-family: 'Times New Roman';
+                    }
+                    p {
+                      font-size: 16px;
+                    }
+                  `}
+                  files={[{
+                      href: 'cssfileaddress',
+                      type: 'text/css',
+                      rel: 'stylesheet'
+                  }]}
+                  source={{ html: `${resource.data1} ${resource.data1}` }}
+                  scalesPageToFit={true}
+                  viewportContent={'width=device-width, user-scalable=no'}
+                  injectedJavaScript={injectedJS}
+                  javaScriptEnabled={true}
+                  originWhitelist={['*']}
+                  allowFileAccess={true}
+                  style={{marginTop:2, flex:1, minHeight:Math.floor(local_size.HEIGHTS * 0.80)}}
+                  renderLoading={this.ActivityIndicatorLoadingView}
+                  startInLoadingState={true}
+                  ref={WEBVIEW_REF => (WebViewRef = WEBVIEW_REF)}
+                />
             </ScrollView>
             </View>
             : null } 
             {resource.types == 2 ?
             <View style={{marginTop:2, flex:1}}>
-            <ScrollView style={{flex:1}}>
-            <WebView  
+            <ScrollView >
+            <WebView 
               source={{ uri:resource.sources }}
               javaScriptEnabled={true}
               originWhitelist={['*']}
               allowFileAccess={true}
               onMessage={this.onMessage}
-              style={{marginTop:2, flex:1, height: Math.floor(local_size.HEIGHTS * 80)}}
+              style={{marginTop:2, flex:1, minHeight: Math.floor(local_size.HEIGHTS * 0.80)}}
+              renderLoading={this.ActivityIndicatorLoadingView}
+              startInLoadingState={true}
+              ref={WEBVIEW_REF => (WebViewRef = WEBVIEW_REF)}
             />
             </ScrollView>
             </View>
