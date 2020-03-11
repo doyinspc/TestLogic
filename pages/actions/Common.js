@@ -23,16 +23,10 @@ export const GOOGLE_API_KEY = config.GOOGLE_API_KEY;
 export const GOOGLE_PATH = config.GOOGLE_PATH;
 export const FACEBOOK_PATH = config.FACEBOOK_PATH;
 export const ADMOB = config.ADMOB;
-export const ADINTER = cofig.ADINTER;
+export const ADINTER = config.ADINTER;
 export const ADREWARD = config.ADREWARD;
 export const PUBLISHER = config.PUBLISHER;
 export const EMU = config.EMU;
-export const DB_PATH = config.DB_PATH;
-export const DATABASE_NAME = config.DATABASE_NAME;
-export const DATABASE_VERSION = config.DATABASE_VERSION;
-export const DATABASE_SIZE= config.DATABASE_SIZE; 
-export const DATABASE_DISPLAYNAME= config.DATABASE_DISPLAYNAME; 
-
 
 const db = DB_PATH;
 

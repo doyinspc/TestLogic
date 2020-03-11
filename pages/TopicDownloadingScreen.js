@@ -55,8 +55,8 @@ class TopicScreen extends React.Component{
     }
  }
 
-  //REDIRECT TO TOPIC SCREEN : RESOURCES
-  //ARGUMENTS PASSED THE TOPIC ID SELECTED
+ //REDIRECT TO TOPIC SCREEN : RESOURCES
+  //ARGUMENTS PASSED THE THEME IDS SELECTED
   relocateOne = (id) =>{
     let values = id;
     if(values)
@@ -65,40 +65,33 @@ class TopicScreen extends React.Component{
     }
   }
 
-  //REDIRECT TO TOPIC DOWNLOADING SCREEN : DOWN LOAD QUESTION 
-  //ARGUMENTS PASSED THE TOPIC ID SELECTED
-  relocateDownload = (id) =>{
-    if(id)
-    {
-      this.props.navigation.navigate('TopicDownloadingScreen', {'topicID':id, 'sid':this.state.page})
-    }
-  }
-
-  // SHOW ADVERT ALERT
   changeVisibility = () =>{
     this.setState({isVisible:true})
   }
 
-  
+  changeDownloading = (id) =>{
+    this.setState({showAdvertAlert:false, isDownloading:true})
+  }
+
 async componentDidMount() {
-  //GET THE SELECTED THEMES
-  let selected_themes = this.props.navigation.getParam('themezID');
-  //GET TOPICS FROM OFFLINE B
-  this.props.getTopics(selected_themes);
-  //LOAD FONT
+  
+  let arry = this.props.navigation.getParam('themezID');
+  this.props.getTopics(arry);
+  if(this.props.topic.topics.length > 0){
+    this.props.getTopicsDBs(arry);
+  }
+  //this.props.getTopicsDownload(arry);
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
   });
-  //SET STATE
   this.setState({ fontLoaded: true, page:page });
-
-  //INITIALIZE VIDEO ADVERT
   this.initAds().catch((error) => console.log(error));
   //AdMobRewarded.setTestDeviceID(EMU);
   // ALWAYS USE TEST ID for Admob ads
   AdMobRewarded.setAdUnitID(ADREWARD);
+
   AdMobRewarded.addEventListener('rewardedVideoDidRewardUser',
       () =>{this.activateTopic()}
   );
@@ -118,8 +111,6 @@ async componentDidMount() {
       () => console.log('interstitialDidLoad4')
   );
 }
-
-//INITIALIZE ADS
 initAds = async () => {
   await setTestDeviceIDAsync(EMU);
  }
@@ -140,20 +131,26 @@ activateLoad = async () =>{
 }
 
 activateTopic = () =>{
-  //IF VIDEO WAS WATCHED THEN ACTIVATE DOWNLOAD
   let d = this.state.watchVideoTopic;
-  this.props.updateTopic({active: 2}, d, async (g)=>{
-    await this.onChange(d, 0, 2 )
-  })
-  this.props.getTopicsDownloadOnly(d, async(c)=>{});
+  console.log(` topic activated ${d}`)
+  this.props.getTopicsDownloadOnly(d, async(c)=>{
+      if(c){
+        this.props.updateTopic({active: 1}, d, async (g)=>{
+          await this.onChange(d, 0, 1 )
+        })
+        
+      }
+  });
 }
 
 showRewarded = async () =>{
-  //CLOSE THE ADVERT ALERT
+  this.activateTopic()
   this.setState({showAdvertAlert:false});
   AdMobRewarded.setAdUnitID(ADINTER); 
   await AdMobRewarded.requestAdAsync();
   await AdMobRewarded.showAdAsync();
+  
+
 }
 
 static getDerivedStateFromProps(nextProps, prevState){
@@ -166,56 +163,47 @@ static getDerivedStateFromProps(nextProps, prevState){
 }
 
 //STORE SELECTED TOPICS IN STATE ARRAY : VALUES
-onChange = (topicID, advert, topicActive, indexes ) => {
-    //IF THE TOPIC IS ACTIVE
-    //AND THE TOPIC QUESTIONS HAVE ALREADY BEEN DOWNLODED
-    //SELECT TOPIC
+onChange = async (topicID, advert, topicActive ) => {
+    //if the topic active 
+    //activate the list
     if(topicActive === 1)
     {
       let news = {...this.state.checked};
-      const newValues = [...this.state.values];
-
       news[topicID] = news[topicID] ? false : true;
-      const currentIndex = this.state.values.indexOf(topicID); 
+      const currentIndex = this.state.values.indexOf(topicID);
+      const newValues = [...this.state.values];
     
       if (currentIndex === -1) {
-        newValues.push(topicID);
+        await newValues.push(topicID);
       } else {
-        newValues.splice(currentIndex, 1);
+        await newValues.splice(currentIndex, 1);
       }
-      //UPDATE STATE AND CHECKED VALUES
-      this.setState({ checked : news, values:newValues});
+      await this.setState({ checked : news, values:newValues});
     }
-    //IF THE TOPIC IS NOT ACTIVE
-    //AND TOPIC QUESTIONS NOT DOWNLOADED
     else if(topicActive === 0)
     {
-      //SHOW ALERT BOX TO DETERMINE MODE OF PAYMENT
-      //ALSO SET THE TOPIC ID AS ACTIVE : WATCHVIDEOTOPIC
-      //ALSO SET ADVERT OPTIONS
-      this.setState({ showAdvertAlert:true, watchVideoTopic:topicID, advertType:advert });
-    }
-    //IF THE TOPIC IS NOT ACTIVE
-    //AND TOPIC ARE SET TO DOWNLOADING
-    else if(topicActive === 2)
-    {
-      //REDIRECT TO TOPIC DOWNLOADINGPAGE
-      this.relocateDownload(topicID);
+      this.setState({ showAdvertAlert:true, watchVideoTopic:topicID });
+      let d =topicID;
+      this.props.getTopicsDownloadOnly(d, async(c)=>{
+        
+            //await this.props.updateTopic({active: 1}, d, async (g)=>{
+            //await this.onChange(d, 0, 1 )
+         // })
+          
+        
+    });
     }
   }
 
-  //DOWNLOAD TOPICS ONLY
+  //DOWNLOAD TOPICS, INSTRUCTIONS, QUESTIONS, ANSWERS, DISTRACTOR
   updateTopicx=()=>{
-    let arry = this.props.navigation.getParam('themezID');
+    let arry = this.props.navigation.getParam('topicID');
     this.props.getTopicsDBs(arry);
   }
 
-  //BUTTOM BUTTON GROUP
-  //0. TOGGLE MODE ACADEMIC AND RESOURCES
-  //1. REDOWNLOAD TOPICS
-  //2. REDIRECT T0 TEST SETTINGS
   updateIndex = (selectedIndex) =>{
     this.setState({ selectedIndex });
+
     if(selectedIndex == 0 )
     {
         var p = this.state.page == 1 ? 2 : 1;
@@ -223,50 +211,31 @@ onChange = (topicID, advert, topicActive, indexes ) => {
     }
     else if(selectedIndex == 1 )
     {
-        this.updateTopicx();
+        //this.updateTopicx();
     }
     else if(selectedIndex == 2 )
     {
         this.relocate()
     }
   }
-
-
-
-  //USE WHEN ACADEMIC
+  
   keyExtractors = (item, index) =>index.toString();
   renderItems = ({item, index}) =>
     <ListItem
                 key={index}
                 titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: item.active == 2 ? 'grey' : this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: item.active == 2 ? 'cloud-download':this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
+                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
                 title={`${item.name} ${item.id} ${item.active}`}
-                subtitle={ item.active == 2 ? 'Downloading... Click to learn more...' : null}
+                subtitle={ this.state.downloads[item.id] ? 'Downloading' : null}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
-                onPress={()=>{item.active == 2 ? this.relocateDownload(item.id) :this.state.downloads[item.id] ? this.onDownloading(item.id) : this.onChange(item.id, item.advert, item.active, index)}}   
+                onPress={()=>{this.state.downloads[item.id] ? this.onDownloading(item.id) :this.onChange(item.id, item.advert, item.active)}}   
             />
-  renderItemsx = ({item, index}) =><Text>{item.id}</Text>
   
-  //USE WHEN RESOURCES
-  keyExtractorss = (item, index) =>index.toString();
-  renderItemss = ({item, index}) =>
-            <ListItem
-              key={index}
-              titleStyle={item.active == 1 ? styles.listItem:[styles.listItem, {opacity:0.4}] }  
-              leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
-              title={item.name}
-              bottomDivider
-              friction={90}
-              tension={100}
-              activeScale={0.85}
-              onPress={()=>{this.relocateOne(l.id)}}
-              chevron
-          />
-  renderItemsxs = ({item, index}) =><Text>{item.id}</Text>
 
+  renderItemsx = ({item, index}) =><Text>{item.id}</Text>
   
   comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
   comp3 = () => <Icon name='cloud-download' color='white' type='material' />
@@ -294,6 +263,25 @@ render(){
       </View>
        <View style={{flex:1}}>
        <Admob type='fullbanner'/>
+       <Overlay
+          isVisible={this.state.isDownloading}
+          windowBackgroundColor="rgba(7, 7, 7, .3)"
+          overlayBackgroundColor= {local_color.color1}
+          style={{minHeight:200, activeOpacity:0.3}}
+          margin={15}
+          padding={15}
+          width={Math.floor(local_size.WIDTHS * 0.75)}
+        >
+          <View style={{flex:1, alignItems:'center', alignContent:'center'}}>
+            <ProgressCircular prog={67} onDownloaded={() => console.log('onAnimationComplete')}/>
+            <Button
+                title='Close'
+                style={styles.but_overlay}
+                onPress={()=>this.setState({isDownloading:false})}
+                buttonStyle={{backgroundColor:local_color.color3}}
+            />
+          </View>
+        </Overlay>
        <Overlay
           isVisible={this.state.isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -325,6 +313,7 @@ render(){
                   Select at least one topic and move to the next page.
                 </Text>
              </View>
+
              <View >
                 
                 <View style={{flexDirection:'row', flexWrap:'wrap', }}>
@@ -396,7 +385,7 @@ render(){
                 tension={100}
                 style={{marginVertical:10}}
                 activeScale={0.85}
-                onPress={()=>{this.activateTopic()}}
+                onPress={()=>{this.changeDownloading(1)}}
                 chevron
             />
 
@@ -411,7 +400,7 @@ render(){
                 tension={100}
                 style={{marginVertical:10}}
                 activeScale={0.85}
-                onPress={()=>{this.relocatePayment(1)}}
+                onPress={()=>{this.relocateOne(1)}}
                 chevron
             />
              
@@ -436,15 +425,21 @@ render(){
               extraData={this.state}
               style={{flex:1}}
            />
-           : page == 2 && topics && Object.keys(topics).length > 0  ? 
-              <FlatList
-                data={topics}
-                keyExtractor={this.keyExtractorss}
-                initialNumToRender={7}
-                renderItem={this.renderItemss}
-                extraData={this.state}
-                style={{flex:1}}
-             /> 
+           : page == 2 && topics  ? 
+              topics.map((l, i) => (
+              <ListItem
+                key={i}
+                titleStyle={l.active == 1 ? styles.listItem:[styles.listItem, {opacity:0.4}] }  
+                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
+                title={l.name}
+                bottomDivider
+                friction={90}
+                tension={100}
+                activeScale={0.85}
+                onPress={()=>{this.relocateOne(l.id)}}
+                chevron
+            />
+            ))  
           :
         <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
           <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />

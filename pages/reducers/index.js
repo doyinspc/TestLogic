@@ -6,6 +6,7 @@ import topic from'./Topic';
 import question from'./Question';
 import test from'./Test';
 import score from'./Score';
+import mock from'./Mock';
 import user from'./User';
 
 export default combineReducers({
@@ -16,5 +17,6 @@ export default combineReducers({
     questionReducer:question,
     testReducer:test,
     scoreReducer:score,
+    mockReducer:mock,
     userReducer:user,
 });

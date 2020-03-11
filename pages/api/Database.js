@@ -1,5 +1,11 @@
 import * as SQLite from "expo-sqlite";
-import { DATABASE_PATH, DATABASE_NAME, DATABASE_VERSION, DATABASE_SIZE, DATABASE_DISPLAYNAME} from "./../actions/Common";
+import config from './../../config.js';
+
+const DB_PATH = config.DB_PATH;
+const DATABASE_NAME = config.DATABASE_NAME;
+const DATABASE_VERSION = config.DATABASE_VERSION;
+const DATABASE_SIZE= config.DATABASE_SIZE; 
+const DATABASE_DISPLAYNAME= config.DATABASE_DISPLAYNAME; 
 
 
 var database_name = DATABASE_NAME;
@@ -278,13 +284,13 @@ closeDatabase(db) {
                           }
                       },
                       (t, error) => {
-                        callback('xx');
+                        callback(error);
                         
                       }
                     ) 
                   }, 
                   (t, error)=>{
-                    callback('xx');
+                    callback(error);
                    
                   },     
           )
@@ -362,7 +368,7 @@ closeDatabase(db) {
         let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
         this.db.transaction((tx) => {tx.executeSql(query, insert_array, 
           (transaction, result) => {           
-            console.log(`${TABLE_NAME} UPDATED INTO ROW ${JSON.stringify(transaction, undefined, 2)} `);
+            console.log(`${TABLE_NAME} UPDATED INTO ROW ${JSON.stringify(id, undefined, 2)} `);
             callback(result)                
           },
                           (t, error) => {

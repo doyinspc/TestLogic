@@ -35,7 +35,7 @@ class MockScreen extends React.Component{
  
  
   async componentDidMount() {
-    this.props.getMocksDownload(this.props.navigation.getParam('topicID'));
+    this.props.getMocksDownload(this.props.navigation.getParam('subjectID'));
     var page = this.props.navigation.getParam('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -126,8 +126,12 @@ render(){
   return (
     <ThemeProvider >
       <View style={styles.topSection}>
-          <Text style={styles.h1}>{name}</Text>
-          <Text style={styles.h2}>{page == 1 ? 'Test': `Mocks`}: pick at least one mock</Text>
+          <Text style={styles.h1}>Mock Test</Text>
+          <View style={{flexDirection:'row', justifyContent:'center'}}>
+                  <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
+                  <Icon reverse raised name='ios-stats' type='ionicon'  color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('ChartScreen',{'stats':1})}}/>
+                  <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.changeVisibility()}}/>
+          </View> 
       </View>
       <View style={{flex:1}}>
         {fontLoaded   ?  

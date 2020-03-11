@@ -53,4 +53,44 @@ export const getMockSelected = (ids) => (dispatch) => {
   dispatch({ type: MOCK_GET_SELECTED, payload: ids})
 };
 
+export const loaddata =  (data, tables, callback) =>{
+  // data : rows from cloud
+  // tables : database table to be used
+  // get the columns of a table that can be edite
+  const editable_rows = SCHEME[tables].edits;
+  // crea an array to store return valuse 
+  let dt  = [];
+  //check if data is available
+  // run through the array
+  data && Array.isArray(data) && data.length > 0 ? data.forEach(async data_row => {
+      //pick a row via id confirm id is not zero
+      if(data_row.id && parseInt(data_row.id) > 0)
+      {
+        //ARG - ROW id , table name
+        // select row from sqlite db usign id and table name
+        await selectPut(data_row.id, tables, (sqlite_row)=>{
+            //COMPARE THE DATA ROW AND THE SQLITE ROW DATA
+            compare(sqlite_row, data_row, editable_rows, (col)=>{
+              console.log(`Comparing ${tables} ${data_row.id} `);
+              if(col[0] === 0)
+              {
+                dt.push(data_row.id);
+                loadUpdate(col[1], tables, data_row.id,  (da)=>{dt.push(data_row.id); console.log(`Updating ${tables} ${data_row.id}`);})
+              }else if(col[0] === 1)
+              {
+                loadInsert(data_row, tables, (da)=>{dt.push(da); console.log(`Inserting ${tables} ${data_row.id}`);})
+              }
+            else if(col[0] === 2)
+            {
+              console.log(`Exist ${tables} row ${data_row.id} no changes required`);
+              //callback(dt)
+            }
+            })
+      })
+    }
+      
+   })
+   : null ;
+   callback(dt); 
+};
 

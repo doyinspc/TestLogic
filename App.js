@@ -18,6 +18,9 @@ import ThemeScreen from './pages/ThemeScreen';
 import TopicScreen from './pages/TopicScreen';
 import ResourcesScreen from './pages/ResourcesScreen';
 import ResourceScreen from './pages/ResourceScreen';
+import MocksScreen from './pages/MocksScreen';
+import MockScreen from './pages/MockScreen';
+import PaymentScreen from './pages/PaymentScreen';
 import ChangePasswordScreen from './pages/ChangePasswordScreen';
 import ForgotPasswordScreen from './pages/ForgotPasswordScreen';
 import TestSettingsScreen from './pages/TestSettingsScreen';
@@ -127,6 +130,33 @@ const AppStack = createStackNavigator({
       screen: ResourceScreen,
       navigationOptions: {
         title: 'Resources',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    MocksScreen: {
+      screen: MocksScreen,
+      navigationOptions: {
+        title: 'Mocks List',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    MockScreen: {
+      screen: MockScreen,
+      navigationOptions: {
+        title: 'Mocks',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+    PaymentScreen: {
+      screen: PaymentScreen,
+      navigationOptions: {
+        title: 'Payments',
         headerStyle: pgArr,
         headerTitleStyle: phArr,
         headerTintColor: tintColor,

@@ -110,12 +110,12 @@ class HomeScreen extends React.Component {
         </View>
         </TouchableHighlight>
         
-        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('SubjectScreen')}} underlayColor="grey">
+        <TouchableHighlight onPress={()=>{this.props.navigation.navigate('PaymentScreen')}} underlayColor="grey">
         <View style={styles.home_list_container}>
         <Icon name='payment' padding={10}  paddingLeft={30} color= {local_color.color2} size={80} type="fontawesome"/>
         <View style={{padding:10, flexShrink:1}}>
           <Text style={styles.home_h1}>Upgrade to Pro.</Text>
-          <Text style={styles.home_h2}>Remove adverts, get frequent question updates, full access to all mock test</Text>
+          <Text style={styles.home_h2}>Remove ads, get frequent question updates, full access to all mock test</Text>
         </View>
         </View>
         </TouchableHighlight>

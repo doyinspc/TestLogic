@@ -39,7 +39,7 @@ class SubjectScreen extends React.Component{
 }
 
 //REDIRECT TO THEMES PAGE
-//REQUIRE THEMECID
+//REQUIRE THEME ID
 relocate = (value) =>{
   if(value && value > 0)
   {
@@ -55,7 +55,7 @@ relocateResources = (loc) =>{
 }
 
 //REDIRECT TO SUBJECT MOCKS
-relocateMocks = (value) =>{
+relocateMock = (value) =>{
   this.props.navigation.navigate('MocksScreen', {'subjectID':value, 'sid':this.state.page});
 }
 

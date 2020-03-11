@@ -7,7 +7,9 @@ import {
     TOPIC_LOADING_ERROR,
     TOPIC_DOWNLOADING,
     TOPIC_DOWNLOADING_SUCCESS,
-    TOPIC_DOWNLOADING_FAIL
+    TOPIC_DOWNLOADING_FAIL,
+    TOPIC_DOWNLOADING_START,
+    TOPIC_DOWNLOADING_STATE
 } from "../types/Topic";
 
 const initialState = {
@@ -19,7 +21,9 @@ const initialState = {
     isEdit: 0,
     ids: [],
     isForm: false,
-    showActions: false
+    showActions: false,
+    tquestions:{},
+    tloading:{}
 }
 
 export default function(state = initialState, action){
@@ -32,7 +36,23 @@ export default function(state = initialState, action){
                 topic:{},
                 ids:[]
             };
-         case TOPIC_DOWNLOADING:
+        case TOPIC_DOWNLOADING_START:
+            let tq = {...state.tquestions};
+            let nu = action.topicid;
+            tq[nu] = action.topicquestions;
+            return {
+                ...state,
+                tquestions:tq
+            };
+        case TOPIC_DOWNLOADING_STATE:
+            let tqs = {...state.tloading};
+            let nus = action.topicid;
+            tqs[nus] = action.topicquestions;
+            return {
+                ...state,
+                tloading:tqs
+            };
+        case TOPIC_DOWNLOADING:
             return {
                 ...state,
                 isDownloading: true,
@@ -87,7 +107,6 @@ export default function(state = initialState, action){
             var datac = action.data.active;
             var newArrayc = [...state.topics];
             const isIndex = newArrayc.findIndex(x => x.id === idc);
-            console.log(isIndex);
             newArrayc && Array.isArray(newArrayc) && newArrayc[isIndex] ? newArrayc[isIndex].active =  datac: {};
             return {
                 ...state,
