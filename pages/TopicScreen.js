@@ -68,9 +68,10 @@ class TopicScreen extends React.Component{
   //REDIRECT TO TOPIC DOWNLOADING SCREEN : DOWN LOAD QUESTION 
   //ARGUMENTS PASSED THE TOPIC ID SELECTED
   relocateDownload = (id) =>{
+    console.log(id);
     if(id)
     {
-      this.props.navigation.navigate('TopicDownloadingScreen', {'topicID':id, 'sid':this.state.page})
+      this.props.navigation.navigate('TopicDownloadingScreen', {'topicID':id})
     }
   }
 

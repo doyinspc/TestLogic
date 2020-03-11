@@ -1,14 +1,13 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ScrollView, ListView } from 'react-native';
-import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon , Overlay, Button, SocialIcon} from 'react-native-elements';
+import { StyleSheet, Text, View, ScrollView} from 'react-native';
+import { ThemeProvider,ButtonGroup, Icon , Overlay, Button} from 'react-native-elements';
 import * as Font from 'expo-font';
 import ProgressCircular  from './components/Progress';
 import Admob from "./advert/Admob";
 
-import { getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic } from './actions/Topic';
+import { getTopic, getTopicsDownloadOnly, updateTopic } from './actions/Topic';
 import Activity from './components/LoaderTest';
-import { FlatList } from 'react-native-gesture-handler';
 import {ADMOB, ADINTER, ADREWARD, PUBLISHER, EMU } from './actions/Common';
 import {
   setTestDeviceIDAsync,
@@ -30,15 +29,7 @@ class TopicScreen extends React.Component{
       fontLoaded: false,
       isVisible: false,
       isDownloading: false,
-      selectedIndex: null,
-      checked: {},
-      values: [],
-      page:1,
-      showAdvertAlert: false,
-      watchVideoTopic: null,
-      selected:false,
-      topics:this.props.topic.topics,
-      downloads:{}
+      prog:23
       
     };
   }
@@ -50,7 +41,6 @@ class TopicScreen extends React.Component{
   let values = this.state.values;
     if(values && values.length > 0)
     {
-    this.props.getTopicSelected(values);
     this.props.navigation.navigate('TestSettingsScreen', { 'topics':this.state.values, testID:null});
     }
  }
@@ -75,12 +65,8 @@ class TopicScreen extends React.Component{
 
 async componentDidMount() {
   
-  let arry = this.props.navigation.getParam('themezID');
-  this.props.getTopics(arry);
-  if(this.props.topic.topics.length > 0){
-    this.props.getTopicsDBs(arry);
-  }
-  //this.props.getTopicsDownload(arry);
+  let arry = this.props.navigation.getParam('topicID');
+  this.props.getTopic(arry);
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -130,18 +116,7 @@ activateLoad = async () =>{
  })
 }
 
-activateTopic = () =>{
-  let d = this.state.watchVideoTopic;
-  console.log(` topic activated ${d}`)
-  this.props.getTopicsDownloadOnly(d, async(c)=>{
-      if(c){
-        this.props.updateTopic({active: 1}, d, async (g)=>{
-          await this.onChange(d, 0, 1 )
-        })
-        
-      }
-  });
-}
+
 
 showRewarded = async () =>{
   this.activateTopic()
@@ -149,8 +124,6 @@ showRewarded = async () =>{
   AdMobRewarded.setAdUnitID(ADINTER); 
   await AdMobRewarded.requestAdAsync();
   await AdMobRewarded.showAdAsync();
-  
-
 }
 
 static getDerivedStateFromProps(nextProps, prevState){
@@ -162,52 +135,13 @@ static getDerivedStateFromProps(nextProps, prevState){
   }
 }
 
-//STORE SELECTED TOPICS IN STATE ARRAY : VALUES
-onChange = async (topicID, advert, topicActive ) => {
-    //if the topic active 
-    //activate the list
-    if(topicActive === 1)
-    {
-      let news = {...this.state.checked};
-      news[topicID] = news[topicID] ? false : true;
-      const currentIndex = this.state.values.indexOf(topicID);
-      const newValues = [...this.state.values];
-    
-      if (currentIndex === -1) {
-        await newValues.push(topicID);
-      } else {
-        await newValues.splice(currentIndex, 1);
-      }
-      await this.setState({ checked : news, values:newValues});
-    }
-    else if(topicActive === 0)
-    {
-      this.setState({ showAdvertAlert:true, watchVideoTopic:topicID });
-      let d =topicID;
-      this.props.getTopicsDownloadOnly(d, async(c)=>{
-        
-            //await this.props.updateTopic({active: 1}, d, async (g)=>{
-            //await this.onChange(d, 0, 1 )
-         // })
-          
-        
-    });
-    }
-  }
-
-  //DOWNLOAD TOPICS, INSTRUCTIONS, QUESTIONS, ANSWERS, DISTRACTOR
-  updateTopicx=()=>{
-    let arry = this.props.navigation.getParam('topicID');
-    this.props.getTopicsDBs(arry);
-  }
-
+  
   updateIndex = (selectedIndex) =>{
     this.setState({ selectedIndex });
 
     if(selectedIndex == 0 )
     {
-        var p = this.state.page == 1 ? 2 : 1;
-        this.setState({page:p});
+      this.relocate()
     }
     else if(selectedIndex == 1 )
     {
@@ -215,75 +149,36 @@ onChange = async (topicID, advert, topicActive ) => {
     }
     else if(selectedIndex == 2 )
     {
-        this.relocate()
+        this.props.getTopicsDownloadOnly(this.props.navigation.getParam('topicID'))
     }
   }
   
-  keyExtractors = (item, index) =>index.toString();
-  renderItems = ({item, index}) =>
-    <ListItem
-                key={index}
-                titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
-                title={`${item.name} ${item.id} ${item.active}`}
-                subtitle={ this.state.downloads[item.id] ? 'Downloading' : null}
-                bottomDivider
-                friction={90}
-                tension={100}
-                activeScale={0.85}
-                onPress={()=>{this.state.downloads[item.id] ? this.onDownloading(item.id) :this.onChange(item.id, item.advert, item.active)}}   
-            />
   
-
-  renderItemsx = ({item, index}) =><Text>{item.id}</Text>
-  
-  comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
-  comp3 = () => <Icon name='cloud-download' color='white' type='material' />
-  comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next</Text>
-  comp3a = () => <Icon name='spinner' color='white' type='evilicon' />
+  comp1 = () => <Icon name='backward' color='white' type='material' />
+  comp2 = () => <Icon name='cloud-download' color='white' type='material' />
+  comp3 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Update</Text>
 
 render(){
 
-  const {isLoading, isDownloading, topics } = this.props.topic;
+  const {isLoading, isDownloading, topic } = this.props.topic;
   const { themes, ids } = this.props.theme;
   const { name } = this.props.subject.subject;
-  const { fontLoaded, selectedIndex, values, page, selected, downloads} = this.state;
-  const buttons = values && Object.keys(values).length > 0 && page == 1 ? [{element:this.comp2}, {element:isDownloading ? this.comp3a: this.comp3} , {element:this.comp4}] : [{element:this.comp2}, {element:isDownloading ? this.comp3a: this.comp3}];
+  const { fontLoaded, selectedIndex, isVisible, prog} = this.state;
+  const buttons =  [{element:this.comp1}, {element:isDownloading ? this.comp3a: this.comp2} , {element:this.comp3}] ;
   const list_themes = themes && Array.isArray(themes) && themes.length > 0 && ids  && Array.isArray(ids) ? themes.filter((row)=>ids.includes(row.id)) : null;
   const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
   
   return (
     <ThemeProvider >
       <View style={styles.topSection}>
-          <Text style={styles.h1}>{name}</Text><View style={{flexDirection:'row', justifyContent:'center'}}>
-                  <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
-                  <Icon reverse raised name='ios-stats' type='ionicon'  color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
-                  <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.changeVisibility()}}/>
-          </View>
+          <Text style={styles.h1}>{name}</Text>
+          <Text style={styles.h2}>{topic.name}</Text>
       </View>
        <View style={{flex:1}}>
        <Admob type='fullbanner'/>
+       
        <Overlay
-          isVisible={this.state.isDownloading}
-          windowBackgroundColor="rgba(7, 7, 7, .3)"
-          overlayBackgroundColor= {local_color.color1}
-          style={{minHeight:200, activeOpacity:0.3}}
-          margin={15}
-          padding={15}
-          width={Math.floor(local_size.WIDTHS * 0.75)}
-        >
-          <View style={{flex:1, alignItems:'center', alignContent:'center'}}>
-            <ProgressCircular prog={67} onDownloaded={() => console.log('onAnimationComplete')}/>
-            <Button
-                title='Close'
-                style={styles.but_overlay}
-                onPress={()=>this.setState({isDownloading:false})}
-                buttonStyle={{backgroundColor:local_color.color3}}
-            />
-          </View>
-        </Overlay>
-       <Overlay
-          isVisible={this.state.isVisible}
+          isVisible={isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
           overlayBackgroundColor= {local_color.color1}
           style={{minHeight:200, activeOpacity:0.3}}
@@ -348,105 +243,15 @@ render(){
           </View>
         </Overlay>
 
-        <Overlay
-          isVisible={this.state.showAdvertAlert}
-          windowBackgroundColor="rgba(7, 7, 7, .3)"
-          overlayBackgroundColor= "rgba(7, 7, 7, .3)"
-          style={{ opacity:0.3}}
-          margin={60}
-          padding={15}
-          width="auto"
-        >
-          <View style={{flex:1, width: Math.floor((local_size.WIDTHS / 20) * 15),   justifyContent:'space-between', alignContent:'space-between'}}>
-          <Text style={[styles.h1_overlay, { fontFamily:'PoiretOne'}]}>UNLOCK TOPIC</Text>
-          <View>
-          <View style={{flexDirection:'column'}}>
-          <ListItem
-                key={1}
-                titleStyle={styles.listItem}  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7} size='medium' rounded  icon={{ name: 'tv', color:'white', backgroundColor:'red' }} />}
-                title='Watch a video'
-                bottomDivider
-                friction={90}
-                tension={100}
-                style={{marginVertical:10}}
-                activeScale={0.85}
-                onPress={()=>{this.showRewarded()}}
-                chevron
-            />
-
-            <ListItem
-                key={2}
-                titleStyle={styles.listItem}  
-                leftAvatar={<SocialIcon  activeOpacity={0.7} type='facebook'/>}
-                title='Share on Facebook'
-                bottomDivider
-                friction={90}
-                tension={100}
-                style={{marginVertical:10}}
-                activeScale={0.85}
-                onPress={()=>{this.changeDownloading(1)}}
-                chevron
-            />
-
-            <ListItem
-                key={3}
-                titleStyle={styles.listItem}  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'maroon'}} activeOpacity={0.7} size='medium' rounded  icon={{ name: 'party-mode', color:'white', backgroundColor:'red' }} />}
-                title='Upgrade to Pro version'
-                subtitle='Unlock all topics for this subject, Remove adverts'
-                bottomDivider
-                friction={90}
-                tension={100}
-                style={{marginVertical:10}}
-                activeScale={0.85}
-                onPress={()=>{this.relocateOne(1)}}
-                chevron
-            />
-             
-          </View>
-          </View>
-          <Button
-                title='Close'
-                style={styles.but_overlay}
-                onPress={()=>this.setState({showAdvertAlert:false})}
-                buttonStyle={{backgroundColor:local_color.color3}}
-            />
-          </View>
-        </Overlay>
-        {fontLoaded  && !isLoading ? 
-         <View style={{flex:1}}>
-        { page == 1 && topics && Object.keys(topics).length > 0 ? 
-           <FlatList
-              data={topics}
-              keyExtractor={this.keyExtractors}
-              initialNumToRender={7}
-              renderItem={this.renderItems}
-              extraData={this.state}
-              style={{flex:1}}
+           <View style={{flex:1, alignItems:'center', alignContent:'center'}}>
+           <ProgressCircular prog={prog} onDownloaded={() => console.log('onAnimationComplete')}/>
+           <Button
+               title='Close'
+               style={styles.but_overlay}
+               onPress={()=>this.setState({isDownloading:false})}
+               buttonStyle={{backgroundColor:local_color.color3}}
            />
-           : page == 2 && topics  ? 
-              topics.map((l, i) => (
-              <ListItem
-                key={i}
-                titleStyle={l.active == 1 ? styles.listItem:[styles.listItem, {opacity:0.4}] }  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: 'teal'}} activeOpacity={0.7}  rounded  icon={{ name: 'school', color:'white', backgroundColor:'red' }} />}
-                title={l.name}
-                bottomDivider
-                friction={90}
-                tension={100}
-                activeScale={0.85}
-                onPress={()=>{this.relocateOne(l.id)}}
-                chevron
-            />
-            ))  
-          :
-        <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
-          <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />
-          <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Topics</Text>
-        </View>
-        }
-        </View>:<Activity title='Topics' onPress={()=>{this.onPress(1)}} />}
+         </View>
         <ButtonGroup
             onPress={this.updateIndex}
             selectedIndex={selectedIndex}
@@ -469,6 +274,6 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic,
+    getTopic, updateTopic, getTopicsDownloadOnly
    }
    )(TopicScreen);

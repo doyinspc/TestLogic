@@ -16,6 +16,7 @@ import LoginShowScreen from './pages/LoginShowScreen';
 import SubjectScreen from './pages/SubjectScreen';
 import ThemeScreen from './pages/ThemeScreen';
 import TopicScreen from './pages/TopicScreen';
+import TopicDownloadingScreen from './pages/TopicDownloadingScreen';
 import ResourcesScreen from './pages/ResourcesScreen';
 import ResourceScreen from './pages/ResourceScreen';
 import MocksScreen from './pages/MocksScreen';
@@ -112,6 +113,15 @@ const AppStack = createStackNavigator({
       screen: TopicScreen,
       navigationOptions: {
         title: 'Topics',
+        headerStyle: pgArr,
+        headerTitleStyle: phArr,
+        headerTintColor: tintColor,
+      },
+    },
+  TopicDownloadingScreen: {
+      screen: TopicDownloadingScreen,
+      navigationOptions: {
+        title: 'Downloading Questions',
         headerStyle: pgArr,
         headerTitleStyle: phArr,
         headerTintColor: tintColor,
