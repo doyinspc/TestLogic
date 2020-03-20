@@ -6,7 +6,7 @@ import * as Font from 'expo-font';
 import ProgressCircular  from './components/Progress';
 import Admob from "./advert/Admob";
 
-import { getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic } from './actions/Topic';
+import { getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic, getTopicCount } from './actions/Topic';
 import Activity from './components/LoaderTest';
 import { FlatList } from 'react-native-gesture-handler';
 import {ADMOB, ADINTER, ADREWARD, PUBLISHER, EMU } from './actions/Common';
@@ -38,8 +38,8 @@ class TopicScreen extends React.Component{
       watchVideoTopic: null,
       selected:false,
       topics:this.props.topic.topics,
-      downloads:{}
-      
+      downloads:{},
+      tupdate:{}
     };
   }
 
@@ -68,7 +68,6 @@ class TopicScreen extends React.Component{
   //REDIRECT TO TOPIC DOWNLOADING SCREEN : DOWN LOAD QUESTION 
   //ARGUMENTS PASSED THE TOPIC ID SELECTED
   relocateDownload = (id) =>{
-    console.log(id);
     if(id)
     {
       this.props.navigation.navigate('TopicDownloadingScreen', {'topicID':id})
@@ -84,7 +83,7 @@ class TopicScreen extends React.Component{
 async componentDidMount() {
   //GET THE SELECTED THEMES
   let selected_themes = this.props.navigation.getParam('themezID');
-  //GET TOPICS FROM OFFLINE B
+  //GET TOPICS FROM OFFLINE 
   this.props.getTopics(selected_themes);
   //LOAD FONT
   var page = this.props.navigation.getParam('sid');
@@ -130,6 +129,12 @@ componentWillUnmount() {
   AdMobRewarded.removeAllListeners();
 }
 
+componentDidUpdate(nextProps, prevState){
+  if(nextProps.topic.tupdate[prevState.watchVideoTopic] == 1){
+    this.props.updateTopic({active: 2}, prevState.watchVideoTopic, async (g)=>{})
+  }
+
+}
 bannerError(e) {
   return e;
 }
@@ -142,6 +147,7 @@ activateLoad = async () =>{
 
 activateTopic = () =>{
   //IF VIDEO WAS WATCHED THEN ACTIVATE DOWNLOAD
+  this.setState({isVisible:false})
   let d = this.state.watchVideoTopic;
   this.props.updateTopic({active: 2}, d, async (g)=>{
     await this.onChange(d, 0, 2 )
@@ -158,12 +164,19 @@ showRewarded = async () =>{
 }
 
 static getDerivedStateFromProps(nextProps, prevState){
+  if(nextProps.topic.tupdate[prevState.watchVideoTopic] !== undefined && nextProps.topic.tupdate[prevState.watchVideoTopic] !== prevState.tupdate[prevState.watchVideoTopic])
+  {
+    let tload = {...prevState.tupdate};
+    tload[prevState.watchVideoTopic] = nextProps.topic.tupdate[prevState.watchVideoTopic];
+    return{tupdate: tload};
+  }else{ 
+    return null;
+  }
+
   if(nextProps.topic.topics !== prevState.topics)
   {
     return{selected:true, topics:nextProps.topic.topics}
-  }else{
-    return{selected:false}
-  }
+  }else{ return null}
 }
 
 //STORE SELECTED TOPICS IN STATE ARRAY : VALUES
@@ -173,6 +186,8 @@ onChange = (topicID, advert, topicActive, indexes ) => {
     //SELECT TOPIC
     if(topicActive === 1)
     {
+      this.setState({ watchVideoTopic:topicID });
+      this.props.getTopicCount(topicID);
       let news = {...this.state.checked};
       const newValues = [...this.state.values];
 
@@ -231,8 +246,6 @@ onChange = (topicID, advert, topicActive, indexes ) => {
         this.relocate()
     }
   }
-
-
 
   //USE WHEN ACADEMIC
   keyExtractors = (item, index) =>index.toString();
@@ -475,6 +488,6 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic,
+    getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic, getTopicCount
    }
    )(TopicScreen);

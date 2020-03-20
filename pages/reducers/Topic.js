@@ -9,7 +9,8 @@ import {
     TOPIC_DOWNLOADING_SUCCESS,
     TOPIC_DOWNLOADING_FAIL,
     TOPIC_DOWNLOADING_START,
-    TOPIC_DOWNLOADING_STATE
+    TOPIC_DOWNLOADING_STATE,
+    TOPIC_UPDATING_STATE
 } from "../types/Topic";
 
 const initialState = {
@@ -23,7 +24,8 @@ const initialState = {
     isForm: false,
     showActions: false,
     tquestions:{},
-    tloading:{}
+    tloading:{},
+    tupdate:{},
 }
 
 export default function(state = initialState, action){
@@ -46,11 +48,22 @@ export default function(state = initialState, action){
             };
         case TOPIC_DOWNLOADING_STATE:
             let tqs = {...state.tloading};
+            let tqs1 = {...state.tquestions};
             let nus = action.topicid;
-            tqs[nus] = action.topicquestions;
+            let nnum = Math.floor((action.tquestions/tqs1[nus]) * 100);
+            tqs[nus] = nnum;
+            //console.log(`this is all ${nus} ${action.tquestions} ${tqs1[nus]} ${tqs[nus]}`)
             return {
                 ...state,
                 tloading:tqs
+            };
+        case TOPIC_UPDATING_STATE:
+            let tups = {...state.tupdate};
+            let txID = action.topicID;
+            tups[txID] = action.status
+            return {
+                ...state,
+                tupdate:tups
             };
         case TOPIC_DOWNLOADING:
             return {

@@ -6,7 +6,7 @@ import * as Font from 'expo-font';
 import ProgressCircular  from './components/Progress';
 import Admob from "./advert/Admob";
 
-import { getTopic, getTopicsDownloadOnly, updateTopic } from './actions/Topic';
+import { getTopic, getTopicsDownloadOnly, updateTopic, getTopicCount } from './actions/Topic';
 import Activity from './components/LoaderTest';
 import {ADMOB, ADINTER, ADREWARD, PUBLISHER, EMU } from './actions/Common';
 import {
@@ -26,11 +26,13 @@ class TopicScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
+      sid:null,
       fontLoaded: false,
       isVisible: false,
       isDownloading: false,
-      prog:23
-      
+      selectedIndex: 0,
+      prog:0,
+      updateState:0,
     };
   }
 
@@ -48,8 +50,7 @@ class TopicScreen extends React.Component{
  //REDIRECT TO TOPIC SCREEN : RESOURCES
   //ARGUMENTS PASSED THE THEME IDS SELECTED
   relocateOne = (id) =>{
-    let values = id;
-    if(values)
+    if(id)
     {
       this.props.navigation.navigate('ResourcesScreen', {'topicID':id, 'sid':this.state.page})
     }
@@ -67,12 +68,13 @@ async componentDidMount() {
   
   let arry = this.props.navigation.getParam('topicID');
   this.props.getTopic(arry);
+  this.props.getTopicCount(arry);
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
   });
-  this.setState({ fontLoaded: true, page:page });
+  this.setState({ fontLoaded: true, page:page, sid:arry });
   this.initAds().catch((error) => console.log(error));
   //AdMobRewarded.setTestDeviceID(EMU);
   // ALWAYS USE TEST ID for Admob ads
@@ -110,13 +112,11 @@ bannerError(e) {
   return e;
 }
 
-activateLoad = async () =>{
-  let d = this.state.watchVideoTopic;
-  await this.props.updateTopic({active: 1}, d, async (g)=>{
+activateLoad = async (nu) =>{
+  let d = this.state.sid;
+  await this.props.updateTopic({active: nu}, d, async (g)=>{
  })
 }
-
-
 
 showRewarded = async () =>{
   this.activateTopic()
@@ -126,17 +126,24 @@ showRewarded = async () =>{
   await AdMobRewarded.showAdAsync();
 }
 
+// componentDidUpdate(nextProps, prevState){
+//   if(nextProps.topic.tloading[prevState.sid] !== this.props.topic.tloading[prevState.sid])
+//   {
+//     this.setState({prog:nextProps.topic.tloading[prevState.sid]})
+//   }
+// }
+
 static getDerivedStateFromProps(nextProps, prevState){
-  if(nextProps.topic.topics !== prevState.topics)
+  if(nextProps.topic.tloading[prevState.sid] !== prevState.prog)
   {
-    return{selected:true, topics:nextProps.topic.topics}
+    return{prog:nextProps.topic.tloading[prevState.sid]}
   }else{
     return{selected:false}
   }
 }
 
   
-  updateIndex = (selectedIndex) =>{
+  updateIndex = async (selectedIndex) =>{
     this.setState({ selectedIndex });
 
     if(selectedIndex == 0 )
@@ -149,108 +156,39 @@ static getDerivedStateFromProps(nextProps, prevState){
     }
     else if(selectedIndex == 2 )
     {
-        this.props.getTopicsDownloadOnly(this.props.navigation.getParam('topicID'))
+       await this.props.getTopicsDownloadOnly(this.props.navigation.getParam('topicID'))
     }
   }
   
-  
-  comp1 = () => <Icon name='backward' color='white' type='material' />
+  comp1 = () => <Icon name='arrow-back' color='white' type='material' />
   comp2 = () => <Icon name='cloud-download' color='white' type='material' />
   comp3 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Update</Text>
 
 render(){
-
-  const {isLoading, isDownloading, topic } = this.props.topic;
+  const {isLoading, isDownloading, topic, tloading } = this.props.topic;
   const { themes, ids } = this.props.theme;
   const { name } = this.props.subject.subject;
-  const { fontLoaded, selectedIndex, isVisible, prog} = this.state;
-  const buttons =  [{element:this.comp1}, {element:isDownloading ? this.comp3a: this.comp2} , {element:this.comp3}] ;
+  const { selectedIndex, isVisible, prog, sid} = this.state;
+  const buttons =  [{element:this.comp1}, {element: this.comp2}, {element:this.comp3}] ;
   const list_themes = themes && Array.isArray(themes) && themes.length > 0 && ids  && Array.isArray(ids) ? themes.filter((row)=>ids.includes(row.id)) : null;
   const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
-  
+  if(prog === 100 && topic && topic.active !== 1){
+    this.activateLoad(1);
+  }else if(prog <  100 && topic && topic.active !== 2)
+  {
+    this.activateLoad(2);
+  }
+
   return (
     <ThemeProvider >
       <View style={styles.topSection}>
           <Text style={styles.h1}>{name}</Text>
-          <Text style={styles.h2}>{topic.name}</Text>
+          <Text style={styles.h2}>{topic && topic.name ? topic.name : 'No topics'}</Text>
       </View>
        <View style={{flex:1}}>
        <Admob type='fullbanner'/>
-       
-       <Overlay
-          isVisible={isVisible}
-          windowBackgroundColor="rgba(7, 7, 7, .3)"
-          overlayBackgroundColor= {local_color.color1}
-          style={{minHeight:200, activeOpacity:0.3}}
-          margin={15}
-          padding={15}
-          width="auto"
-        >
-          <View style={{flex:1, justifyContent:'space-between', alignContent:'space-between'}}>
-          <Text style={styles.h1_overlay}>Info.</Text>
-          <ScrollView>
-          <View style={{flexDirection:'column', flexWrap:'wrap', margin:0, padding:10, justifyContent:'center', alignContent:'center'}}>
-          <View style={{ marginBottom:10}} >
-                <Text style={styles.h2_overlay}>Subject</Text>
-                <Text style={{color:'white', fontFamily:'PoiretOne', marginTop:2 }}>
-                  {name}
-                </Text>
-             </View>
-             <View style={{borderTopColor:local_color.color2, borderTopWidth:1, marginBottom:10}}>
-                <Text style={styles.h2_overlay}>Themes</Text>
-                <View style={{flexDirection:'column' }}>
-                  {list_data}
-                </View>
-             </View>
-             <View style={{borderTopColor:local_color.color2, borderTopWidth:1}}>
-                <Text style={styles.h2_overlay}>Instruction</Text>
-                <Text style={{color:'white', fontFamily:'PoiretOne', marginTop:2 }}>
-                  Select at least one topic and move to the next page.
-                </Text>
-             </View>
-
-             <View >
-                
-                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
-                  <Icon name='home' type='material' color='white' />
-                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Move to home Page</Text>
-                </View>
-                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
-                  <Icon name='cloud-download' type='material' color='white' />
-                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Download/Update topics</Text>
-                </View>
-                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
-                  <Icon name='book' type='material' color='white' />
-                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Switch to resources</Text>
-                </View>
-                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
-                  <Icon name='spellcheck' type='material' color='white' />
-                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Switch to test</Text>
-                </View>
-                <View style={{flexDirection:'row', flexWrap:'wrap', }}>
-                  <Icon name='ios-stats' type='ionicon' color='white' />
-                  <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} >  View statistics</Text>
-                </View>
-             </View>
-          </View>
-          </ScrollView>
-          <Button
-                title='Close'
-                style={styles.but_overlay}
-                onPress={()=>this.setState({isVisible:false})}
-                buttonStyle={{backgroundColor:local_color.color3}}
-            />
-          </View>
-        </Overlay>
-
-           <View style={{flex:1, alignItems:'center', alignContent:'center'}}>
-           <ProgressCircular prog={prog} onDownloaded={() => console.log('onAnimationComplete')}/>
-           <Button
-               title='Close'
-               style={styles.but_overlay}
-               onPress={()=>this.setState({isDownloading:false})}
-               buttonStyle={{backgroundColor:local_color.color3}}
-           />
+          <View style={{flex:1, alignItems:'center', alignContent:'center'}}>
+           <ProgressCircular prog={prog && prog !== undefined ? prog : 5} onDownloaded={() => console.log('onAnimationComplete')}/>
          </View>
         <ButtonGroup
             onPress={this.updateIndex}
@@ -274,6 +212,6 @@ const mapStateToProps = state => ({
 })
 export default connect(mapStateToProps, 
   { 
-    getTopic, updateTopic, getTopicsDownloadOnly
+    getTopic, updateTopic, getTopicsDownloadOnly, getTopicCount
    }
    )(TopicScreen);

@@ -124,7 +124,7 @@ closeDatabase(db) {
   select(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
     let completeQuery = build_param(param);
     const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
-    
+    console.log(query)
     db.transaction(
               (tx) => { 
                 tx.executeSql(query, [], (transaction, result) => {
@@ -143,9 +143,31 @@ closeDatabase(db) {
       );
     }
 
+    selectCountQuestions(topic, callback) {
+      const query = `SELECT COUNT(id) AS id FROM ( SELECT questions.id AS id, questions.instructionID AS instructionID, instructions.id as sid, instructions.topicID AS topicID FROM instructions JOIN questions ON instructions.id = questions.instructionID WHERE instructions.topicID = ${topic}) AS INST  `;
+      
+      db.transaction(
+                (tx) => { 
+                  tx.executeSql(query, [], (transaction, result) => {
+                      callback(result.rows);
+                    },
+                    (t, error) => {
+                      callback(1);
+                      console.log(error)
+                    }
+                  ) 
+                }, 
+                (error)=>{
+                  callback(1)
+                  console.log(error)
+                }, 
+               
+        );
+      }
+
     selectTopic(TABLE_NAME, TABLE_STRUCTURE, param, id, callback) {
       let completeQuery = build_param(param);
-      const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN (SELECT GROUP_CONCAT(id) AS ids FROM instructions WHERE instructions.topicID = ${id} GROUP BY topicID) LIMIT 1) AS numid FROM ${ TABLE_NAME } ${ completeQuery } `;
+      const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN (SELECT GROUP_CONCAT(id)  FROM instructions WHERE instructions.topicID = ${id})) AS numid FROM ${ TABLE_NAME } `;
       console.log(query);
       this.db.transaction(
                 (tx) => { 
@@ -263,7 +285,8 @@ closeDatabase(db) {
           )
       }
 
-  insert(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
+      
+      async insert(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
         let insert_array = []
         let quxs = [];
         let nuxs = [];
@@ -276,8 +299,8 @@ closeDatabase(db) {
         let qux = `${quxs.toString()}`; 
 
     const query = `INSERT OR IGNORE INTO ${TABLE_NAME} (${nux}) VALUES (${qux})`;
-    
-    this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {
+    await this.db.transaction(async (tx) => { await tx.executeSql(query, insert_array, async (transaction, result) => {
+                          console.log(`${TABLE_NAME} INSERTED INTO ROW ${result.insertId}`)
                           if(result.insertId > 0)
                           {
                             callback(result.insertId)
@@ -295,6 +318,8 @@ closeDatabase(db) {
                   },     
           )
       }
+
+  
 
   updatex(TABLE_NAME, TABLE_STRUCTURE, param, callback) {
     let completeQuery = insert_param(param);
@@ -488,7 +513,6 @@ closeDatabase(db) {
 
 
   drop(TABLE_NAME, TABLE_STRUCTURE) {
-   
     const query = `DROP TABLE ${TABLE_NAME} `;
     this.db.transaction((tx) => {
       tx.executeSql(query, [], (transaction, result) => {
@@ -496,12 +520,67 @@ closeDatabase(db) {
               },
               (t, error) => {
                 console.log(error.message);
-                callback(0)
+               
               }
             ) 
           }, 
           (t, error)=>{console.log(error.message)}
         );
       }
+
+async selectPromise(TABLE_NAME, param) {
+  return await new Promise((resolve, reject)=>{
+    let completeQuery = build_param(param);
+    const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
+    db.transaction(
+      (tx) => { 
+        tx.executeSql(query, [], (transaction, result) => {resolve(result.rows);}, (error) => {reject(JSON.stringify(error.message)); console.log(JSON.stringify(error.message))}
+      )}, 
+      (t, error) => {reject(JSON.stringify(error.message)); console.log(JSON.stringify(error.message))},
+      );
+  })
+}
+
+insertPromise = async(TABLE_NAME,  param) =>{
+      let insert_array = []
+      let quxs = [];
+      let nuxs = [];
+      Object.keys(param).forEach((para)=>{
+          nuxs.push(para);
+          quxs.push(`?`);
+          insert_array.push(param[para]);
+      })
+      let nux = `${nuxs.toString()}`; 
+      let qux = `${quxs.toString()}`; 
+
+      const query = `INSERT OR IGNORE INTO ${TABLE_NAME} (${nux}) VALUES (${qux})`;
+    return await new Promise((resolve, reject)=>{
+      this.db.transaction((tx) => {
+        tx.executeSql(query, insert_array, (transaction, result) => { result.insertId && result.insertId > 0 ? resolve(param.id) : reject(`constraint error ${result}`);},
+                    (t, error) => {reject(error.message);}) 
+                }, 
+                (t, error)=>{reject(error.message);},     
+        )
+    })
+  }
+
+  async updatePromise(TABLE_NAME, param, id) {
+    let insert_array = []
+    let qux = '';
+    let quxs = [];
+    Object.keys(param).forEach((para)=>{
+        quxs.push(` ${para} = ? `);
+        insert_array.push(param[para])
+    })
+    qux = `${quxs.toString()}`;   
+    let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
+    return await new Promise((resolve, reject)=>{
+      this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {resolve(id)},(t, error) => {reject(error.message);}
+          )}, 
+      (t, error)=>{reject(error.message)},         
+        ); 
+    })
+    
+  }  
 
 }

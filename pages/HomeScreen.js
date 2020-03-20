@@ -134,8 +134,8 @@ class HomeScreen extends React.Component {
           </View>
           <View>
           <Button 
-              title='DROP Themes Table'
-              onPress={()=>{this.props.dropTable('theme')}}
+              title='DROP question Table'
+              onPress={()=>{this.props.dropTable('question')}}
               />
           </View>
           <View>

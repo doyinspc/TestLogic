@@ -46,14 +46,14 @@ module.exports = {
         name:'questions',
         schema: `id INTEGER PRIMARY KEY, 
         instructionID INTEGER NOT NULL REFERENCES instructions, 
-        question text NOT NULL, 
-        question_image NULL, 
-        question_audio NULL, 
-        question_video NULL, 
-        type DEFAULT NULL, 
-        option_type DEFAULT NULL, 
-        issued NULL, 
-        passed  NULL, 
+        question TEXT NOT NULL, 
+        question_image TEXT  NULL, 
+        question_audio TEXT  NULL, 
+        question_video TEXT  NULL, 
+        type DEFAULT TEXT  NULL, 
+        option_type TEXT  DEFAULT NULL, 
+        issued TEXT  NULL, 
+        passed TEXT  NULL, 
         grp INTEGER DEFAULT 0, 
         active INTEGER DEFAULT 0, 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
@@ -62,12 +62,12 @@ module.exports = {
     },
     instruction: {
         name:'instructions',
-        schema: 'id INTEGER PRIMARY KEY, topicID INTEGER NOT NULL REFERENCES topics, name TEXT , content TEXT DEFAULT NULL, contenttitle  DEFAULT NULL, picslink TEXT DEFAULT NULL, active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP',
-        edits: [ 'topicID' , 'name' , 'content' , 'contenttitle' , 'picslink' , 'active' , 'updated_at' ]
+        schema: 'id INTEGER PRIMARY KEY, topicID INTEGER NOT NULL REFERENCES topics, name TEXT , content TEXT DEFAULT NULL, contenttitle  DEFAULT NULL, contentsource DEFAULT NULL, contentimg DEFAULT NULL, picslink TEXT DEFAULT NULL, grp INTEGER DEFAULT 0, active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP',
+        edits: [ 'topicID' , 'name' , 'content' , 'contenttitle' , 'contentsource' , 'contentimg' , 'picslink' , 'grp', 'active' , 'updated_at' ]
     },
     answer: {
         name:'answers',
-        schema: 'id INTEGER PRIMARY KEY, questionID INTEGER NOT NULL REFERENCES questions, name TEXT NOT NULL, type INTEGER DEFAULT 0,  active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP',
+        schema: 'id INTEGER PRIMARY KEY, questionID INTEGER NOT NULL REFERENCES questions, name TEXT NOT NULL, type INTEGER DEFAULT 0,  active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP ',
         edits: ['name', 'active']
     },
     distractor: {
