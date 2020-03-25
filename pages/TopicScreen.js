@@ -58,8 +58,7 @@ class TopicScreen extends React.Component{
   //REDIRECT TO TOPIC SCREEN : RESOURCES
   //ARGUMENTS PASSED THE TOPIC ID SELECTED
   relocateOne = (id) =>{
-    let values = id;
-    if(values)
+    if(id)
     {
       this.props.navigation.navigate('ResourcesScreen', {'topicID':id, 'sid':this.state.page})
     }
@@ -70,7 +69,7 @@ class TopicScreen extends React.Component{
   relocateDownload = (id) =>{
     if(id)
     {
-      this.props.navigation.navigate('TopicDownloadingScreen', {'topicID':id})
+      this.props.navigation.navigate('TopicDownloadingScreen', {'topicID':id, sel:this.state.checked, val:this.state.values})
     }
   }
 
@@ -135,6 +134,7 @@ componentDidUpdate(nextProps, prevState){
   }
 
 }
+
 bannerError(e) {
   return e;
 }
@@ -145,14 +145,14 @@ activateLoad = async () =>{
  })
 }
 
-activateTopic = () =>{
+activateTopic = async () =>{
   //IF VIDEO WAS WATCHED THEN ACTIVATE DOWNLOAD
   this.setState({isVisible:false})
   let d = this.state.watchVideoTopic;
-  this.props.updateTopic({active: 2}, d, async (g)=>{
+  await this.props.updateTopic({active: 2}, d, async (g)=>{
     await this.onChange(d, 0, 2 )
   })
-  this.props.getTopicsDownloadOnly(d, async(c)=>{});
+  await this.props.getTopicsDownloadOnly(d, async(c)=>{});
 }
 
 showRewarded = async () =>{
@@ -254,13 +254,14 @@ onChange = (topicID, advert, topicActive, indexes ) => {
                 key={index}
                 titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: item.active == 2 ? 'grey' : this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: item.active == 2 ? 'cloud-download':this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
-                title={`${item.name} ${item.id} ${item.active}`}
+                title={`${item.name} ${item.id} `}
+                rightTitle={`${item.numid} `}
                 subtitle={ item.active == 2 ? 'Downloading... Click to learn more...' : null}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
-                onPress={()=>{item.active == 2 ? this.relocateDownload(item.id) :this.state.downloads[item.id] ? this.onDownloading(item.id) : this.onChange(item.id, item.advert, item.active, index)}}   
+                onPress={()=>{item.active == 2  ? this.relocateDownload(item.id) : this.state.downloads[item.id] ? this.onDownloading(item.id) : this.onChange(item.id, item.advert, item.active, index)}}   
             />
   renderItemsx = ({item, index}) =><Text>{item.id}</Text>
   
