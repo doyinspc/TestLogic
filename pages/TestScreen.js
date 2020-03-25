@@ -37,7 +37,9 @@ class TestScreen extends React.Component{
  
   async componentDidMount() {
     this.props.getTests(JSON.stringify(this.props.navigation.getParam('subjectID')));
-
+    let q_num = [];
+    let thm= this.props.theme.themes;
+    thm && thm.length > 0 ? thm.forEach(row=>q_num.push(row.id)) : [];
     
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),

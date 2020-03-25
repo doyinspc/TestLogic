@@ -38,7 +38,6 @@ module.exports = {
     build_in_param : (datas) => {
         let mains = Object.keys(datas);
         let datax = Object.values(datas);
-        console.log(datax)
         let main = mains[0];
         let data = datax[0];
         if(data && data.length  > 0 && main)

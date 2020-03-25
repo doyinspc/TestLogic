@@ -263,13 +263,14 @@ export const getTopics = (theme) => (dispatch) => {
 };
 
 //GET ALL TOPIC
-export const getTopicsDB = (topics) => (dispatch) => {
-  let PARAM = {id : topics};
-  db.selectIN(TABLE_NAME, TABLE_STRUCTURE, PARAM, (data)=>{
+export const getTopicsDB = (topics, themes) => (dispatch) => {
+  let PARAM = topics ? {id : topics}: {themeID : themes};
+  db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, PARAM, 1, (data)=>{
     data == 1 ? dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'}) : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array}); 
   })
 
 };
+
 
 //GET ALL TOPIC
 const getTopicsDB1 = (topics) => (dispatch) => {

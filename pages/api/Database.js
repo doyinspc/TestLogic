@@ -144,9 +144,8 @@ closeDatabase(db) {
     }
 
     selectCountQuestions(topic, callback) {
-      const query = `SELECT COUNT(id) AS id FROM ( SELECT questions.id AS id, questions.instructionID AS instructionID, instructions.id as sid, instructions.topicID AS topicID FROM instructions JOIN questions ON instructions.id = questions.instructionID WHERE instructions.topicID = ${topic}) AS INST  `;
-      
-      db.transaction(
+      const query = `SELECT COUNT(questions.id) AS id FROM instructions LEFT JOIN questions ON instructions.id = questions.instructionID  WHERE instructions.topicID = ${topic} `;
+     db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
                       callback(result.rows);
@@ -166,13 +165,14 @@ closeDatabase(db) {
       }
 
     selectTopic(TABLE_NAME, TABLE_STRUCTURE, param, id, callback) {
-      let completeQuery = build_param(param);
-      const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN (SELECT GROUP_CONCAT(id)  FROM instructions WHERE instructions.topicID = ${id})) AS numid FROM ${ TABLE_NAME } `;
+      let completeQuery = build_in_param(param);
+      const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN ( SELECT id FROM instructions WHERE instructions.topicID = topics.id ) ) AS numid FROM ${ TABLE_NAME } ${completeQuery} `;
       console.log(query);
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
                       callback(result.rows);
+                      console.log(result)
                     },
                     (t, error) => {
                       callback(1);
@@ -182,6 +182,7 @@ closeDatabase(db) {
                 }, 
                 (error)=>{
                   callback(1)
+                  console.log(error)
                 }, 
                
         );
@@ -575,7 +576,7 @@ insertPromise = async(TABLE_NAME,  param) =>{
     qux = `${quxs.toString()}`;   
     let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
     return await new Promise((resolve, reject)=>{
-      this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {resolve(id)},(t, error) => {reject(error.message);}
+      this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {resolve(id)}, (t, error) => {reject(error.message);}
           )}, 
       (t, error)=>{reject(error.message)},         
         ); 

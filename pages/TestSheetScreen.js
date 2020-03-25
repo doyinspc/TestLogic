@@ -164,7 +164,47 @@ class ScoresScreen extends React.Component{
     clearInterval(this.timerx);
   }
 
+  static getDerivedStateFromProps(nextProps, prevState){
+    // let test_data = nextProps.test.test;
+    // let hour = test_data.testtime/(60 * 60);
+    // let hours = Math.floor(hour);
+    // let mins = (test_data.testtime - (hours * 60 * 60)) / 60;
+    // let minutes = Math.floor(mins);
+    // let seconds = test_data.testtime - ((hours * 60 * 60) + (minutes * 60)) ;
+    // let settings = test_data.settings.split(':::');
+    // let noq = parseInt(settings[0]);
+    // let valueTimers = parseInt(settings[1]);
+    // let valueAnswers = parseInt(settings[2]);
 
+    // let arr = [];
+    // test_data.id == prevState.testID ? null: arr.push(1);
+    // test_data.description == prevState.description ? null: arr.push(1);
+    // test_data.title == prevState.title ? null: arr.push(1);
+    // hours == prevState.hours ? null: arr.push(1);
+    // minutes == prevState.minutes ? null: arr.push(1);
+    // seconds == prevState.seconds ? null: arr.push(1);
+    // noq == prevState.noq ? null: arr.push(1);
+    // valueTimers == prevState.valueTimers ? null: arr.push(1);
+    // valueAnswers == prevState.valueAnswers ? null: arr.push(1);
+    //   if(arr.length > 0)
+    //   {
+    //     let q_num = {};
+        
+    //     return({
+    //       title: test_data.title,
+    //       description: test_data.description,
+    //       noq: noq,
+    //       hours: hours,
+    //       minutes: minutes,
+    //       seconds: seconds,
+    //       valueTimers: valueTimers,
+    //       valueAnswers: valueAnswers,
+    //       testID: test_data.id
+    //     });
+        
+    //   }
+
+  }
   deleteTest= () =>{
     //delete action
   }
@@ -203,8 +243,8 @@ comp2 = () => <Icon name='book'color='white' type='material' />
 comp3 = () => <Icon name='delete' color='white' type='material' />
 
 render(){
- const { themes, ids } = this.props.theme;
- const { topics} = this.props.topic;
+ const { themes } = this.props.theme;
+ const { topics } = this.props.topic;
  const { name } = this.props.subject.subject;
  const { fontLoaded, selectedIndex } = this.state;
 
@@ -228,11 +268,7 @@ render(){
   let topic = [];
 
     if(test_data && Object.keys(test_data).length > 0){
-        let hours = test_data.testtime/(60 * 60);
-        hour = Math.floor(hours);
-        let mins = (test_data.testtime - (hour * 60 * 60)) / 60;
-        min = Math.floor(mins);
-        sec = test_data.testtime - ((hour * 60 * 60) + (min * 60)) ;
+       
         settings = test_data.settings?  test_data.settings.split(':::'): [0, 0, 0];
         noq = settings[0];
         timeSetting = settings[1];
@@ -241,32 +277,58 @@ render(){
         title = test_data.title;
         description = test_data.description;
         topic = test_data.topics ? JSON.parse(test_data.topics): [];
+        let hours = 0;
+        let mins = 0;
+        if(parseInt(settings[1]) === 1)
+        {
+          hours = test_data.testtime/(60 * 60);
+          hour = Math.floor(hours);
+          mins = (test_data.testtime - (hour * 60 * 60)) / 60;
+          min = Math.floor(mins);
+          sec = test_data.testtime - ((hour * 60 * 60) + (min * 60)) ;
+        }
+        if(parseInt(settings[1]) === 2)
+        {
+          let ttime = test_data.testtime * noq;
+          hours = ttime/(60 * 60);
+          hour = Math.floor(hours);
+          mins = (ttime - (hour * 60 * 60)) / 60;
+          min = Math.floor(mins);
+          sec = ttime - ((hour * 60 * 60) + (min * 60)) ;
+          time_shared = `${parseInt(test_data.testtime)} sec. `;
+        }
+        if(parseInt(settings[1]) === 3)
+        {
+          hour = 0;
+          min = 0;
+          sec = 0;
+        }
+       
     }
  
     
     if(!this.props.score.isLoading)
     {
       let scores = this.props.score.scores;
-      if(scores && Array.isArray(scores) && scores.length > 0 ){
+      if(scores && Array.isArray(scores) && scores.length > 0 )
+      {
          testQuantity = scores.length;
          let maxScoreArray = [];
          scores.forEach((row)=>{
                maxScoreArray.push(row.score);
          })
          maxScore = Math.max(...maxScoreArray) * 100;
-         
       }
-      
-
     }
     const buttons = testQuantity > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}];
     const list_topics = topics && Array.isArray(topics) && topics.length > 0 && topic ? topics.filter((row)=>topic.includes(row.id)) : null;
-    const list_data_topics = list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
+    const list_data_topics = list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map(row =>(<Text key={`${row.id}xx`} style={{ color:'black', fontFamily:'PoiretOne', marginTop:2}}>{row.name}</Text>)) :null;
+  
     const list_topics_filter_themes = [];
     list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map((row) =>list_topics_filter_themes.push(row.themeID)) : null;
     const list_themes = themes && Array.isArray(themes) && themes.length > 0 && list_topics_filter_themes  ? themes.filter((row)=>list_topics_filter_themes.includes(row.id)) : null;
-    const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
-    
+    const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map(row =>(<Text style={{ color:'black', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : null;
+   
  let state = this.state;
   return (
     <ThemeProvider>
@@ -300,20 +362,22 @@ render(){
               <View style={styles.row_sheet} >
                 <Text style={styles.h2_sheet}>Maximum score obtained</Text><Text style={styles.h2_sheets}>{maxScore}</Text>
               </View>
-              <View style={styles.row_sheet} >
-                <Text style={styles.h2_sheet}>Timer Preference</Text><Text style={styles.h2_sheets}>{timer_arr.name}</Text>
+              <View style={styles.col_sheet} >
+                <Text style={styles.h2_sheet}>Timer Preference</Text>
+                <View style={styles.col_sheet}><Text style={[styles.h2_sheets, {color:'red'}] }>{timer_arr.name}</Text></View>
               </View>
-              <View style={styles.row_sheet} >
-                <Text style={styles.h2_sheet}>Answer Preference</Text><Text style={styles.h2_sheets}>{answ_arr.name}</Text>
+              <View style={styles.col_sheet} >
+                <Text style={styles.h2_sheet}>Answer Preference</Text>
+                <View style={[styles.col_sheet, {flex:1}]}><Text style={[styles.h2_sheets, {color:'red'}]}>{answ_arr.name}</Text></View>
               </View>
               <View style={styles.col_sheet} >
                 <Text style={styles.h2_sheet}>Description</Text><Text style={styles.h2_sheets}>{description}</Text>
               </View>
               <View style={styles.col_sheet} >
-                <Text style={styles.h2_sheet}>Themes</Text><Text style={styles.h2_sheets}>{list_data}</Text>
+                <Text style={styles.h2_sheet}>Themes</Text><View style={styles.col_sheet}>{list_data}</View>
               </View>
               <View style={styles.col_sheet} >
-                <Text style={styles.h2_sheet}>Topics</Text><Text style={styles.h2_sheets}>{list_data_topics}</Text>
+                <Text style={styles.h2_sheet}>Topics</Text>{list_data_topics}
               </View>
             </View>
         </ScrollView>

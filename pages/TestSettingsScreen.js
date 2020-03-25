@@ -23,7 +23,8 @@ class TestSettingsScreen extends React.Component{
       topics:[],
       title:'Test',
       description: '',
-      noq: 5,
+      noq: 0,
+      noqFull: 0,
       hours: 1,
       minutes: 30,
       seconds: 0,
@@ -40,19 +41,32 @@ class TestSettingsScreen extends React.Component{
       selectedIndex: null,
       name:'',
       isVisible:false,
+      questionNum: {}
     };
      this.onPrepare= this.onPrepare.bind(this);
   }
 
   async componentDidMount() {
     //get topics id
-    if(this.props.navigation.getParam('topics')){
+    if(this.props.navigation.getParam('topics'))
+    {
       let arry = this.props.navigation.getParam('topics');
+      let q_num = {};
+
+      arry && Array.isArray(arry) && arry.length > 0 ? this.props.topic.topics.forEach(row=>{
+          if(arry.includes(row.id) == true){
+            q_num[row.id] = row.numid
+          }
+      }) : {};
+      let total_questions = Object.values(q_num).reduce((a, b)=> a + b , 0);
       this.setState({ 
         isEdit:false, 
         topics: arry,
         title: this.props.subject.subject.name,
         description: this.props.subject.subject.name,
+        question_num :q_num,
+        noq: Math.floor(total_questions * 0.3),
+        noqFull: total_questions
       });
     }
     
@@ -69,18 +83,28 @@ class TestSettingsScreen extends React.Component{
         let sec = test_data.testtime - ((hour * 60 * 60) + (min * 60)) ;
 
         let settings = test_data.settings.split(':::');
-        
+        console.log(settings);
+        let q_num = {};
+        let arry1 = JSON.parse(test_data.topics);
+        arry1 && Array.isArray(arry1) && arry1.length > 0 ? this.props.topic.topics.forEach(row=>{
+            if(arry1.includes(row.id) == true)
+            {
+              q_num[row.id] = row.numid;
+            }
+        }) : {};
+        let total_questions = Object.values(q_num).reduce((a, b)=> a + b , 0);
         this.setState({
           title: test_data.title,
           description: test_data.description,
-          noq: settings[0],
+          noq: parseInt(settings[0]),
           hours: hour,
           minutes: min,
           seconds: sec,
-          valueTimers: settings[1],
-          valueAnswers: settings[2],
+          valueTimers: parseInt(settings[1]),
+          valueAnswers: parseInt(settings[2]),
           testID: testID,
-          isEdit: true
+          isEdit: true,
+          noqFull: total_questions
         });
         
       }
@@ -116,7 +140,6 @@ class TestSettingsScreen extends React.Component{
     let arry = this.props.navigation.getParam('topics');
     this.setState({statePos: this.props.question.msg});
     this.props.getQuestions(arry, this.state.noq, q =>{
-        console.log(q)
       if(q){
           this.setState({statePos: 'Preparing Test'});
           this.deConstruct(q, (data) =>{
@@ -143,13 +166,10 @@ class TestSettingsScreen extends React.Component{
         this.setState({ fontLoaded: true });
       }
     });
-
-    
-
    
   }
 
-  onEditPrepare = () =>{
+onEditPrepare = () =>{
     let { testID, title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
     let total_hours = hours * 60 * 60;
     let total_minutes = minutes * 60;
@@ -158,16 +178,15 @@ class TestSettingsScreen extends React.Component{
     let settings = `${noq}:::${valueTimers}:::${valueAnswers}`;
   
      let $f = {};
-     $f['id'] = testID;
      $f['title'] = title;
      $f['description'] = description;
      $f['testtime'] = total_time;
      $f['settings'] = settings;
-    
-     this.props.updateTest($f, (d)=>{
+      
+     this.props.updateTest($f, testID, (d)=>{
         d == 1 ? this.props.navigation.navigate('TestSheetScreen', { 'testID':tID }) : null ;
      });
-  }
+}
   
   
 deConstruct = (arr, callback) =>{
@@ -272,10 +291,21 @@ shuffle=(array) => {
 
 saveTest= (data, callback) =>{
   let{ topics, title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
-  
-  let total_hours = hours * 60 * 60;
-  let total_minutes = minutes * 60;
-  let total_seconds = seconds;
+  let total_hours = 0;
+  let total_minutes = 0;
+  let total_seconds = 0;
+
+  if(valueTimers === 1){
+    total_hours = hours * 60 * 60;
+    total_minutes = minutes * 60;
+    total_seconds = seconds;
+  }
+  if(valueTimers === 2){
+    total_hours = 0;
+    total_minutes = 0;
+    total_seconds = seconds;
+  }
+
   let total_time = total_hours + total_minutes + total_seconds;
   let settings = `${noq}:::${valueTimers}:::${valueAnswers}`;
   let userID = "1";
@@ -295,9 +325,8 @@ saveTest= (data, callback) =>{
    $f['options'] = JSON.stringify(data.options);
    $f['answers'] = JSON.stringify(data.answers);
    $f['questionweigth'] = JSON.stringify(data.questionweight);
-   console.log($f);
+  
    this.props.insertTest($f, (id)=>{
-        console.log('saved');
         callback(id);
    });
    
@@ -311,7 +340,6 @@ updateIndex = (selectedIndex) =>{
   }
   else if(selectedIndex == 1 )
   {
-    console.log(this.state.testID);
     if(this.state.testID && this.state.testID > 0)
     {
       this.props.navigation.navigate('TestSheetScreen', { 'testID':this.state.testID })
@@ -325,7 +353,7 @@ updateIndex = (selectedIndex) =>{
   {
     if(this.state.testID && this.state.testID > 0)
     {
-      this.onEditPrepare;
+      this.onEditPrepare();
     }
   }
  
@@ -354,7 +382,7 @@ render(){
   let data =[
     {
       'id': 1,
-      'name':'Show answers immediately after selection' 
+      'name':'Show answers immediately' 
     },
     {
       'id': 2,
@@ -362,18 +390,18 @@ render(){
     },
     {
       'id': 3,
-      'name':'Do not show any answers' 
+      'name':'Do not show answers' 
     }
   ]
 
   let datax =[
     {
       'id': 1,
-      'name':'Time set for all questions' 
+      'name':'Set time for all questions' 
     },
     {
       'id': 2,
-      'name':'Distrubute time equally per question' 
+      'name':'Set time per question' 
     },
     {
       'id': 3,
@@ -483,18 +511,17 @@ render(){
               />
 
               <View style={styles.textwidthx}>
-                  <Text style={styles.label}>Number of Questions</Text> 
+                  <Text style={styles.label}>{`Number of Questions (Max. Available ${this.state.noqFull    })`}</Text> 
               </View>
              <TextInput
                 style={styles.textplace}
                 placeholder='0 - 100'
-                value={this.state.noq.toString()}
+                value={this.state.noq.toString()} 
                 defaultValue={this.state.noq.toString()}
                 keyboardType='numeric'
                 onChangeText={(text) => this.setState({noq: text})}
                 type='number'
               />
-              
               <View style={{flex:1, flexDirection:'column', flexGrow: 1, padding: 2}}>
                         <View style={styles.textwidthx}>
                           <Text style={styles.label}>Description</Text> 
@@ -513,7 +540,23 @@ render(){
               <Icon name='watch' color='white' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Timer </Text>
         </View>
+        <View style={{flex: 1, marginLeft:30}} >
+          {
+            datax.map(ele =>(
+                <View key={`xx${ele.id}`} style={{flexDirection:'row'}}>
+                <RadioButton
+                  value={ele.id}
+                  status={this.state.valueTimers  && ele.id === this.state.valueTimers  ? 'checked' : 'unchecked'}
+                  onPress={() =>{this.valueTimer(ele.id)}}
+                />
+               <Text style={styles.label_radio}>{ele.name}</Text>
+              </View>
+            ))
+          }
+        </View>
+        
         <View style={{flex:1, marginLeft:30, flexDirection:'row'  , alignItems: 'center'}} >
+                  { this.state.valueTimers == 1 ?
                     <View style={{flex:1, flexDirection:'column', flexGrow: 1, padding: 2}} >
                         <View style={styles.textwidthx_min}>
                         <Text style={styles.label_min}>Hours</Text> 
@@ -526,9 +569,11 @@ render(){
                             keyboardType='numeric'
                             onChangeText={(text) => this.setState({hours: text})}
                             type='number'
+                            editable={false}
                         />
                     </View>
-
+                    : null }
+                    { this.state.valueTimers == 1 ?
                     <View style={{flex:1, flexDirection:'column', flexGrow: 1, padding: 2}}>
                       <View style={styles.textwidthx_min}>
                         <Text style={styles.label_min}>Minutes</Text> 
@@ -543,13 +588,14 @@ render(){
                           type='number'
                         />
                     </View>
-
+                    : null }
+                    { this.state.valueTimers == 1 || this.state.valueTimers == 2 ?
                     <View style={{flex:1, flexDirection:'column', flexGrow: 1, padding: 2}}>
-                      <View style={styles.textwidthx_min}>
+                      <View style={ this.state.valueTimers == 2 ? styles.textwidth : styles.textwidthx_min }>
                           <Text style={styles.label_min}>Seconds</Text> 
                       </View>
                       <TextInput
-                          style={styles.textplace_min}
+                          style={this.state.valueTimers == 2 ? styles.textplace : styles.textplace_min}
                           placeholder='00'
                           value={this.state.seconds.toString()}
                           defaultValue={this.state.seconds.toString()}
@@ -558,23 +604,9 @@ render(){
                           type='number'
                       />
                     </View>
-                    
+                    : null }
               </View>
-        <View style={{flex: 1, marginLeft:30}} >
-          {
-            datax.map(ele =>(
-                <View key={`xx${ele.id}`} style={{flexDirection:'row'}}>
-                <RadioButton
-                  value={ele.id}
-                  status={this.state.valueTimers  && ele.id === this.state.valueTimers  ? 'checked' : 'unchecked'}
-                  onPress={() =>{this.valueTimer(ele.id)}}
-                />
-               <Text style={styles.label_radio}>{ele.name}</Text>
-              </View>
-              
-            ))
-          }
-        </View>
+        
         <View style={styles.section_container}>
               <Icon name='info' type='octicon' style={styles.section_icon}/>
               <Text style={styles.section_text}>Answer </Text>

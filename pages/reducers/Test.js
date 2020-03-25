@@ -122,9 +122,10 @@ export default function(state = initialState, action){
             };
         case TEST_UPDATE_SUCCESS:
             let oldArrayz = [...state.tests];
+            let idz = action.id;
             let updatedRow = action.payload;
-            let filterRows = oldArrayz.filter((row)=>row.id != id);
-            let filterRow = oldArrayz.filter((row)=>row.id == id)[0];
+            let filterRows = oldArrayz.filter((row)=>row.id != idz); // other rows only 
+            let filterRow = oldArrayz.filter((row)=>row.id == idz)[0]; //specific row
             Object.keys(filterRow).forEach(r=>{
                     if(updatedRow[r])
                     {

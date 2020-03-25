@@ -100,8 +100,12 @@ export const insertTest = (data, callback) => (dispatch) => {
 
 export const updateTest = (data, id) => (dispatch) => {
   dispatch({ type: TEST_UPDATE_LOADING});
-  db.update(TABLE_NAME, TABLE_STRUCTURE, data, id, (dat)=>{
-    data == 0 ? dispatch({type: TEST_UPDATE_FAIL,  msg:'none'}) : dispatch({type: TEST_UPDATE_SUCCESS, payload: data})
+  db.updatePromise(TABLE_NAME, data, id)
+  .then(dat=>{
+    dispatch({type: TEST_UPDATE_SUCCESS, payload: data, id:id})
+  })
+  .catch(err=>{
+    dispatch({type: TEST_UPDATE_FAIL,  msg:'none'})
   })
 };
 

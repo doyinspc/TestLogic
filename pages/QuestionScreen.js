@@ -7,7 +7,7 @@ import { ThemeProvider, Icon, Button, ButtonGroup, Overlay  } from 'react-native
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { RadioButton } from 'react-native-paper';
 import * as Font from 'expo-font';
-
+import Accordion from './components/Accordion'
 import { getTest } from './actions/Test';
 import { getScore, insertScore, updateScore } from './actions/Score';
 import WebView from 'react-native-webview';
@@ -33,7 +33,6 @@ class QuestionScreen extends React.Component{
       testID:null,
       scoreID:null,
       isRetest: false,
-
       settime: null,
       noq: null,
       tim: null,
@@ -50,7 +49,7 @@ class QuestionScreen extends React.Component{
     };
   }
 
- async componentDidMount(){
+async componentDidMount(){
    //get the test id stor in state
   let testID = this.props.navigation.getParam('testID');
   this.setState({ testID:testID });
@@ -60,15 +59,22 @@ class QuestionScreen extends React.Component{
   if(!this.props.test.isLoading && test_data && Object.keys(test_data).length > 0)
   {
     //set sata in state
-    console.log(test_data)
     let settings = test_data.settings.split(':::');
+    let time_store = {};
+    let ids = JSON.parse(test_data.ids);
+    let time_span = parseInt(settings[1]) === 2 ? test_data.testtime : null;
+    time_span && Array.isArray(ids) && ids.length > 0 ? ids.forEach(id => {
+      time_store[parseInt(id)] = parseInt(time_span);
+    }): null;
+    
+    let testtime = parseInt(settings[1]) === 2 ? time_store : test_data.testtime;
     this.setState({
-        ids: JSON.parse(test_data.ids),
+        ids: ids,
         instructions: JSON.parse(test_data.instructions),
         questions: JSON.parse(test_data.questions),
         options: JSON.parse(test_data.options),
         answers: JSON.parse(test_data.answers),
-        settime: test_data.testtime,
+        settime: testtime,
         noq: settings[0],
         tim: settings[1],
         ans: settings[2],
@@ -114,16 +120,37 @@ class QuestionScreen extends React.Component{
   this.timer = setInterval(()=>{ this.getCurrentTime(); }, 1000);
  }
 
-
  //record the score
- setChoice=(questionID, selectionID)=>{
+setChoice=(questionID, selectionID)=>{
+      console.log(`no selection was made ${selectionID} ${questionID} ${this.state.activeNumber}`)
       let ch = {...this.state.choices};
       ch[questionID] = selectionID;
       this.setState({choices:ch});
+      if(parseInt(this.state.tim) === 2)
+      {
+        let settimes = {...this.state.settime};
+        let cur = 0; 
+        let currenttime = this.state.currentTime.split(':');
+        
+        currenttime = currenttime.map(Number);
+        if(currenttime[0] === -1)
+        {
+            cur = 0;
+        }
+        else
+        {
+          let sec = currenttime[2] > 0 ? currenttime[2]: 0;
+          let min = currenttime[1] > 0 ? currenttime[1] * 60: 0;
+          let hr  = currenttime[0] > 0 ? currenttime[0] * 60 * 60 : 0;
+          cur = hr + min + sec;
+        }
+        settimes[this.state.activeNumber] = cur;
+        this.setState({settime:settimes});
+      }
+      
  }
-
  //mark the test and record
- markTest=()=>{
+markTest=()=>{
 
   let { answers, choices, scoreID, testtime, testID } = this.state;
 
@@ -145,9 +172,8 @@ class QuestionScreen extends React.Component{
   });
  this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
 }
-
  //swipe
- onSwipeUp=(gestureState)=> {
+onSwipeUp=(gestureState)=> {
    //show all question numbers
   //this.setState({myText: 'You swiped up!'});
 }
@@ -162,7 +188,6 @@ onSwipeLeft=(gestureState)=> {
   this.onForward();
   
 }
-
 onSwipeRight=(gestureState)=> { 
   this.onBackward()
 }
@@ -171,14 +196,48 @@ changeQuestion=(activeIndex, activeNumber)=> {
     this.setState({activeIndex: activeIndex, activeNumber: activeNumber, isVisible:false});
  
 }
-
 onForward=()=> {
   let oldIndex = this.state.activeIndex;
   let newIndex = oldIndex + 1;
   if(newIndex < Object.keys(this.state.answers).length)
   {
     let newActiveNumber = this.state.ids[newIndex];
-    this.setState({activeIndex: newIndex, activeNumber: newActiveNumber});
+    let oldActiveNumber = this.state.activeNumber;
+    
+    if(parseInt(this.state.tim) === 2)
+    {
+      let settimes = {...this.state.settime};
+      let cur = 0; 
+      let currenttime = this.state.currentTime.split(':');
+      currenttime = currenttime.map(Number);
+      if(currenttime[0] === -1)
+      {
+          cur = 0;
+      }
+      else
+      {
+        let sec = currenttime[2] > 0 ? currenttime[2]: 0;
+        let min = currenttime[1] > 0 ? currenttime[1] * 60: 0;
+        let hr  = currenttime[0] > 0 ? currenttime[0] * 60 * 60 : 0;
+        cur = hr + min + sec;
+      }
+      settimes[oldActiveNumber] = cur;
+      
+      this.setState({
+        activeIndex: newIndex, 
+        activeNumber: newActiveNumber,
+        settime: settimes,
+        starttime: Math.floor(new Date().getTime()),
+      });
+
+    }else{
+      this.setState({
+        activeIndex: newIndex, 
+        activeNumber: newActiveNumber
+      });
+
+    }
+    
   }
 }
 
@@ -188,7 +247,41 @@ onBackward=()=> {
   if(newIndex > -1)
   {
     let newActiveNumber = this.state.ids[newIndex];
-    this.setState({activeIndex: newIndex, activeNumber: newActiveNumber});
+    let oldActiveNumber = this.state.activeNumber;
+    console.log(`${newIndex} ${newActiveNumber} ${oldIndex} ${oldActiveNumber}`)
+    if(parseInt(this.state.tim) === 2)
+    {
+      let settimes = {...this.state.settime};
+      let cur = 0; 
+      let currenttime = this.state.currentTime.split(':');
+      currenttime = currenttime.map(Number);
+      if(currenttime[0] === -1)
+      {
+          cur = 0;
+      }
+      else
+      {
+        let sec = currenttime[2] > 0 ? currenttime[2]: 0;
+        let min = currenttime[1] > 0 ? currenttime[1] * 60: 0;
+        let hr  = currenttime[0] > 0 ? currenttime[0] * 60 * 60 : 0;
+        cur = hr + min + sec;
+      }
+      settimes[oldActiveNumber] = cur;
+      
+      this.setState({
+        activeIndex: newIndex, 
+        activeNumber: newActiveNumber,
+        settime: settimes,
+        starttime: Math.floor(new Date().getTime()),
+      });
+
+    }else{
+      this.setState({
+        activeIndex: newIndex, 
+        activeNumber: newActiveNumber
+      });
+
+    }
   }
 }
 
@@ -246,23 +339,60 @@ onSwipe=(gestureName, gestureState)=> {
 }
 
 getCurrentTime = () =>{
-    let { settime, starttime } = this.state;
+    let { settime, starttime, tim, activeIndex, activeNumber, choices } = this.state;
+    
+    let stime = parseInt(tim) === 2 ? settime[activeNumber] : settime;
     let now = Math.floor(new Date().getTime());
-    let diff = now - starttime;
-    let timeLeft =  settime - Math.floor((diff/1000));
-    let hours = timeLeft/(60 * 60);
-    let hour = Math.floor(hours);
-    let mins = (timeLeft - (hour * 60 * 60)) / 60;
-    let min = Math.floor(mins);
-    let sec = timeLeft - ((hour * 60 * 60) + (min * 60)) ;
-
-  this.setState({currentTime: `${hour} : ${min} : ${sec} ` });
+    let diff = 0;
+    let did = activeNumber.toString();
+    let sc = choices[did] && choices[did] !== undefined ? choices[did] : null ;
+    
+    if(parseInt(tim) === 2)
+    {
+      if(sc && sc.length > 0 && sc != null)
+      {
+        diff = 0;
+      }else
+      {
+        diff = now - starttime;
+      }
+    }
+    if(parseInt(tim) === 1)
+    {
+      diff = now - starttime; 
+    }
+    
+    let timeLeft =  diff > 0 ? stime - Math.floor(diff/1000) : stime;
+    //CONFIRM IF TIME IS LEFT
+    if(timeLeft >= 0)
+    {
+      let hours = timeLeft/(60 * 60);
+      let hour = Math.floor(hours);
+      let mins = (timeLeft - (hour * 60 * 60)) / 60;
+      let min = Math.floor(mins);
+      let sec = timeLeft - ((hour * 60 * 60) + (min * 60)) ;
+      hour = hour > 0 ? hour : '--';
+      min = min > 0 ? min : '--';
+      sec = sec > 0 ? sec : '--';
+      this.setState({currentTime: `${hour} : ${min} : ${sec}` });
+    }else
+    {
+      //IF THE TIMER SELECTED IS 1: SUBMIT WHEN TIME IS BELOW 0
+      if(parseInt(tim) === 1)
+      {
+        this.markTest();
+      }
+      //IF THE TIMER SELECTED IS 2: RESET THE TIME WHEN QUESTION CHANGES
+      if(parseInt(tim) === 2)
+      {
+        sc && sc.length > 0 ? this.setChoice(activeNumber, sc) : this.setChoice(activeNumber, '000');
+      }
+    }
 }
 
 componentWillUnmount(){
   clearInterval(this.timer);
 }
-
 
 comp1 = () => <Icon name='arrow-back' color='white' type='material' />
 comp2 = () => <Icon name='pause'color='white'   type='material' />
@@ -270,16 +400,17 @@ comp3 = () => <Icon name='done' color='white'   type='material' />
 comp4 = () => <Icon name='arrow-forward' color='white'  type='material' />
 
 render(){
- const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans } = this.state;
+ const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans, tim } = this.state;
  const buttons =[{element:this.comp1}, {element:this.comp2}, {element:this.comp3}, {element:this.comp4}];
+ 
  const config = {
-  velocityThreshold: 0.3,
-  directionalOffsetThreshold: 80
+    velocityThreshold: 0.3,
+    directionalOffsetThreshold: 80
   };
   
   let mainIDs = activeNumber;
   let mainID = mainIDs && mainIDs != undefined ? mainIDs.toString() : '1';
- 
+
   let li = ids && Array.isArray(ids) ? ids.map((l, i)=>(
           <Button 
           key={i} 
@@ -291,6 +422,8 @@ render(){
           />
   )): null;
 this.getCurrentTime
+    
+
   return (
     <ThemeProvider>
         {fontLoaded && ids.length > 0 ?
@@ -343,19 +476,14 @@ this.getCurrentTime
                <View style={{borderBottomWidth: 0.5, borderBottomColor:local_color.color4, marginBottom: 5}}>
                 <Text style={{fontFamily:'PoiretOne', marginBottom:10, color:local_color.color2}}>{ questions[mainID][0] && instructions[questions[mainID][0]][0] ? instructions[questions[mainID][0]][0]: 'Choose the Right option'}</Text>
                </View>
-                 <View style={{flex:1}}>
-                  <Text style={styles.questionContent}>{instructions[questions[mainID][0]][1]}</Text>
-                </View>
-                <View style={{flex:1}} >
-                  <WebView 
-                    originWhitelist={['*']}
-                    source={{ html: instructions[questions[mainID][0]][2] }}
-                    scalesPageToFit={false}
-                    style={{minHeight:90}}
-                    scrollEnabled={true}
+               { instructions[questions[mainID][0]][2] && instructions[questions[mainID][0]][2].length > 0 ?
+                <View style={{flex:1, margin:0}} >
+                  <Accordion
+                  title = {instructions[questions[mainID][0]][1]}
+                  data = { instructions[questions[mainID][0]][2]}
                   />
-                  </View>
-                 
+                </View>
+                : null }
                 <View>
                   <Text style={styles.questionQuestion}>{questions[mainID][1]}</Text>
                 </View> 
@@ -381,7 +509,7 @@ this.getCurrentTime
                           onPress={() =>{this.setChoice(activeNumber, element[0])}}
                           size={40}
                         />
-                      <Text style={styles.label_radio}>{element[1]}</Text>
+                      <Text style={styles.label_radio}>{`${element[1]}`}</Text>
                       </View> 
                     ))
                     : null}

@@ -39,7 +39,7 @@ class HomeScreen extends React.Component {
    }
   
   render() {
-    console.log(this.props.user)
+    
     return (
       <ThemeProvider >
         <ImageBackground
