@@ -28,7 +28,9 @@ class ThemeScreen extends React.Component{
       page:1,
       checked: {},
       values: [],
-      themes:[]
+      themes:[],
+      themeNum : 0,
+      status: '--'
     };
   }
 
@@ -40,7 +42,20 @@ class ThemeScreen extends React.Component{
  
   async componentDidMount() {
    await this.props.getThemes(JSON.stringify(this.props.navigation.getParam('subjectID')));
-    this.props.getThemesDownload(this.props.navigation.getParam('subjectID'));
+   this.props.getThemes(JSON.stringify(this.props.navigation.getParam('subjectID')))
+    .then(res=>{
+        this.setState({themeNum:res});
+    })
+    .catch(err=>{
+      this.setState({status:err});
+      this.props.getThemesDownload(this.props.navigation.getParam('subjectID'))
+      .then(resp =>{
+        this.setState({themeNum:resp});
+      })
+      .catch(err=>{
+        this.setState({status:err});
+      })
+  })
     var page = this.props.navigation.getParam('sid');
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -50,7 +65,6 @@ class ThemeScreen extends React.Component{
   }
 
 
- 
   //REDIRECT TO TOPIC SCREEN: TEST
   //ARGUMENTS PASSED THE THEME IDS SELECTED
   relocate = () =>{
@@ -71,7 +85,6 @@ class ThemeScreen extends React.Component{
     {
       var arr = []
       arr.push(values);
-      console.log(`sssss${arr}`)
       this.props.getThemeSelected(arr);
       this.props.navigation.navigate('TopicScreen', {'themezID':id, 'sid':this.state.page})
     }
@@ -80,8 +93,13 @@ class ThemeScreen extends React.Component{
   //DOWNLOAD THEMES FROM HOME/ONLINE SERVER
   //ARGUMENT PASSED SUBJECT ID
   updateTheme =(subject)=>{
-    this.props.getThemesDownload(subject, (response)=>{
-    });
+    this.props.getThemesDownload(subject)
+      .then(resp =>{
+        this.setState({themeNum:resp});
+      })
+      .catch(err=>{
+        this.setState({status:err});
+      })
   }
 
   //GET SELECTED TOPICS AND STORE THEM IN STATE VALUES

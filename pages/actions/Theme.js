@@ -23,25 +23,61 @@ const TABLE_NAME = SCHEME.theme.name;
 const TABLE_STRUCTURE = SCHEME.theme.schema;
 
 //GET THEMES FROM ONLINE DATABANK
-export  const getThemesDownload = (subjectID) => (dispatch, getState) => {
-  let paths = `${path}/theme/cat/${subjectID}`;
-  dispatch({ type: THEME_DOWNLOADING });
-  axios.get(paths, config(getState))
-      .then(async res => {
+export const getThemesDownload = (subjectID) => (dispatch, getState) => {
+  return new Promise((resolve, reject) =>{
+    if(subjectID && parseInt(subjecID) > 0)
+    {
+      let paths = `${path}/theme/cat/${subjectID}`;
+      dispatch({ type: THEME_DOWNLOADING });
+      axios.get(paths, config(getState))
+          .then(async res => {
             await loadData(res.data, 'theme', async (d)=>{
-            res.data  ? await dispatch({type: THEME_DOWNLOADING_SUCCESS, payload: res.data }) : await dispatch({type : THEME_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
-        });
-      })
-      .catch(err => {dispatch({type : THEME_DOWNLOADING_SUCCESS, msg : err })
-      })
+              if(res.data && Array.isArray(res.data) && res.data.length > 0 )
+              {
+                await dispatch({type: THEME_DOWNLOADING_SUCCESS, payload: res.data });
+                resolve(res.data.length);
+              }else
+              {
+                await dispatch({type : THEME_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
+                reject('Not Saved')
+              } 
+            });
+          })
+          .catch(err => {
+            dispatch({type : THEME_DOWNLOADING_FAIL, msg : err })
+            reject(err);
+          })
+        }else
+        {
+            reject('No Theme(s) Offline');
+        }
+    })
 };
 
 //GET ALL THEME 
 export const getThemes = (subject) => (dispatch) => {
-  let PARAM = {subjectID : subject};
-  dispatch({ type: THEME_LOADING });
-  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
-    data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: THEME_GET_MULTIPLE, payload: data._array}): dispatch({ type : THEME_LOADING_ERROR, msg : 'No file'});
+  return new Promise((resolve, reject) =>{
+    let PARAM = {subjectID : subject};
+    if(subject && parseInt(subject) > 0)
+    {
+      dispatch({ type: THEME_LOADING });
+      db.selectPromise(TABLE_NAME, PARAM)
+        .then(data =>{
+          if(data._array && Array.isArray(data._array) && parseInt(data.length) > 0 )
+          {
+            dispatch({type: THEME_GET_MULTIPLE, payload: data._array})
+            resolve(data._array.length);
+          }else
+          {
+            dispatch({ type : THEME_LOADING_ERROR, msg : 'No Theme(s) Offline'});
+            reject('No Theme(s) Offline')
+          }
+        })
+        .catch(err=>reject(err))
+    }else
+    {
+        reject('No Theme(s) Offline');
+    }
   })
 };
 

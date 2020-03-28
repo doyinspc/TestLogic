@@ -8,11 +8,10 @@ import Activity from './components/Loader';
 
 import { getTest } from './actions/Test';
 import { getScores } from './actions/Score'; 
-
-const datab = [
+let datab =[
   {
     'id': 1,
-    'name':'Show answers immediately after selection' 
+    'name':'Show answers immediately' 
   },
   {
     'id': 2,
@@ -20,25 +19,26 @@ const datab = [
   },
   {
     'id': 3,
-    'name':'Do not show any answers' 
+    'name':'Do not show answers' 
   }
 ]
 
-
-const dataxb =[
+let dataxb =[
   {
     'id': 1,
-    'name':'Time set for all questions' 
+    'name':'Set time for all questions' 
   },
   {
     'id': 2,
-    'name':'Distrubute time equally per question' 
+    'name':'Set time per question' 
   },
   {
     'id': 3,
     'name':'No timer' 
   }
 ]
+
+
 const tools = require('./components/Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
@@ -164,48 +164,7 @@ class ScoresScreen extends React.Component{
     clearInterval(this.timerx);
   }
 
-  static getDerivedStateFromProps(nextProps, prevState){
-    // let test_data = nextProps.test.test;
-    // let hour = test_data.testtime/(60 * 60);
-    // let hours = Math.floor(hour);
-    // let mins = (test_data.testtime - (hours * 60 * 60)) / 60;
-    // let minutes = Math.floor(mins);
-    // let seconds = test_data.testtime - ((hours * 60 * 60) + (minutes * 60)) ;
-    // let settings = test_data.settings.split(':::');
-    // let noq = parseInt(settings[0]);
-    // let valueTimers = parseInt(settings[1]);
-    // let valueAnswers = parseInt(settings[2]);
-
-    // let arr = [];
-    // test_data.id == prevState.testID ? null: arr.push(1);
-    // test_data.description == prevState.description ? null: arr.push(1);
-    // test_data.title == prevState.title ? null: arr.push(1);
-    // hours == prevState.hours ? null: arr.push(1);
-    // minutes == prevState.minutes ? null: arr.push(1);
-    // seconds == prevState.seconds ? null: arr.push(1);
-    // noq == prevState.noq ? null: arr.push(1);
-    // valueTimers == prevState.valueTimers ? null: arr.push(1);
-    // valueAnswers == prevState.valueAnswers ? null: arr.push(1);
-    //   if(arr.length > 0)
-    //   {
-    //     let q_num = {};
-        
-    //     return({
-    //       title: test_data.title,
-    //       description: test_data.description,
-    //       noq: noq,
-    //       hours: hours,
-    //       minutes: minutes,
-    //       seconds: seconds,
-    //       valueTimers: valueTimers,
-    //       valueAnswers: valueAnswers,
-    //       testID: test_data.id
-    //     });
-        
-    //   }
-
-  }
-  deleteTest= () =>{
+   deleteTest= () =>{
     //delete action
   }
   relocate=()=>{

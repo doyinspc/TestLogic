@@ -24,12 +24,27 @@ class SubjectScreen extends React.Component{
       selectedIndex: null,
       page:1,
       isVisible:false,
+      subjectNum: 0,
+      status:'None'
     };
   }
 
- async componentDidMount() {
-  this.props.getSubjects();
-  this.props.getSubjectsDownload();
+ async componentDidMount(){
+  this.props.getSubjects()
+  .then(res=>{
+      this.setState({subjectNum:res});
+  })
+  .catch(err=>{
+    this.setState({status:err});
+    this.props.getSubjectsDownload()
+    .then(resp =>{
+      this.setState({subjectNum:resp});
+    })
+    .catch(err=>{
+      this.setState({status:err});
+    })
+  })
+  
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),

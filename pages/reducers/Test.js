@@ -132,7 +132,9 @@ export default function(state = initialState, action){
                         filterRow[r] = updatedRow[r];
                     }
                 });
-            let newArrayz = [...filterRows, ...filterRow];
+            let ne_a = [];
+            ne_a.push(filterRow);
+            let newArrayz = [...filterRows, ...ne_a];
             return {
                 ...state,
                 tests : newArrayz,
@@ -140,11 +142,10 @@ export default function(state = initialState, action){
             };
         case TEST_INSERT_SUCCESS:
             let newArrayy = [];
-            let oldArrayy = state.tests.length > 0 ? [...state.tests] : [];
             let newRowy = action.payload;
-            newRowy['id'] = action.id,
+            newRowy['id'] = action.id;
             newRowy['created_at'] = new Date().getTime().toLocaleString(),
-            newArrayy = oldArrayy.push(newRowy);
+            newArrayy =[...state.tests, newRowy];
             return {
                 ...state,
                 tests : newArrayy,

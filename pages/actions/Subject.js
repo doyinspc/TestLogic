@@ -24,25 +24,49 @@ const TABLE_STRUCTURE = SCHEME.subject.schema;
 
 //GET SUBJECTS FROM ONLINE DATABANK
 export const getSubjectsDownload = () => (dispatch, getState) => {
+  return new Promise((resolve, reject) =>{
   let paths = `${path}/subject/`
   dispatch({ type: SUBJECT_DOWNLOADING });
   axios.get(paths, config(getState))
       .then(async res => {
         await loadData(res.data, 'subject', async (d)=>{
-          res.data ? await dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data }) : await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
+          if(res.data && Array.isArray(res.data) && res.data.length > 0 )
+          {
+            await dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data });
+            resolve(res.data.length);
+          }else
+          {
+            await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
+            reject('Not Saved')
+          } 
         });
       })
-      .catch(err => {dispatch({type : SUBJECT_DOWNLOADING_FAIL, msg : err })
+      .catch(err => {
+        dispatch({type : SUBJECT_DOWNLOADING_FAIL, msg : err })
+        reject(err);
       })
+    })
 };
 
 //GET ALL SUBJECT 
 export const getSubjects = () => (dispatch) => {
-  let PARAM= {};
-  dispatch({ type: SUBJECT_LOADING });
-  db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
-    data._array && Array.isArray(data._array) && parseInt(data.length) > 0 ? await dispatch({type: SUBJECT_GET_MULTIPLE, payload: data._array}): await dispatch({ type : SUBJECT_LOADING_ERROR, msg : 'No file'});
-  })
+  return new Promise((resolve, reject) =>{
+    let PARAM= {};
+    dispatch({ type: SUBJECT_LOADING });
+      db.selectPromise(TABLE_NAME, PARAM)
+      .then(data =>{
+        if(data._array && Array.isArray(data._array) && parseInt(data.length) > 0 )
+        {
+          dispatch({type: SUBJECT_GET_MULTIPLE, payload: data._array})
+          resolve(data._array.length);
+        }else
+        {
+          dispatch({ type : SUBJECT_LOADING_ERROR, msg : 'No Subject Offline'});
+          reject('No Data')
+        }
+      })
+      .catch(err=>reject(err))
+    })
 };
 
 //SELECT SINGLE SUBJECT FROM SUBJECTS

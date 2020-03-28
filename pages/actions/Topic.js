@@ -250,14 +250,26 @@ export const getTopics = (theme) => (dispatch) => {
   theme && Array.isArray(theme) ? 
   theme.forEach(id => {
       let PARAM = {themeID : id};
-      db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, PARAM, id, (data)=>{
-        
-        data == 1 ? null : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3}); 
+      db.selectTopicPromise(TABLE_NAME, PARAM)
+      .then(data=>{
+        if(data == 1)
+        {
+          dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
+        }else{
+          dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'});
+        }   
       })
-      dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'})
-    }): db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, {themeID : theme}, theme, (data)=>{
-      
-      data == 1 ? null : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3}); 
+    .catch(err=>reject(err))
+    }): 
+    db.selectTopicPromise(TABLE_NAME, {themeID : theme})
+    .then((data)=>{
+      if(data == 1)
+      {
+        dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
+      }else{
+        dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'});
+        reject(err);
+      }  
     })
 
 };
@@ -265,10 +277,19 @@ export const getTopics = (theme) => (dispatch) => {
 //GET ALL TOPIC
 export const getTopicsDB = (topics, themes) => (dispatch) => {
   let PARAM = topics ? {id : topics}: {themeID : themes};
-  db.selectTopic(TABLE_NAME, TABLE_STRUCTURE, PARAM, 1, (data)=>{
-    data == 1 ? dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'}) : dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array}); 
+  db.selectTopicPromise(TABLE_NAME, PARAM)
+  .then((data)=>{
+    if(data == 1)
+    {
+      dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'})
+     }else
+     {
+      dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array});
+     }  
   })
-
+  .catch(err=>{
+    dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'})
+  })
 };
 
 

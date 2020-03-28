@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { ThemeProvider, Button, ButtonGroup, Icon, Overlay} from 'react-native-elements';
-import { TextInput, View, Text, StyleSheet } from 'react-native';
+import { TextInput, View, Text, StyleSheet, Alert } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import * as Font from 'expo-font';
 import Activity from './components/LoaderTest';
@@ -76,14 +76,10 @@ class TestSettingsScreen extends React.Component{
       let test_data = this.props.test.test;
 
       if(test_data && Object.keys(test_data).length > 0){
-        let hours = test_data.testtime/(60 * 60);
-        let hour = Math.floor(hours);
-        let mins = (test_data.testtime - (hour * 60 * 60)) / 60;
-        let min = Math.floor(mins);
-        let sec = test_data.testtime - ((hour * 60 * 60) + (min * 60)) ;
-
+        
+        //SETTINGS
         let settings = test_data.settings.split(':::');
-        console.log(settings);
+        //TOPICS GET NUMBER OF QUESTIONS
         let q_num = {};
         let arry1 = JSON.parse(test_data.topics);
         arry1 && Array.isArray(arry1) && arry1.length > 0 ? this.props.topic.topics.forEach(row=>{
@@ -93,6 +89,26 @@ class TestSettingsScreen extends React.Component{
             }
         }) : {};
         let total_questions = Object.values(q_num).reduce((a, b)=> a + b , 0);
+        //TIMING
+        let hours = 0;
+        let hour = 0;
+        let mins = 0;
+        let min = 0;
+        let sec = 0;
+        if(parseInt(settings[1]) === 2)
+        {
+          sec = parseInt(test_data.testtime);
+        }
+        else
+        {
+          hours = test_data.testtime/(60 * 60);
+          hour = Math.floor(hours);
+          mins = (test_data.testtime - (hour * 60 * 60)) / 60;
+          min = Math.floor(mins);
+          sec = test_data.testtime - ((hour * 60 * 60) + (min * 60)) ;
+        }
+       
+
         this.setState({
           title: test_data.title,
           description: test_data.description,
@@ -132,64 +148,68 @@ class TestSettingsScreen extends React.Component{
     this.props.navigation.navigate('TestSheetScreen', {'testID':this.state.testID});
   }
   onPrepare(){
-    
-    //activity pulling questions
-    const { isLoading } = this.props.question;
-
     this.setState({statePos:'Loading Questions', fontLoaded: false});
     let arry = this.props.navigation.getParam('topics');
     this.setState({statePos: this.props.question.msg});
-    this.props.getQuestions(arry, this.state.noq, q =>{
-      if(q){
-          this.setState({statePos: 'Preparing Test'});
-          this.deConstruct(q, (data) =>{
-            if(data){
-              //saving test 
-              this.setState({statePos: 'Saving Test'});
-              this.saveTest(data, tID =>{
-                this.setState({testID: tID});
-                if(tID > 0)
-                {
-                  this.setState({ fontLoaded: true });
-                  this.setState({ statePos:'Done'});
-                  this.props.navigation.navigate('TestSheetScreen', { 'testID':tID })
-                }else{
-                  this.setState({ fontLoaded: true });
-                  this.setState({ statePos:'Failed to save '});
-                }
-              }); 
-            }  
-          });  
-      }
-      else
-      {
+    this.props.getQuestions(arry, this.state.noq)
+    .then(q =>{
+      if(q == 1){
         this.setState({ fontLoaded: true });
+      }else
+      {
+          this.setState({statePos: 'Preparing Test...'});
+          this.deConstruct(q)
+          .then(data =>{
+              this.setState({statePos: 'Saving Test...'});
+              this.saveTest(data)
+              .then(tID =>{
+                  console.log(`main the inserted id is ${tID}`);
+                  this.setState({testID: tID});
+                  this.setState({ statePos:'Success ..Redirecting'});
+                  this.props.navigation.navigate('TestSheetScreen', { 'testID':tID })
+              })
+              .catch(err =>{this.setState({ fontLoaded: true }); console.log('fail3', err)}) 
+          })
+          .catch(err =>{this.setState({ fontLoaded: true }); console.log('fail2')})  
       }
-    });
+    })
+    .catch(err=>{this.setState({ fontLoaded: true }); console.log('fail1')})
    
   }
 
-onEditPrepare = () =>{
+onEditPrepare= () =>{
     let { testID, title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
-    let total_hours = hours * 60 * 60;
-    let total_minutes = minutes * 60;
+    let total_hours = 0;
+    let total_minutes = 0;
+    if(parseInt(valueTimers) === 2)
+    {
+
+    }else
+    {
+      total_hours = hours * 60 * 60;
+      total_minutes = minutes * 60;
+    }
+   
     let total_seconds = seconds;
     let total_time = total_hours + total_minutes + total_seconds;
     let settings = `${noq}:::${valueTimers}:::${valueAnswers}`;
   
      let $f = {};
-     $f['title'] = title;
+     //$f['title'] = title;
      $f['description'] = description;
      $f['testtime'] = total_time;
      $f['settings'] = settings;
       
-     this.props.updateTest($f, testID, (d)=>{
-        d == 1 ? this.props.navigation.navigate('TestSheetScreen', { 'testID':tID }) : null ;
-     });
+     this.props.updateTest($f, testID)
+     .then(d =>{
+        d > 0 ? Alert.alert('Done!', 'Test Updated') : Alert.alert('Failed!', 'No corrections made') ;
+     })
+     .catch(err=>Alert.alert('Error!', 'Change but not updated'))
 }
   
   
-deConstruct = (arr, callback) =>{
+deConstruct = async (arr) =>{
+  return await new Promise((resolve, reject)=>{
     //creat array to store items
     let idStore = [];
     let answerStore = {};
@@ -282,25 +302,30 @@ deConstruct = (arr, callback) =>{
     struct['options'] = optionStore;
     struct['answers'] = answerStore;
     struct['instructions'] = instructionStore;
-    callback(struct);
+    idStore.length > 0 ? resolve(struct) : reject(1);
+  })
 }
 
 shuffle=(array) => {
   return array.sort(() => Math.random() - 0.5);
 }
 
-saveTest= (data, callback) =>{
+saveTest= async data =>{
+  return await new Promise((resolve, reject)=>{
   let{ topics, title, description, noq, hours, minutes, seconds, valueTimers, valueAnswers } = this.state;
   let total_hours = 0;
   let total_minutes = 0;
   let total_seconds = 0;
 
-  if(valueTimers === 1){
+  if(valueTimers === 1)
+  {
     total_hours = hours * 60 * 60;
     total_minutes = minutes * 60;
     total_seconds = seconds;
   }
-  if(valueTimers === 2){
+
+  if(valueTimers === 2)
+  {
     total_hours = 0;
     total_minutes = 0;
     total_seconds = seconds;
@@ -326,10 +351,13 @@ saveTest= (data, callback) =>{
    $f['answers'] = JSON.stringify(data.answers);
    $f['questionweigth'] = JSON.stringify(data.questionweight);
   
-   this.props.insertTest($f, (id)=>{
-        callback(id);
-   });
-   
+   this.props.insertTest($f)
+   .then(id=>{
+     console.log('checking save')
+        parseInt(id) > 0 ? resolve(id): reject('xx');
+   })
+   .catch(err =>reject(err))
+  })
 }
 
 updateIndex = (selectedIndex) =>{
@@ -345,7 +373,6 @@ updateIndex = (selectedIndex) =>{
       this.props.navigation.navigate('TestSheetScreen', { 'testID':this.state.testID })
     } else
     {
-      //alert
       this.onPrepare();
     } 
   }
@@ -373,12 +400,7 @@ render(){
   const list_data_topics = list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
   const list_themes = themes && Array.isArray(themes) && themes.length > 0  ? themes.filter((row)=>ids.includes(row.id)) : null;
   const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
-  if(!this.props.question.isLoading)
-  {
-    //this.setState({statePos: this.props.question.msg});
-  }
   
-
   let data =[
     {
       'id': 1,
@@ -409,7 +431,6 @@ render(){
     }
   ]
 
-  
   return (
     <View style={{flex:1}}>
       <View style={styles.topSection_small}>

@@ -78,7 +78,8 @@ module.exports = {
     test: {
         name:'tests',
         schema: `id INTEGER PRIMARY KEY , 
-                topics TEXT, userID TEXT , 
+                topics TEXT, 
+                userID TEXT , 
                 subjectID TEXT REFERENCES subject,
                 title TEXT ,description TEXT ,
                 testtime TEXT DEFAULT 0,
@@ -116,14 +117,21 @@ module.exports = {
         name:'scores',
         schema: `   id INTEGER PRIMARY KEY ,
                     testID INTEGER NOT NULL REFERENCES tests,
-                    score TEXT , 
+                    score TEXT DEFAULT 0, 
                     timeleft INTEGER DEFAULT 0,
+                    timeset INTEGER DEFAULT 0,
                     timespent TEXT DEFAULT NULL,
+                    settings TEXT DEFAULT NULL,
                     choices TEXT DEFAULT NULL,
-                    started_at TEXT NULL ,
-                    ended_at TEXT NULL ,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
+    },
+    stat: {
+        name:'stats',
+        schema: `   id INTEGER PRIMARY KEY ,
+                    scoreID INTEGER NOT NULL REFERENCES scores,
+                    questionID INTEGER NOT NULL REFERENCES questions, 
+                    stat INTEGER DEFAULT 0`
     },
     mockscore: {
         name:'mocksscores',

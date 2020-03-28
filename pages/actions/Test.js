@@ -90,22 +90,42 @@ export const getTest = (id) => (dispatch) => {
   dispatch({ type: TEST_GET_ONE, payload: id})
 };
 
-export const insertTest = (data, callback) => (dispatch) => {
+export const insertTestPromise = (data) => (dispatch) => {
   dispatch({ type: TEST_INSERT_LOADING});
-  db.insertTest(TABLE_NAME, TABLE_STRUCTURE, data, 1, (dat) => {
+  db.insertTest(TABLE_NAME, TABLE_STRUCTURE, data, 1, (dat) =>{
     callback(dat);
     dat == 0 ? dispatch({type: TEST_INSERT_FAIL, msg: 'none'}) : dispatch({type: TEST_INSERT_SUCCESS, payload:data, id:dat});
   })
 };
 
+export const insertTest = (data) => (dispatch) => {
+  dispatch({ type: TEST_INSERT_LOADING});
+    return new Promise((resolve, reject)=>{
+      db.insertTestPromise(TABLE_NAME, data)
+      .then(dat=>{
+        dispatch({type: TEST_INSERT_SUCCESS, payload:data, id:dat})
+        resolve(dat);
+      })
+      .catch(err=>{
+        dispatch({type: TEST_INSERT_FAIL,  msg:err});
+        reject(err);
+      })
+  })
+};
+
 export const updateTest = (data, id) => (dispatch) => {
   dispatch({ type: TEST_UPDATE_LOADING});
-  db.updatePromise(TABLE_NAME, data, id)
-  .then(dat=>{
-    dispatch({type: TEST_UPDATE_SUCCESS, payload: data, id:id})
-  })
-  .catch(err=>{
-    dispatch({type: TEST_UPDATE_FAIL,  msg:'none'})
+    return new Promise((resolve, reject)=>{
+      db.updatePromise(TABLE_NAME, data, id)
+      .then(dat=>{
+        dispatch({type: TEST_UPDATE_SUCCESS, payload: data, id:id});
+        resolve(id);
+      })
+      .catch(err=>{
+        console.log(err);
+        dispatch({type: TEST_UPDATE_FAIL,  msg:err});
+        reject(id);
+      })
   })
 };
 

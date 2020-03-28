@@ -230,7 +230,7 @@ closeDatabase(db) {
       
       const q = `(SELECT * FROM instructions WHERE instructions.topicID IN (${param}))`;
       const q1 = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN ${q} as instr ON questions.instructionID = instr.id LIMIT ${num}`;
-      console.log(query);
+      
       this.db.transaction(
                 (tx) => { 
                   tx.executeSql(query, [], (transaction, result) => {
@@ -565,6 +565,29 @@ insertPromise = async(TABLE_NAME,  param) =>{
     })
   }
 
+  insertTestPromise = async(TABLE_NAME,  param) =>{
+    let insert_array = []
+    let quxs = [];
+    let nuxs = [];
+    Object.keys(param).forEach((para)=>{
+        nuxs.push(para);
+        quxs.push(`?`);
+        insert_array.push(param[para]);
+    })
+    let nux = `${nuxs.toString()}`; 
+    let qux = `${quxs.toString()}`; 
+
+    const query = `INSERT OR IGNORE INTO ${TABLE_NAME} (${nux}) VALUES (${qux})`;
+  return await new Promise((resolve, reject)=>{
+    this.db.transaction((tx) => {
+      tx.executeSql(query, insert_array, (transaction, result) => { result.insertId && result.insertId > 0 ? resolve(result.insertId) : reject(`constraint error ${result}`);},
+                  (t, error) => {reject(error.message);}) 
+              }, 
+              (t, error)=>{reject(error.message);},     
+      )
+  })
+}
+
   async updatePromise(TABLE_NAME, param, id) {
     let insert_array = []
     let qux = '';
@@ -584,4 +607,26 @@ insertPromise = async(TABLE_NAME,  param) =>{
     
   }  
 
+  async selectQuestionsPromise(param, num) {
+    const query0 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM answers WHERE  answers.questionID = questions.id GROUP BY questionID ";
+    const query1 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM distractors WHERE  distractors.questionID = questions.id GROUP BY questionID ";
+    const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id WHERE instructions.topicID IN (${param}) ORDER BY RANDOM() LIMIT ${num}`;
+    return await new Promise((resolve, reject)=>{
+    this.db.transaction(
+              (tx) => { tx.executeSql(query, [], (transaction, result) => {resolve(result.rows._array);}, (t, error) => {reject(1); console.log(error.message)}) }, 
+              (t, error)=>{reject(1); console.log(error.message)},  
+      );
+    })
+  }
+
+  async selectTopicPromise(TABLE_NAME,  param) {
+      return await new Promise((resolve, reject)=>{
+      let completeQuery = build_in_param(param);
+      const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN ( SELECT id FROM instructions WHERE instructions.topicID = topics.id ) ) AS numid FROM ${ TABLE_NAME } ${completeQuery} `;
+      this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) =>{resolve(result.rows)}, (t, error) =>{reject(1); console.log(error.message)}
+              )}, 
+            (t, error)=>{reject(1); console.log(error.message)},     
+        );
+    })
+  }
 }

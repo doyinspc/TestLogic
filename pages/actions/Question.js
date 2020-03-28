@@ -23,13 +23,22 @@ const TABLE_STRUCTURE = SCHEME.question.schema;
 //ARGUMENTS TOPICS AND NUMBER OF QUESTIONS;
 //ENGLISH PASSAGES AND CLOZE BE TREATED DIFFERENTLY
 //OTHERS CAN BE SELECTED RANDOMLY
-export const getQuestions = (topicsID, NUM, callback) => (dispatch) => {
-  let topics_array = topicsID.toString();
+export const getQuestions = (topicsID, NUM) => (dispatch) => {
   let PARAM = topicsID;
   dispatch({ type: QUESTION_LOADING});
-  db.selectQuestions(TABLE_NAME, TABLE_STRUCTURE, PARAM, NUM, (data)=>{
-    callback(data);
-    data == 1 ?  dispatch({type: QUESTION_LOADING_ERROR, msg:'error'}) :  dispatch({type: QUESTION_GET_MULTIPLE, payload: data._array});
+  return new Promise((resolve, reject)=>{
+  db.selectQuestionsPromise(PARAM, NUM)
+  .then(data =>{
+    if(data == 1)
+    {  
+      dispatch({type: QUESTION_LOADING_ERROR, msg:'error'})
+      reject(1);
+    }else{
+      dispatch({type: QUESTION_GET_MULTIPLE, payload: data._array});
+      resolve(data)
+    }
+  })
+  .catch(err =>{reject(1)})
   })
 };
 

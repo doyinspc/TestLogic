@@ -43,6 +43,7 @@ class QuestionScreen extends React.Component{
       gestureName: 'none',
       currentTime:'',
       starttime: Math.floor(new Date().getTime()),
+      starting: Math.floor(new Date().getTime()/1000),
       selectedIndex: 2,
       score: 0,
       isVisible: false,
@@ -56,6 +57,21 @@ async componentDidMount(){
   //load test from test table
   this.props.getTest(testID);
   let test_data = this.props.test.test; 
+  let timing = test_data.testtime.split(':::');
+  let cur = 0;
+  timing = timing.map(Number);
+      if(timing[0] === -1)
+        {
+            cur = 0;
+        }
+      else
+        {
+          let sec = timing[2] > 0 ? timing[2]: 0;
+          let min = timing[1] > 0 ? timing[1] * 60: 0;
+          let hr  = timing[0] > 0 ? timing[0] * 60 * 60 : 0;
+          cur = hr + min + sec;
+        }
+
   if(!this.props.test.isLoading && test_data && Object.keys(test_data).length > 0)
   {
     //set sata in state
@@ -94,6 +110,9 @@ async componentDidMount(){
     arr['testID'] = testID;
     arr['score'] = 0;
     arr['timeleft'] = test_data.testtime;
+    arr['timeset'] = cur;
+    arr['timespent'] = JSON.stringify({});
+    arr['settings'] = test_data.settings;
     arr['choices'] = JSON.stringify({});
     
     this.props.insertScore(arr, (id)=>{
@@ -122,7 +141,6 @@ async componentDidMount(){
 
  //record the score
 setChoice=(questionID, selectionID)=>{
-      console.log(`no selection was made ${selectionID} ${questionID} ${this.state.activeNumber}`)
       let ch = {...this.state.choices};
       ch[questionID] = selectionID;
       this.setState({choices:ch});
@@ -147,12 +165,21 @@ setChoice=(questionID, selectionID)=>{
         settimes[this.state.activeNumber] = cur;
         this.setState({settime:settimes});
       }
+    else if(parseInt(this.state.tim) === 1)
+    {
+      let settimes = {...this.state.settime};  //GET ALL TIME STORED
+      let ending = Math.floor(new Date().getTime()/1000); //GET CURRENT TIME IN SECONDS
+      let lasttime = settimes[this.state.activeNumber.toString()] ? settimes[this.state.activeNumber] : 0; //GET PREVIOS TIME FOR PARTICULAR ID
+      let cur = lasttime + (ending - this.state.starting); // SUBTRACT NOW FROM TIME STARTED ANDADD LAST TIME USED, IF ANY
+      settimes[this.state.activeNumber] = cur; //STORE IN OBJECT
+      this.setState({settime: settimes}); //SET STATE
+    }
       
  }
  //mark the test and record
 markTest=()=>{
 
-  let { answers, choices, scoreID, testtime, testID } = this.state;
+  let { answers, choices, scoreID, testtime, testID, settime } = this.state;
 
   let correctAnswers = [];
   for(let i in answers)
@@ -168,6 +195,7 @@ markTest=()=>{
   arr['score']  = score.toString();
   arr['timeleft']  = testtime;
   arr['choices']  = JSON.stringify(choices);
+  arr['timespent']  = JSON.stringify(settime);
     this.props.updateScore(arr, scoreID, (data)=>{
   });
  this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
@@ -177,12 +205,10 @@ onSwipeUp=(gestureState)=> {
    //show all question numbers
   //this.setState({myText: 'You swiped up!'});
 }
-
 onSwipeDown=(gestureState)=>{
   //hid all question numbers
   this.setState({isVisible:true});
 }
-
 onSwipeLeft=(gestureState)=> {
   
   this.onForward();
@@ -230,17 +256,43 @@ onForward=()=> {
         starttime: Math.floor(new Date().getTime()),
       });
 
-    }else{
+    }else if(parseInt(this.state.tim) === 1)
+    {
+      //IF THE QUESTION HAS BEEN ANSWERED
+      //NO NEED TO STORE THE TIME SPENT
+      let did = oldActiveNumber .toString();
+      let sc = this.state.choices[did] && choices[did] !== undefined ? this.state.choices[did] : null ;
+      if(sc && sc.length > 0 && sc != null)
+      {
+        let settimes = {...this.state.settime};
+        let ending = Math.floor(new Date().getTime()/1000);
+        let lasttime = settimes[oldActiveNumber.toString()] ? settimes[oldActiveNumber] : 0;
+        let cur = lasttime + (ending - this.state.starting);
+        settimes[oldActiveNumber] = cur;
+        this.setState({
+          activeIndex: newIndex, 
+          activeNumber: newActiveNumber,
+          settime: settimes,
+          starting: Math.floor(new Date().getTime()/1000),
+        });
+      }else
+      {
+        this.setState({
+          activeIndex: newIndex, 
+          activeNumber: newActiveNumber
+        });
+      }
+    }
+    else
+    {
       this.setState({
         activeIndex: newIndex, 
         activeNumber: newActiveNumber
       });
-
     }
-    
+  
   }
 }
-
 onBackward=()=> {
   let oldIndex = this.state.activeIndex;
   let newIndex = oldIndex - 1;
@@ -284,7 +336,6 @@ onBackward=()=> {
     }
   }
 }
-
 updateIndex = (selectedIndex) =>{
   this.setState({ selectedIndex });
   if(selectedIndex == 0 )
@@ -322,7 +373,6 @@ updateIndex = (selectedIndex) =>{
       this.onForward();
   }
 }
-
 onSwipe=(gestureName, gestureState)=> {
   const {SWIPE_UP, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
   
@@ -337,7 +387,6 @@ onSwipe=(gestureName, gestureState)=> {
       break;
   }
 }
-
 getCurrentTime = () =>{
     let { settime, starttime, tim, activeIndex, activeNumber, choices } = this.state;
     
@@ -389,7 +438,6 @@ getCurrentTime = () =>{
       }
     }
 }
-
 componentWillUnmount(){
   clearInterval(this.timer);
 }
@@ -489,13 +537,12 @@ this.getCurrentTime
                 </View> 
                 <View style={{flex: 1, bottom:10, marginLeft:10, paddingTop:20}} >
                   {options[mainID]  ? 
-                    options[mainID].map((element) =>(
+                    options[mainID].map(element =>(
                         <View key={`${element[0]}`} style={{flexDirection:'row'}}>
-                        { choices[activeNumber] ?
+                        { choices[activeNumber] && ans == 2?
                           choices[activeNumber] == Object.keys(answers[activeNumber])[0] ?
-                          Object.keys(answers[activeNumber])[0] == element[0]?
-                          <Icon name='done' size={20} color='green' type='material' containerStyle={{marginTop:5}} />:
-                          <Icon name='remove' size={20} color='red' type='material' containerStyle={{marginTop:5}} /> : 
+                          Object.keys(answers[activeNumber])[0] == element[0] ? <Icon name='done' size={20} color='green' type='material' containerStyle={{marginTop:5}} />:
+                              <Icon name='remove' size={20} color='red' type='material' containerStyle={{marginTop:5}} /> : 
                           <Icon name='remove' size={20}  color='red' type='material' containerStyle={{marginTop:5}} />
                         :
                         null
