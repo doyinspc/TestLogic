@@ -24,6 +24,7 @@ import {
     TEST_DELETE_SUCCESS,
     TEST_DELETE_FAIL
 } from "../types/Test";
+import Database from "../api/Database";
 
 const initialState = {
     isLoading: false,
@@ -36,6 +37,7 @@ const initialState = {
     testQuestions:{},
     activeTestID : null
 }
+
 
 export default function(state = initialState, action){
     switch (action.type) {
@@ -109,8 +111,8 @@ export default function(state = initialState, action){
             let newArray = [];
             let oldArray = [...state.tests];
             let onlineArray = action.payload;
-            oldArray.forEach((row)=>{
-                let f = onlineArray.filter((r)=>r.id == row.id);
+            oldArray.forEach(row=>{
+                let f = onlineArray.filter(r =>r.id == row.id);
                 f && Array.isArray(f) && f.length == 1 ? newArray.push(f[0]) : newArray.push(row);
                 onlineArray = onlineArray.filter((r)=>r.id != row.id);
             })

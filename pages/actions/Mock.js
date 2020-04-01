@@ -24,9 +24,16 @@ const TABLE_STRUCTURE = SCHEME.mock.schema;
 
 //GET MOCKS FROM ONLINE DATABANK
 export const getMocksDownload = (subjectID) => (dispatch, getState) => {
-  let paths = `${path}/mock/cat/${subjectID}`;
+  //let paths = `${path}/mock/cat/${subjectID}`;
+  let paths = `${path}/api/`;
+  let params = {
+    data:{subjectID},
+    cat:'all',
+    table:TABLE_NAME,
+    token:token
+  }
   dispatch({ type: MOCK_LOADING });
-  axios.get(paths, config(getState))
+  axios.get(paths, {params})
       .then(res => {
           res.data && Array.isArray(res.data) && parseInt(res.data.length) > 0 ? dispatch({type: MOCK_GET_MULTIPLE, payload: res.data}): dispatch({ type : MOCK_LOADING_ERROR, msg : 'No file'});
       })

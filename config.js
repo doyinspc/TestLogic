@@ -1,5 +1,5 @@
 import { 
-    API_PATH,
+    API_PATHS,
     CLIENT_PATH,
     IMAGE_PATH,
     GOOGLE_API_KEY,
@@ -18,7 +18,7 @@ import {
 } from 'react-native-dotenv';
 
 export default {
-    API_PATH,
+    API_PATHS,
     CLIENT_PATH,
     IMAGE_PATH,
     GOOGLE_API_KEY,

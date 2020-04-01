@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ScrollView, ListView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ListView, Alert } from 'react-native';
 import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon , Overlay, Button, SocialIcon} from 'react-native-elements';
 import * as Font from 'expo-font';
 import ProgressCircular  from './components/Progress';
@@ -83,7 +83,7 @@ async componentDidMount() {
   //GET THE SELECTED THEMES
   let selected_themes = this.props.navigation.getParam('themezID');
   //GET TOPICS FROM OFFLINE 
-  this.props.getTopics(selected_themes);
+  this.props.getTopics(selected_themes)
   //LOAD FONT
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
@@ -223,7 +223,13 @@ onChange = (topicID, advert, topicActive, indexes ) => {
   //DOWNLOAD TOPICS ONLY
   updateTopicx=()=>{
     let arry = this.props.navigation.getParam('themezID');
-    this.props.getTopicsDBs(arry);
+    this.props.getTopicsDBs(arry)
+    .then((res)=>{
+        Alert.alert('Success', 'Downloaded')
+    })
+    .catch((err)=>{
+      Alert.alert('Success', err)
+    })
   }
 
   //BUTTOM BUTTON GROUP
@@ -247,6 +253,26 @@ onChange = (topicID, advert, topicActive, indexes ) => {
     }
   }
 
+  rightNote = (nums) =>{
+    if(nums === 1)
+    {
+      return <Icon name='thumb-up' color='green' type='material' /> 
+    }
+    if(nums === 2)
+    {
+      return <Icon name='thumb-down' color='red' type='material' /> 
+    }
+    if(nums === 4)
+    {
+      return <Icon name='cloud-download' color='green' type='material' /> 
+    }
+    if(nums === 5)
+    {
+      return <Icon name='cloud-download' color='yellow' type='material' /> 
+    }
+
+
+  }
   //USE WHEN ACADEMIC
   keyExtractors = (item, index) =>index.toString();
   renderItems = ({item, index}) =>
@@ -255,7 +281,7 @@ onChange = (topicID, advert, topicActive, indexes ) => {
                 titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: item.active == 2 ? 'grey' : this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: item.active == 2 ? 'cloud-download':this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
                 title={`${item.name} ${item.id} `}
-                rightTitle={`${item.numid} `}
+                rightTitle={this.rightNote(item.questionx)}
                 subtitle={ item.active == 2 ? 'Downloading... Click to learn more...' : null}
                 bottomDivider
                 friction={90}
@@ -341,7 +367,6 @@ render(){
                 </Text>
              </View>
              <View >
-                
                 <View style={{flexDirection:'row', flexWrap:'wrap', }}>
                   <Icon name='home' type='material' color='white' />
                   <Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:3}} > Move to home Page</Text>

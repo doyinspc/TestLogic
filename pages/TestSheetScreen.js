@@ -1,8 +1,7 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ThemeProvider, Button, Avatar, ListItem, ButtonGroup, Icon } from 'react-native-elements';
-import { Table, TableWrapper, Row, Rows, Col } from 'react-native-table-component';
+import { ThemeProvider, Button, ButtonGroup, Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 import Activity from './components/Loader';
 
@@ -180,26 +179,19 @@ class ScoresScreen extends React.Component{
     }
     else if(selectedIndex == 1 && testID && testID > 0)
     {
-      if(this.state.testQuantity > 0 && testID && testID > 0){
-        this.props.navigation.navigate('ScoresScreen', {'testID':testID });
-      }
-      else
-      {   
         //delete test
-            this.deleteTest();
-      }
-        
+        this.deleteTest();
     }
     else if(selectedIndex == 2 && testID && testID > 0)
     {
       //delete test
-        this.deleteTest();
+      this.props.navigation.navigate('ScoresScreen', {'testID':testID });
     }
   }
 
 comp1 = () => <Icon name='edit' color='white' type='material' />
-comp2 = () => <Icon name='book'color='white' type='material' />
-comp3 = () => <Icon name='delete' color='white' type='material' />
+comp2 = () => <Icon name='delete' color='white' type='material' />
+comp3 = () => <Icon name='list'color='white' type='material' />
 
 render(){
  const { themes } = this.props.theme;
@@ -279,7 +271,7 @@ render(){
          maxScore = Math.max(...maxScoreArray) * 100;
       }
     }
-    const buttons = testQuantity > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp3}];
+    const buttons = testQuantity > 0 ? [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}] : [{element:this.comp1},  {element:this.comp2}];
     const list_topics = topics && Array.isArray(topics) && topics.length > 0 && topic ? topics.filter((row)=>topic.includes(row.id)) : null;
     const list_data_topics = list_topics && Array.isArray(list_topics) && list_topics.length > 0 ? list_topics.map(row =>(<Text key={`${row.id}xx`} style={{ color:'black', fontFamily:'PoiretOne', marginTop:2}}>{row.name}</Text>)) :null;
   
@@ -371,7 +363,6 @@ render(){
             icon={{name: 'done-all', height:45, type: 'material', color:'#fff' }}
             title='START TEST'
             buttonStyle={{backgroundColor:local_color.color3, bottom:1, margin:10, padding:10, justifyContent:'center'}}
-            
             onPress={this.relocate}
           />
           

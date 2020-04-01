@@ -24,9 +24,16 @@ const TABLE_STRUCTURE = SCHEME.resource.schema;
 
 //GET RESOURCES FROM ONLINE DATABANK
 export const getResourcesDownload = (topicID) => (dispatch, getState) => {
-  let paths = `${path}/resource/cat/${topicID}`;
+  //let paths = `${path}/resource/cat/${topicID}`;
+  let paths = `${path}/api/`;
+  let params = {
+    data:{topicID},
+    cat:'all',
+    table:TABLE_NAME,
+    token:token
+  }
   dispatch({ type: RESOURCE_LOADING });
-  axios.get(paths, config(getState))
+  axios.get(paths, {params})
       .then(res => {
           res.data && Array.isArray(res.data) && parseInt(res.data.length) > 0 ? dispatch({type: RESOURCE_GET_MULTIPLE, payload: res.data}): dispatch({ type : RESOURCE_LOADING_ERROR, msg : 'No file'});
       })

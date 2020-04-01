@@ -65,13 +65,11 @@ class LogIn extends React.Component{
            {
             this.setState({isActive:true});
            }
-           
          }else{
-                dispatch({ type : USER_LOADING_ERROR, msg : 'No file'});
+            dispatch({ type : USER_LOADING_ERROR, msg : 'No file'});
          }
       })
     }
-
   }
 
   render(){
@@ -94,7 +92,7 @@ class LogIn extends React.Component{
         </View>
             
               <View style={styles.textwidthx}>
-              <Text style={styles.label}>Email</Text> 
+              <Text style={styles.label}>Email or Phone Number</Text> 
               </View>
              <TextInput
                 style={styles.textplace}

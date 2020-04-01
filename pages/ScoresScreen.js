@@ -47,7 +47,6 @@ class ScoresScreen extends React.Component{
       let settings = test_data.settings.split(":::");
       this.setState({title:test_data.title, noq:settings[0], tim:settings[1]})
     }
-    //this.setState({testID: this.props.navigation.getParam('testID')});
 
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -56,16 +55,17 @@ class ScoresScreen extends React.Component{
     this.setState({ fontLoaded: true, testID:this.props.navigation.getParam('testID') });
   }
 
-  timeLefts = (ti, ty) =>{
+  timeLefts = (ty, tin) =>{
+      let ti = JSON.parse(tin);
       if(ti && Object.keys(ti).length > 0)
       {
         let val = Object.values(ti);
-        let sumLeft = val.map((a, b)=> a + b, 0);
-        let timeGiven = ty;
-        let timeleft = timeGiven - sumLeft;
+        let sumLeft = val.reduce((a, b)=> a + b, 0);
+        let timeGiven = 0;
+        let timeleft = sumLeft;
         let mins = Math.floor(timeleft/60);
         let secs = timeleft - (mins * 60);
-        return `${mins}m ${secs}s spent`
+        return `${mins}m ${secs}s`
       }else{
         return `--.--`;
       }
@@ -121,7 +121,7 @@ class ScoresScreen extends React.Component{
           rightTitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color2}} 
           subtitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color4}} 
           rightSubtitleStyle={{fontFamily: 'SulphurPointNormal', color:local_color.color4}}
-          rightSubtitle={`${this.timeLefts(item.timespent, item.timeleft)}`}
+          rightSubtitle={`${this.timeLefts(item.timeleft, item.timespent)}`}
           bottomDivider
           friction={90}
           tension={100}

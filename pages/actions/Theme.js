@@ -25,11 +25,18 @@ const TABLE_STRUCTURE = SCHEME.theme.schema;
 //GET THEMES FROM ONLINE DATABANK
 export const getThemesDownload = (subjectID) => (dispatch, getState) => {
   return new Promise((resolve, reject) =>{
+    dispatch({ type: THEME_DOWNLOADING });
     if(subjectID && parseInt(subjecID) > 0)
     {
-      let paths = `${path}/theme/cat/${subjectID}`;
-      dispatch({ type: THEME_DOWNLOADING });
-      axios.get(paths, config(getState))
+      //let paths = `${path}/theme/cat/${subjectID}`;
+      let paths = `${path}/api/`;
+      let params = {
+        data:{subjectID},
+        cat:'all',
+        table:TABLE_NAME,
+        token:config
+      }
+      axios.get(paths, {params})
           .then(async res => {
             await loadData(res.data, 'theme', async (d)=>{
               if(res.data && Array.isArray(res.data) && res.data.length > 0 )

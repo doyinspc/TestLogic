@@ -6,6 +6,9 @@ import { DrawerItems } from 'react-navigation-drawer';
 import { Provider }from 'react-redux';
 import store from "./store";
 import * as Font from 'expo-font';
+import {
+  setTestDeviceIDAsync,
+} from 'expo-ads-admob';
 
 import GoogleScreen from './pages/GoogleScreen';
 import FacebookScreen from './pages/FacebookScreen';
@@ -275,6 +278,11 @@ export default class App extends React.Component {
       'SulphurPointNormal': require("./assets/fonts/SulphurPoint-Regular.ttf")
     });
     this.setState({ fontLoaded: true });
+    this.initAds().catch((error) => console.log(error));
+  }
+  
+  initAds = async () => {
+   await setTestDeviceIDAsync(EMU);
   }
 
 

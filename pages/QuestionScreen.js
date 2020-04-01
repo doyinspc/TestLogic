@@ -57,14 +57,15 @@ async componentDidMount(){
   //load test from test table
   this.props.getTest(testID);
   let test_data = this.props.test.test; 
+  if(test_data && Object.keys(test_data).length > 0){
   let timing = test_data.testtime.split(':::');
   let cur = 0;
   timing = timing.map(Number);
-      if(timing[0] === -1)
+  if(timing[0] === -1)
         {
             cur = 0;
         }
-      else
+  else
         {
           let sec = timing[2] > 0 ? timing[2]: 0;
           let min = timing[1] > 0 ? timing[1] * 60: 0;
@@ -72,7 +73,7 @@ async componentDidMount(){
           cur = hr + min + sec;
         }
 
-  if(!this.props.test.isLoading && test_data && Object.keys(test_data).length > 0)
+  if(test_data && Object.keys(test_data).length > 0)
   {
     //set sata in state
     let settings = test_data.settings.split(':::');
@@ -125,12 +126,12 @@ async componentDidMount(){
     let da = this.props.score.score;
     this.setState({ 
         choices: da.choices !== undefined ? JSON.parse(da.choices): {},
-        testtime: da.timeleft, 
+        testtime: da.timespent !== undefined ? JSON.parse(da.timespent):{}, 
         timeleft: da.timeleft, 
         score: da.score,  
     });
   }
-   
+}
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -180,8 +181,8 @@ setChoice=(questionID, selectionID)=>{
 markTest=()=>{
 
   let { answers, choices, scoreID, testtime, testID, settime } = this.state;
-
   let correctAnswers = [];
+
   for(let i in answers)
   {
     let d = Object.keys(answers[i])[0];
@@ -189,13 +190,13 @@ markTest=()=>{
        correctAnswers.push(d);
     }
   };
+
   let score = correctAnswers.length > 0 && Object.keys(answers).length > 0 ? (correctAnswers.length / Object.keys(answers).length) : 0 ;
-  
   let arr = {}
   arr['score']  = score.toString();
-  arr['timeleft']  = testtime;
   arr['choices']  = JSON.stringify(choices);
   arr['timespent']  = JSON.stringify(settime);
+  arr['timeleft']  = JSON.stringify(settime);
     this.props.updateScore(arr, scoreID, (data)=>{
   });
  this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
@@ -347,11 +348,13 @@ updateIndex = (selectedIndex) =>{
   {
       //pause test save questions
       //exit to score screen
-      let {choices, timeleft, scoreID, testID } = this.state;
+      let {choices, timeleft, scoreID, testID, settime } = this.state;
       //1. set up an array of items to store
       let arr = {};
       arr['choices'] = JSON.stringify(choices);
       arr['timeleft'] = timeleft;
+      arr['timespent']  = JSON.stringify(settime);
+      //arr['timeleft']  = JSON.stringify(settime);
       //2. get the id to store the data
       let scoreIDs = scoreID;
       //3. update the score database

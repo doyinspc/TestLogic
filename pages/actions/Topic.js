@@ -29,7 +29,6 @@ const TABLE_STRUCTURE = SCHEME.topic.schema;
 //GET TOPICS FROM ONLINE DATABANK
 export const getTopicsDownload = (themeID) => (dispatch, getState) => {
   //START DOWNLOAD
-  console.log(`activating ${themeID}`)
   dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
   
   let topicID =  [];
@@ -118,9 +117,16 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
   //START DOWNLOAD
   console.log(`activating ${topi}`)
   dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
-  let instruction_paths = `${path}/instruction/cat/${topi}`;
+  //let instruction_paths = `${path}/instruction/cat/${topi}`;
+  let instruction_paths = `${path}/api/`;
+  let params = {
+    data:{topicID:topi},
+    cat:'cat',
+    table:'instructions',
+    token:config
+  }
             //START DOWNLOADING INSTRUCIONS
-            axios.get(instruction_paths, config(getState))
+            axios.get(instruction_paths, {params})
             .then(inst => {
                 //START SAVING 
                 //CHECK IF INSTRUCTION IS AVAILABLE
@@ -132,8 +138,15 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                     instructions.map((row) =>(instructionID.push(row.id)));
                     let instruction_id_string = instructionID && Array.isArray(instructionID) ? instructionID.toString() : '';
                     //START DOWNLOADING QUESTIONS
-                    let question_paths = `${path}/question/mult/n`;
-                    axios.patch(question_paths, {instructionID:instruction_id_string}, config(getState))
+                    let question_paths = `${path}/api/`;
+                    //let question_paths = `${path}/question/mult/n`;
+                    let paramsx = {
+                      data:{instructionID:instruction_id_string},
+                      cat:'cat',
+                      table:'instructions',
+                      token:config
+                    }
+                    axios.get(question_paths, {params:paramsx})
                     .then(ques => {
                       //TOTAL QUESTIONS DOWNLOADED FOR THE TOPIC
                       //DISPATCH TOTAL NUMBER FOR THAT TOPIC
@@ -146,7 +159,7 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                       ques.data.forEach(row_ques =>{
                       //START SAVE QUESTION
                       let q_arr = [row_ques];
-                        loadDataPromise(q_arr, SCHEME['question'].name, SCHEME['question'].edits)
+                      loadDataPromise(q_arr, SCHEME['question'].name, SCHEME['question'].edits)
                         .then(async rep =>{
                           console.log(`NUMBER LOOPING  ${JSON.stringify(rep.id)}`)
                           //START DOWNLOADING ANSWERS
@@ -208,27 +221,82 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
 //GET TOPICS FROM ONLINE DATABANK
 export const getTopicsDBs = (themeID) => (dispatch, getState) => {
   dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
-  let topic_paths = `${path}/topic/mult/n`;
+  return new Promise((resolve, reject)=>{
+  //let topic_paths = `${path}/topic/mult/n`;
+  let topic_paths = `${path}/api/`;
   let theme_id_string = '';
   theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : ' ';
-  axios.patch(topic_paths, {themeID:theme_id_string}, config(getState)).then(top => {
+  let params = {
+    data:{themeID:theme_id_string},
+    cat:'ins',
+    table:TABLE_NAME,
+    token:config
+  }
+  axios.get(topic_paths, {params})
+  .then(top => {
         dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:top.data, id:themeID});
-        loadData(top.data, 'topic', (d)=>{
-              //load after loading
-              console.log(`loading and saving topics ${JSON.stringify(d)}`)
-        });
-        }).catch(err =>console.log(err))
+        resolve(top.data);
+        loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+              .then(d=>{
+                  console.log(`loading and saving topics ${JSON.stringify(d)}`)
+              })
+              .catch(err=>console.log(err))
+        }).catch(err =>reject(err))
+    })
+}
+
+//GET TOPICS FROM ONLINE DATABANK
+const getTopicDB = (themeID) => {
+  return new Promise((resolve, reject)=>{
+  //let topic_paths = `${path}/topic/mult/n`;
+  let thm = []
+  let theme_id_string = '';
+  theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : thm.push(themeID).toString();
+  let topic_paths = `${path}/api/`;
+  let theme_id_string = '';
+  theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : ' ';
+      let params = {
+        data:{themeID:theme_id_string},
+        cat:'ins',
+        table:TABLE_NAME,
+        token:config
+      }
+  axios.get(topic_paths, {params})
+    .then(top => {
+        resolve(top.data)
+    })
+    .catch(err =>reject(err))
+      })
 }
 //GET TOPICS FROM ONLINE DATABANK
 export const getTopicCount = (topicID) => (dispatch, getState) => {
   //SET PATH TO COUNT QUESTIONS AVAILABLE
-  let topic_paths = `${path}/topic/count/${topicID}`;
+  //let topic_paths = `${path}/topic/count/${topicID}`;
+  let topic_paths = `${path}/api/`;
+  let theme_id_string = '';
+  let cat = '';
+  
+  if(topicID && Array.isArray(topicID) && topicID.length == 1)
+  {
+    theme_id_string = topicID && Array.isArray(topicID) ? topicID.toString() : '';
+    cat = 'count';
+  }
+  if(topicID && parseInt(topicID) > 0)
+  {
+    theme_id_string = topicID.toString();
+    cat = 'count';
+  }
+  let params = {
+    data:{topicID:theme_id_string},
+    cat:cat,
+    table:TABLE_NAME,
+    token:config
+  }
   //FETCH QUESTION NUMBER
-  axios.get(topic_paths, config(getState)).then(top => {
-        
+  axios.get(topic_paths, {params})
+      .then(top => {
         let on_top = top && Array.isArray(top.data) && top.data.length > 0 ? top.data[0].id: 0;
         //IF NO QUESTION ONLINE: STATE THAT
-        console.log(`tops ${on_top}`);
         //FETCH NO OF QUESTIONS OFFLINE DB
         db.selectCountQuestions(topicID, (data)=>{
           console.log(data);
@@ -240,9 +308,8 @@ export const getTopicCount = (topicID) => (dispatch, getState) => {
           on_top != 0 && on_top > off_top ? dispatch({ type: TOPIC_UPDATING_STATE, topicID:topicID, status:1}) : null ; 
         })
         }).catch(err =>console.log(err))
-        
+      
 }
-
 
 //GET ALL TOPIC
 export const getTopics = (theme) => (dispatch) => {
@@ -254,22 +321,86 @@ export const getTopics = (theme) => (dispatch) => {
       .then(data=>{
         if(data == 1)
         {
-          dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
-        }else{
+          console.log('main fail');
           dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'});
+          //NO DOWNLOAD FROM OFFLINE TRY ONLINE
+        }else{
+          //DATA WAS DOWN LOADED OFFLINE
+          dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
+          console.log('main success');
         }   
       })
-    .catch(err=>reject(err))
+      .then(dataa=>{
+        console.log(`second success ${id}`);
+        getTopicDB(id)
+        .then(data =>{
+          dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
+              loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+              .then(d=>{
+                  console.log(`loading and saving topics ${JSON.stringify(d)}`)
+              })
+              .catch(err=>console.log(err))
+        })
+        .catch(err=>{
+          console.log(err)
+        })
+      })
+    .catch(err=>{
+        console.log(`general fail ${err}`);
+        getTopicDB(id)
+        .then(data =>{
+          dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
+              loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+              .then(d=>{
+                  console.log(`loading and saving topics ${JSON.stringify(d)}`)
+              })
+              .catch(err=>console.log(err))
+        })
+        .catch(err=>{
+          console.log(err)
+        })
+      })
     }): 
     db.selectTopicPromise(TABLE_NAME, {themeID : theme})
     .then((data)=>{
       if(data == 1)
       {
-        dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
-      }else{
+        console.log('single main fail');
         dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'});
-        reject(err);
+      }else{
+        console.log('single main success');
+        dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
       }  
+    })
+    .then(dataa=>{
+      console.log(`single second success ${theme}`);
+      getTopicDB(theme)
+        .then(data =>{
+          dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:theme});
+              loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+              .then(d=>{
+                  console.log(`loading and saving topics ${JSON.stringify(d)}`)
+              })
+              .catch(err=>console.log(err))
+        })
+        .catch(err=>{
+          console.log(err)
+        })
+    })
+  .catch(err=>{
+    console.log(`single general fail ${err}`);
+    getTopicDB(theme)
+    .then(data =>{
+      dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:theme});
+          loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+          .then(d=>{
+              console.log(`loading and saving topics ${JSON.stringify(d)}`)
+          })
+          .catch(err=>console.log(err))
+    })
+    .catch(err=>{
+      console.log(err)
+    })
     })
 
 };
@@ -480,7 +611,6 @@ const comparePromise  = (sqldb, insertdb, editable) => {
     }
   })
 };
-
 
 export const loadData  =  (data, tables, callback) =>{
   // data : rows from cloud

@@ -26,6 +26,7 @@ class ScoresScreen extends React.Component{
       scoreID: null,
       testID:null,
       selectedIndex:null,
+      test:{}
     };
   }
 
@@ -35,13 +36,29 @@ class ScoresScreen extends React.Component{
      this.props.navigation.navigate('ScoreScreen', {'scoreID':value})
     }
   }
+
+  timeLefts = (ty, tin) =>{
+    let ti = JSON.parse(tin);
+    if(ti && Object.keys(ti).length > 0)
+    {
+      let val = Object.values(ti);
+      let sumLeft = val.reduce((a, b)=> a + b, 0);
+      let timeGiven = 0;
+      let timeleft = sumLeft;
+      let mins = Math.floor(timeleft/60);
+      let secs = timeleft - (mins * 60);
+      return `${mins}m ${secs}s`
+    }else{
+      return `--.--`;
+    }
+}
  
   async componentDidMount() {
     this.props.getScore(JSON.stringify(this.props.navigation.getParam('scoreID')));
     this.props.getTest(JSON.stringify(this.props.navigation.getParam('testID')));
     let scoreID = JSON.stringify(this.props.navigation.getParam('scoreID'));
     let testID = JSON.stringify(this.props.navigation.getParam('testID'));
-    this.setState({testID:testID, scoreID:scoreID})
+    this.setState({testID:testID, scoreID:scoreID, test:this.props.test})
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
       'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -68,10 +85,10 @@ class ScoresScreen extends React.Component{
   
   comp1 = () => <Icon name='home' color='white' type='material' />
   comp2 = () => <Icon name='list' color='white' type='material' />
-  comp3 = () => <Icon name='refresh' color='white' type='material' />
+  comp3 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Retake</Text>
 
 render(){
- const { test, score } = this.props;
+ const { score, test } = this.props;
  const { fontLoaded, selectedIndex, testID, scoreID  } = this.state;
  const buttons = [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
 
@@ -82,14 +99,14 @@ render(){
   let final_score = 0;
   let q_answered = 0;
   let q_unanswered = 0;
+  let tim ='No Time';
   if(!this.props.test.isLoading && !this.props.score.isLoading)
   {
   let choices = this.props.score.score !== undefined && this.props.score.score.choices !== undefined ? JSON.parse(this.props.score.score.choices) : {};
   let answers = this.props.test.test !== undefined && this.props.test.test.answers !== undefined ? JSON.parse(this.props.test.test.answers):{};
   noq = this.props.test.test !== undefined ?  Object.keys(answers).length : 0;
   final_score = this.props.score.score !== undefined ? this.props.score.score.score * 100: 0;
- 
-  
+  tim = this.props.score.score !== undefined ? this.timeLefts(this.props.score.score.timespent, this.props.score.score.timespent): 'No Time';
   if(final_score > 0)
   {
     for(let i in answers)
@@ -121,15 +138,15 @@ render(){
       `${noq} questions `,
       `${correctAnswers.length} questions passed`, 
       `${wrongAnswers.length} questions failed`, 
-      `${emptyAnswers.length} questions unanswered`, 
+      `${tim} spent`, 
     ];
 
   }else{
     info = [
       `${noq} questions `,
-      `${q_answered} questions answered`,
-      `${q_unanswered} questions unanswered`, 
-      `${emptyAnswers.length} minutes left`,
+      `${q_answered} answered ${q_unanswered} unanswered ${emptyAnswers.length} left`,
+      `${q_unanswered} left`, 
+      `${tim} spent left`,
     ];
 
   }
@@ -144,7 +161,7 @@ render(){
             color={local_color.color3}
             title={`${test.test.title}`}
             titleFont = "SulphurPointNormal"
-            pricingFont = "PoiretOne"
+            priceFont = "PoiretOne"
             price= {`${final_score}%`}
             titleStyle={{fontFamily:'SulphurPointNormal'}}
             info={info}

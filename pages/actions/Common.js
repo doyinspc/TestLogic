@@ -16,7 +16,7 @@ import config from './../../config';
 // export const EMU = 'EMULATOR';;
 
 export const DB_PATH = new Database();
-export const API_PATH = config.API_PATH;
+export const API_PATH = config.API_PATHS;
 export const CLIENT_PATH = config.CLIENT_PATH;
 export const IMAGE_PATH = config.IMAGE_PATH;
 export const GOOGLE_API_KEY = config.GOOGLE_API_KEY;

@@ -14,6 +14,7 @@ import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
 
 const db = DB_PATH;
+const token = 'TOKEN';
 const path = API_PATH;
 const config = CONFIG;
 const loadData = LOADDATA;
@@ -25,11 +26,18 @@ const TABLE_STRUCTURE = SCHEME.subject.schema;
 //GET SUBJECTS FROM ONLINE DATABANK
 export const getSubjectsDownload = () => (dispatch, getState) => {
   return new Promise((resolve, reject) =>{
-  let paths = `${path}/subject/`
+  //let paths = `${path}subject/`;
+  let paths = `${path}/api/`;
+  let params = {
+    data:{},
+    cat:'all',
+    table:TABLE_NAME,
+    token:token
+  }
   dispatch({ type: SUBJECT_DOWNLOADING });
-  axios.get(paths, config(getState))
-      .then(async res => {
-        await loadData(res.data, 'subject', async (d)=>{
+  axios.get(paths, {params})
+  .then(async res => {
+          await loadData(res.data, 'subject', async (d)=>{
           if(res.data && Array.isArray(res.data) && res.data.length > 0 )
           {
             await dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data });

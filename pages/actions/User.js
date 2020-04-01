@@ -42,10 +42,16 @@ const TABLE_STRUCTURE = SCHEME.user.schema;
 
 //GET ALL USER
 export const postUser = (user) => (dispatch, getState) => {
-    let paths = `${path}/user/post/1`;
+    //let paths = `${path}/user/post/1`;
+    let paths = `${path}/api/register`;
+    let params = {
+      data:user,
+      cat:'all',
+      table:TABLE_NAME,
+      token:token
+    }
     dispatch({ type: USER_UPLOADING });
-    let body = {user:user};
-    axios.patch(paths, body, config(getState))
+    axios.post(paths, user, {params})
       .then(async res => {
         await loadData(res.data, 'user', async (d)=>{
           console.log(res.data);

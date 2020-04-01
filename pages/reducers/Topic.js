@@ -28,6 +28,103 @@ const initialState = {
     tupdate:{},
 }
 
+
+const numidConverter = (data) =>{
+    let datas = [];
+    data.forEach(row=>{
+        let nums = row.numid;
+        if(parseInt(nums) > 0)
+        {
+            //QUESTIONS AVAILABLE
+            row['questionx'] = 1;
+        }
+        else if(parseInt(nums) == 0)
+        {
+            //NO QUESTIONS
+            row['questionx'] = 2;
+        }
+        else
+        {
+            //ERROR
+            row['questionx'] = 3;
+        }
+        datas.push(row);
+    })
+    return datas;
+}
+
+const numidConverterCompare = (offlineData, onlineData) =>{
+    //STORE ALL NEW ROWS
+    let newRowData = [];
+    //NO ONLINE DATA : NETWORK ISSUES
+    if(onlineData && Array.isArray(onlineData) && onlineData.length > 0)
+    {
+        //IF NO OFFLINE DATA
+        if(offlineData && Array.isArray(offlineData) && offlineData.length > 0)
+        {
+            //IF BOTH OFFLINE AND ONLINE DATA ARE AVAILABLE
+            //USE THOSE ONLINE TO COMPARE WITH THOSE OFFLINE
+            //IF NOQ ONLINE IS MORE THAN NOQ OFFLINE : SET UPDATE AVAILABLE
+            //IF BOTH ARE THE SAME : SET OK 
+            //IF NOQ ONLINE IS LESS THAN NOQ OFFLINE : SET IGNORE
+
+            //USE ONLINE TO LOOP THROUGH
+            onlineData.forEach(row =>{
+                //GET THE ROW FROM OFFLINE DATA
+                let isIndex = offlineData.findIndex(x => x.id === row.id);
+                if(isIndex && isIndex > -1)
+                {
+                    //IF THE ROW EXIST UPDATE IT 
+                    //GET THE ONLINE AND OFFLINE QUETION NUMBER 
+                    let offline = offlineData[isIndex].numid;
+                    let online = row.numid;
+                    //COMPARE
+                    //BOTH NOQ ARE THE SAME AND MORE THAN ZERO
+                    if(parseInt(online) === parseInt(offline) && parseInt(online)  > 0)
+                    {
+                        offlineData[isIndex].questionx = 1;
+                    }
+                    //ONLINE NOQ IS MORE THAN OFFLINE NOQ BUT BOTH ARE MORE THAN ZERO
+                    else if(parseInt(online) > parseInt(offline)  && parseInt(online)  > 0)
+                    {
+                        if(parseInt(offline)  > 0)
+                        {
+                            offlineData[isIndex].questionx = 4;
+                        }else{
+                            offlineData[isIndex].questionx = 5;
+                        }
+                        
+                    }
+                    //NO QUESTIONS
+                    else
+                    {
+                        offlineData[isIndex].questionx = 2;
+                    }
+                }
+                else
+                {
+                    //CANNOT FIND ROW IN OFFLINE DATA
+                    // ASSUME NEW ROW : STORE
+                    newRowData.push(row);
+                }
+            })
+                let prep_new_rows = numidConverter(newRowData);
+                //COMBINE ROWS AND RETURN
+                return [...offlineData, ...prep_new_rows ];
+            
+        }else
+        {
+            //NO ONLINE DATA : RETURN OFFLINE DATA 
+            return numidConverter(onlineData);
+        }
+    }else
+    {
+        //NO ONLINE DATA : RETURN OFFLINE DATA 
+        return numidConverter(offlineData);
+    }
+}
+
+
 export default function(state = initialState, action){
     switch (action.type) {
         case TOPIC_LOADING:
@@ -52,7 +149,6 @@ export default function(state = initialState, action){
             let nus = action.topicid;
             let nnum = Math.floor((action.tquestions/tqs1[nus]) * 100);
             tqs[nus] = nnum;
-            //console.log(`this is all ${nus} ${action.tquestions} ${tqs1[nus]} ${tqs[nus]}`)
             return {
                 ...state,
                 tloading:tqs
@@ -84,7 +180,7 @@ export default function(state = initialState, action){
             }else{
                 newTopics  = action.payload
             }
-           
+            newTopics = numidConverter(newTopics);
             return {
                 ...state,
                 topics :newTopics,
@@ -92,15 +188,9 @@ export default function(state = initialState, action){
             };
         
         case TOPIC_DOWNLOADING_SUCCESS:
-            let newArrayx = [];
             let oldArray = [...state.topics];
             let onlineArray = action.payload;
-            oldArray.forEach((row)=>{
-                let f = onlineArray.filter((r)=>r.id == row.id);
-                f && Array.isArray(f) && f.length == 1 ? newArrayx.push(f[0]) : newArrayx.push(row);
-                onlineArray = onlineArray.filter((r)=>r.id != row.id);
-            })
-            newArrayx = [...newArrayx, ...onlineArray];
+            let newArrayx = numidConverterCompare(oldArray, onlineArray);
             return {
                 ...state,
                 topics : newArrayx,
