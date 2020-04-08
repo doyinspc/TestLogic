@@ -8,6 +8,8 @@ import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { RadioButton } from 'react-native-paper';
 import * as Font from 'expo-font';
 import Accordion from './components/Accordion'
+import OptionsButton from './components/OptionsButton';
+import Question from './components/Question';
 import { getTest } from './actions/Test';
 import { getScore, insertScore, updateScore } from './actions/Score';
 import WebView from 'react-native-webview';
@@ -47,6 +49,7 @@ class QuestionScreen extends React.Component{
       selectedIndex: 2,
       score: 0,
       isVisible: false,
+      isCompleted: false,
     };
   }
 
@@ -103,32 +106,34 @@ async componentDidMount(){
   //if the score id is set 
   if(scoreID && parseInt(scoreID) > 0)
   {
-    this.props.getScore(scoreID)
+    this.props.getScore(scoreID);
     this.setState({ isRetest:true, scoreID: scoreID});
   }else
   {
     let arr = {};
     arr['testID'] = testID;
     arr['score'] = 0;
-    arr['timeleft'] = test_data.testtime;
     arr['timeset'] = cur;
-    arr['timespent'] = JSON.stringify({});
     arr['settings'] = test_data.settings;
+    arr['timespent'] = JSON.stringify({}); 
+    arr['timeleft'] = JSON.stringify(test_data.testtime);
     arr['choices'] = JSON.stringify({});
     
     this.props.insertScore(arr, (id)=>{
       this.setState({ isRetest:false , scoreID: id });
       this.props.getScore(id);
     });
-    
   }
-  if(!this.props.score.isLoading){
+  if(!this.props.score.isLoading)
+  {
     let da = this.props.score.score;
+    let isComp = da.score && parseInt(da.active) === 1 ? true : false;
     this.setState({ 
-        choices: da.choices !== undefined ? JSON.parse(da.choices): {},
+        choices: da.choices !== undefined && Object.keys(da.choices).length > 0 ? JSON.parse(da.choices): {},
         testtime: da.timespent !== undefined ? JSON.parse(da.timespent):{}, 
         timeleft: da.timeleft, 
-        score: da.score,  
+        score: da.score, 
+        isCompleted: isComp, 
     });
   }
 }
@@ -197,9 +202,30 @@ markTest=()=>{
   arr['choices']  = JSON.stringify(choices);
   arr['timespent']  = JSON.stringify(settime);
   arr['timeleft']  = JSON.stringify(settime);
+  arr['active']  = 1;
     this.props.updateScore(arr, scoreID, (data)=>{
   });
  this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
+}
+
+storeTest=()=>{
+   //pause test save questions
+      //exit to score screen
+      let {choices, timeleft, scoreID, testID, settime } = this.state;
+      //1. set up an array of items to store
+      let arr = {};
+      arr['choices'] = JSON.stringify(choices);
+      arr['timespent']  = JSON.stringify(settime);
+      arr['timeleft']  = JSON.stringify(settime)
+      arr['active']  = 2;
+      //2. get the id to store the data
+      let scoreIDs = scoreID;
+      //3. update the score database
+      this.props.updateScore(arr, scoreID, (data)=>{
+
+      })
+      //4. close this page : move to the scores page
+      this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreIDs});
 }
  //swipe
 onSwipeUp=(gestureState)=> {
@@ -339,42 +365,15 @@ onBackward=()=> {
 }
 updateIndex = (selectedIndex) =>{
   this.setState({ selectedIndex });
-  if(selectedIndex == 0 )
+ if(selectedIndex == 0 )
   {
-      //move one question forward
-      this.onBackward();
+      this.storeTest();
   }
   else if(selectedIndex == 1 )
   {
-      //pause test save questions
-      //exit to score screen
-      let {choices, timeleft, scoreID, testID, settime } = this.state;
-      //1. set up an array of items to store
-      let arr = {};
-      arr['choices'] = JSON.stringify(choices);
-      arr['timeleft'] = timeleft;
-      arr['timespent']  = JSON.stringify(settime);
-      //arr['timeleft']  = JSON.stringify(settime);
-      //2. get the id to store the data
-      let scoreIDs = scoreID;
-      //3. update the score database
-      this.props.updateScore(arr, scoreID, (data)=>{
-
-      })
-      //4. close this page : move to the scores page
-      this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
-
-  }
-  else if(selectedIndex == 2 )
-  {
       this.markTest();
-
   }
-  else if(selectedIndex == 3 )
-  {
-      //move one question backwards
-      this.onForward();
-  }
+  
 }
 onSwipe=(gestureName, gestureState)=> {
   const {SWIPE_UP, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
@@ -396,7 +395,8 @@ getCurrentTime = () =>{
     let stime = parseInt(tim) === 2 ? settime[activeNumber] : settime;
     let now = Math.floor(new Date().getTime());
     let diff = 0;
-    let did = activeNumber.toString();
+    console.log(activeNumber);
+    let did = activeNumber && activeNumber != undefined ? activeNumber.toString(): 1;
     let sc = choices[did] && choices[did] !== undefined ? choices[did] : null ;
     
     if(parseInt(tim) === 2)
@@ -442,17 +442,43 @@ getCurrentTime = () =>{
     }
 }
 componentWillUnmount(){
-  clearInterval(this.timer);
+  this.state = {
+    instructions: {},
+    ids:{},
+    questions:{},
+    options:{},
+    choices:{},
+    timespent:{},
+    answers:{},
+    checks:{},
+    fontLoaded: false,
+    testID:null,
+    scoreID:null,
+    isRetest: false,
+    settime: null,
+    noq: null,
+    tim: null,
+    ans: null,
+    activeNumber: 1,
+    activeIndex: 0,
+    activeTime: 0,
+    gestureName: 'none',
+    currentTime:'',
+    starttime: Math.floor(new Date().getTime()),
+    starting: Math.floor(new Date().getTime()/1000),
+    selectedIndex: 2,
+    score: 0,
+    isVisible: false,
+    isCompleted: false,
+  };
 }
 
-comp1 = () => <Icon name='arrow-back' color='white' type='material' />
-comp2 = () => <Icon name='pause'color='white'   type='material' />
-comp3 = () => <Icon name='done' color='white'   type='material' />
-comp4 = () => <Icon name='arrow-forward' color='white'  type='material' />
+comp1 = () => <Icon name='pause'color='white'   type='material' />
+comp2 = () => <Icon name='done' color='white'   type='material' />
 
 render(){
- const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans, tim } = this.state;
- const buttons =[{element:this.comp1}, {element:this.comp2}, {element:this.comp3}, {element:this.comp4}];
+ const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans, tim, isCompleted } = this.state;
+ const buttons =[{element:this.comp1}, {element:this.comp2}];
  
  const config = {
     velocityThreshold: 0.3,
@@ -473,8 +499,6 @@ render(){
           />
   )): null;
 this.getCurrentTime
-    
-
   return (
     <ThemeProvider>
         {fontLoaded && ids.length > 0 ?
@@ -499,7 +523,6 @@ this.getCurrentTime
                 buttonStyle={{backgroundColor:local_color.color1}}
             />
           </ScrollView>
-
         </Overlay>
         
           <View style={{flex:.5, flexDirection:'row', justifyContent:'space-between', top:0, margin:10, padding:10, backgroundColor: local_color.color5, borderRadius:5,}}>
@@ -527,50 +550,52 @@ this.getCurrentTime
                <View style={{borderBottomWidth: 0.5, borderBottomColor:local_color.color4, marginBottom: 5}}>
                 <Text style={{fontFamily:'PoiretOne', marginBottom:10, color:local_color.color2}}>{ questions[mainID][0] && instructions[questions[mainID][0]][0] ? instructions[questions[mainID][0]][0]: 'Choose the Right option'}</Text>
                </View>
+               {/* INSTRUCTION PASSAGE PLACED HERE IF NO PASSAGE INSTRUCTION SHOULD NOT DISPLAY */}
                { instructions[questions[mainID][0]][2] && instructions[questions[mainID][0]][2].length > 0 ?
                 <View style={{flex:1, margin:0}} >
                   <Accordion
-                  title = {instructions[questions[mainID][0]][1]}
-                  data = { instructions[questions[mainID][0]][2]}
+                      title = {instructions[questions[mainID][0]][1]}
+                      data = { instructions[questions[mainID][0]][2]}
                   />
                 </View>
                 : null }
-                <View>
-                  <Text style={styles.questionQuestion}>{questions[mainID][1]}</Text>
-                </View> 
-                <View style={{flex: 1, bottom:10, marginLeft:10, paddingTop:20}} >
-                  {options[mainID]  ? 
-                    options[mainID].map(element =>(
-                        <View key={`${element[0]}`} style={{flexDirection:'row'}}>
-                        { choices[activeNumber] && ans == 2?
-                          choices[activeNumber] == Object.keys(answers[activeNumber])[0] ?
-                          Object.keys(answers[activeNumber])[0] == element[0] ? <Icon name='done' size={20} color='green' type='material' containerStyle={{marginTop:5}} />:
-                              <Icon name='remove' size={20} color='red' type='material' containerStyle={{marginTop:5}} /> : 
-                          <Icon name='remove' size={20}  color='red' type='material' containerStyle={{marginTop:5}} />
-                        :
-                        null
-                      }
-                        <RadioButton
-                          value={element[0]}
-                          uncheckedColor='grey'
-                          disabled = { choices[activeNumber] ?  true : false}
-                          color='blue'
-                          status= {choices[activeNumber] && choices[activeNumber] == element[0] ? 'checked' : 'unchecked'}
-                          onPress={() =>{this.setChoice(activeNumber, element[0])}}
-                          size={40}
-                        />
-                      <Text style={styles.label_radio}>{`${element[1]}`}</Text>
-                      </View> 
-                    ))
-                    : null}
+                {/* INSTRUCTION PASSAGE ENDS HERE */}
+
+                {/* QUESTION STARTS HERE */}
+                <Question data={questions[mainID][1]}/>
+                
+                {/* QUESTION ENDS HERE */}
+
+                {/* OPTIONS STARTS HERE */}
+                <View style={{flex: 1, bottom:10, paddingTop:20}} >
+                {options[mainID]  ? options[mainID].map(element =>(
+                  <View key={`${activeNumber}'-'${element[0]}`} style={{flex: 1, marginHorizontal:2, marginVertical:4}} >
+                      <OptionsButton 
+                        key={`${activeNumber}'--'${element[0]}`}  
+                        option={`${element[1]}`} 
+                        status={ choices[activeNumber] && choices[activeNumber] === element[0] ? 1 : choices[activeNumber] && choices[activeNumber] !== element[0] ? 2 : 3 }
+                        disable={ choices[activeNumber] ?  true : false }
+                        activeNumber={activeNumber}
+                        optionID={element[0]}
+                        tim={tim}
+                        ans={ans}
+                        isCompleted={isCompleted}
+                        handlePress={()=>{this.setChoice(activeNumber, element[0])}}
+                      />
+                  </View>
+                  )) : null}
+                {/* OPTIONS ENDS HERE */}
+
                 </View>
+
+
                 <View style={{borderTopWidth: 0.5, borderTopColor:local_color.color4, flex:.5, flexDirection:'row', justifyContent:'space-between', bottom:0, margin:2, padding:2, backgroundColor: local_color.color5, borderRadius:5,}}>
+                  <Icon name='arrow-back' size={40} color={local_color.color4} onPress={()=>{this.onBackward()}} />
                   <Icon name='dashboard' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
                   <Icon name='spellcheck' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
-                  <Icon name='list' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
-                  <Icon name='comment' size={40} color={local_color.color4} onPress={()=>{this.setState({isVisible:true})}} />
+                  <Icon name='arrow-forward' size={40} color={local_color.color4} onPress={()=>{this.onForward()}} />
                 </View>
-                </View>
+              </View>
             </ScrollView>
             </GestureRecognizer>
               
@@ -578,7 +603,7 @@ this.getCurrentTime
                   onPress={this.updateIndex}
                   selectedIndex={selectedIndex}
                   buttons={buttons}
-                  containerStyle={styles.genButtonGroup}
+                  containerStyle={styles.genButtonGroup1}
                   selectedButtonStyle={styles.genButtonStyle}
                   textStyle={styles.genButtonTextStyle}
                   />

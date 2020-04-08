@@ -37,15 +37,15 @@ export default class App extends React.Component{
     const { password, email } = this.state;
     const user = {password, email };
     if(this.state.password ){
-      this.props.navigation.navigate('SubjectScreen');
+      this.props.navigation.navigate('HomeScreen');
     }else{
-      this.setState({ error: 'passwords do not match'});
+      this.setState({ error: 'Passwords do not match'});
     }
 
   }
 
   render(){
-    const { fontLoaded,  email, password, isActive } = this.state;
+    const { fontLoaded, isActive } = this.state;
     return (
       <View style={{flex:1}}>
       {fontLoaded ? 
@@ -64,7 +64,7 @@ export default class App extends React.Component{
           </View>
        </View>
        </View>: this.props.navigation.navigate('HomeScreen')  : null}
-       </View>
+      </View>
    
   );
   }

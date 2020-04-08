@@ -56,16 +56,18 @@ class ScoresScreen extends React.Component{
   async componentDidMount() {
     this.props.getScore(JSON.stringify(this.props.navigation.getParam('scoreID')));
     this.props.getTest(JSON.stringify(this.props.navigation.getParam('testID')));
-    let scoreID = JSON.stringify(this.props.navigation.getParam('scoreID'));
-    let testID = JSON.stringify(this.props.navigation.getParam('testID'));
+    let scoreID = this.props.navigation.getParam('scoreID');
+    let testID = this.props.navigation.getParam('testID');
     this.setState({testID:testID, scoreID:scoreID, test:this.props.test})
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
       'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
     });
-    this.setState({ fontLoaded: true });
+    this.setState({ fontLoaded: true, scoreID, testID });
   }
-
+  componentWillUnmount() {
+    clearInterval(this.state);
+  }
 
   updateIndex = (selectedIndex) =>{
     this.setState({ selectedIndex });

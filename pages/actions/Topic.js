@@ -121,7 +121,7 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
   let instruction_paths = `${path}/api/`;
   let params = {
     data:{topicID:topi},
-    cat:'cat',
+    cat:'all',
     table:'instructions',
     token:config
   }
@@ -135,14 +135,11 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                 .then( rep =>{
                     let instructionID = [];
                     let instructions = inst.data;
-                    instructions.map((row) =>(instructionID.push(row.id)));
-                    let instruction_id_string = instructionID && Array.isArray(instructionID) ? instructionID.toString() : '';
-                    //START DOWNLOADING QUESTIONS
+                    instructions.map((row) =>(instructionID.push(row.id)));//START DOWNLOADING QUESTIONS
                     let question_paths = `${path}/api/`;
-                    //let question_paths = `${path}/question/mult/n`;
                     let paramsx = {
-                      data:{instructionID:instruction_id_string},
-                      cat:'cat',
+                      data:{instructionID:topi},
+                      cat:'question',
                       table:'instructions',
                       token:config
                     }
@@ -151,63 +148,69 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                       //TOTAL QUESTIONS DOWNLOADED FOR THE TOPIC
                       //DISPATCH TOTAL NUMBER FOR THAT TOPIC
                       let question_number = ques.data.length;
-                      console.log(`${ question_number} available to load`);
                       dispatch({ type:TOPIC_DOWNLOADING_START, topicid:topi, topicquestions:question_number});
                       let questioncount = 0;
-                      let times = 0;
                       //LOOP THROUGH QUESTIONS AND SAVE
-                      ques.data.forEach(row_ques =>{
-                      //START SAVE QUESTION
-                      let q_arr = [row_ques];
-                      loadDataPromise(q_arr, SCHEME['question'].name, SCHEME['question'].edits)
-                        .then(async rep =>{
-                          console.log(`NUMBER LOOPING  ${JSON.stringify(rep.id)}`)
-                          //START DOWNLOADING ANSWERS
-                          let answer_paths = `${path}/answer/cat/${row_ques.id}`;
-                          let distractor_paths = `${path}/distractor/cat/${row_ques.id}`;
-                          axios.get(answer_paths, config(getState))
-                          .then(async an => {
-                            console.log(JSON.stringify(an.data))
-                            //SAVE ANSWERS
-                            await loadDataPromise(an.data, SCHEME['answer'].name, SCHEME['answer'].edits)
-                            .then(async r =>{
-                              //ANSWER UPLOAD SUCCESS
-                              //START DOWNLOADING DISTRACTORS
-                              await axios.get(distractor_paths, config(getState))
-                              .then(async di => {
-                                //SAVE DISTRACTORS
-                                await loadDataPromise(di.data, SCHEME['distractor'].name, SCHEME['distractor'].edits)
-                                .then(async r_d=>{
-                                  questioncount = await questioncount + 1;
-                                  await console.log(`${ questioncount} saved`);
-                                  await dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});
-                                })
-                                .catch(async e_d=>{
-                                  questioncount = await questioncount + 1;
-                                  await console.log(`${ questioncount} saved`);
-                                  await dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});
-                                })
-                              }).catch(err => console.log(err))
-                              //END DOWNLOADING DISTRACTORS
-                            })
-                            .catch(async e =>{
-                              //ANSWER LOAD FAIL
-                              questioncount = await questioncount + 1;
-                              await console.log(`${ questioncount} saved`);
-                              await dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});
-                            })
+                        ques.data.forEach(row_ques =>{
+                          
+                          let newanswers = [];
+                          let answer_an = row_ques.answer;
+                          let answers_an = answer_an.split(':::::');
+                          answers_an.forEach(a =>{
+                            let answerArray = a.split(':::');
+                            let newanswer = {};
+                            newanswer['id'] = answerArray[0];
+                            newanswer['name'] = answerArray[1];
+                            newanswer['questionID'] = row_ques.id;
+                            newanswers.push(newanswer);
+                            
+                          })
+                          console.log(newanswers);
+                          let newdistractors = [];
+                          let distractor_an = row_ques.distractor;
+                          let distractors_an = distractor_an.split(':::::');
+                          distractors_an.forEach(a =>{
+                            let distractorArray = a.split(':::');
+                            let newdistractor = {};
+                            newdistractor['id'] = distractorArray[0];
+                            newdistractor['name'] = distractorArray[1];
+                            newdistractor['questionID'] = row_ques.id;
+                            newdistractors.push(newdistractor);
+                          })
+
+                          let qr = {};
+                          qr['id'] = row_ques.id;
+                          qr['instructionID'] = row_ques.instructionID;
+                          qr['question'] = row_ques.question;
+                          qr['question_video'] = row_ques.question_video;
+                          qr['question_audio'] = row_ques.question_audio;
+                          qr['question_image'] = row_ques.question_image;
+                          qr['type'] = row_ques.type;
+                          qr['option_type'] = row_ques.option_type;
+                          qr['issued'] = row_ques.issued;
+                          qr['passed'] = row_ques.passed;
+                          qr['grp'] = row_ques.grp;
+                          qr['active'] = row_ques.active;
+                          qr['created_at'] = row_ques.created_at;
+                          qr['updated_at'] = row_ques.updated_at;
+
+                        console.log(JSON.stringify(newdistractors));
+
+                        let q_arr = [qr];
+                        loadDataPromise(q_arr, SCHEME['question'].name, SCHEME['question'].edits)
+                          .then(rep =>{
+                            questioncount = questioncount + 1;
+                            dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});  
+                            console.log(`${ questioncount} saved`);
+                          })
+                          .then(an => {
+                              loadDataPromise(newanswers, SCHEME['answer'].name, SCHEME['answer'].edits).then(r =>{}).catch(e =>{})
+                          })
+                          .then(di => {
+                              loadDataPromise(newdistractors, SCHEME['distractor'].name, SCHEME['distractor'].edits).then(r_d=>{}).catch(e_d=>{})
                           })
                           .catch(err => console.log(err))
-                          //END DOWNLOADING ANSWERS  
-                          questioncount = await questioncount + 1;
-                          await console.log(`${ questioncount} saved`);
-                          await dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});  
-                        })
-                        //END SAVE QUESTION
-                        //PROGRESS BAR INCREASED
-                        
-                      });
-                      //LOOP THROUGH QUESTIONS AND SAVE
+                        });
                       })
                       .catch(err => console.log(err))
                     //END DOWNLOADING QUESTION
@@ -228,7 +231,7 @@ export const getTopicsDBs = (themeID) => (dispatch, getState) => {
   theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : ' ';
   let params = {
     data:{themeID:theme_id_string},
-    cat:'ins',
+    cat:'topic',
     table:TABLE_NAME,
     token:config
   }
@@ -248,25 +251,23 @@ export const getTopicsDBs = (themeID) => (dispatch, getState) => {
 //GET TOPICS FROM ONLINE DATABANK
 const getTopicDB = (themeID) => {
   return new Promise((resolve, reject)=>{
-  //let topic_paths = `${path}/topic/mult/n`;
   let thm = []
   let theme_id_string = '';
   theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : thm.push(themeID).toString();
   let topic_paths = `${path}/api/`;
-  let theme_id_string = '';
-  theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : ' ';
-      let params = {
-        data:{themeID:theme_id_string},
-        cat:'ins',
+    let params = {
+        data:{themeID:themeID},
+        cat:'topic',
         table:TABLE_NAME,
         token:config
-      }
+    }
   axios.get(topic_paths, {params})
     .then(top => {
-        resolve(top.data)
+      console.log(top.data);
+        resolve(top.data);
     })
     .catch(err =>reject(err))
-      })
+    })
 }
 //GET TOPICS FROM ONLINE DATABANK
 export const getTopicCount = (topicID) => (dispatch, getState) => {
@@ -299,9 +300,7 @@ export const getTopicCount = (topicID) => (dispatch, getState) => {
         //IF NO QUESTION ONLINE: STATE THAT
         //FETCH NO OF QUESTIONS OFFLINE DB
         db.selectCountQuestions(topicID, (data)=>{
-          console.log(data);
           let off_top = data && Array.isArray(data._array) && data._array.length > 0 ? data._array[0].id : 0;
-          console.log(`TOPSZ ${off_top}`);
           //IF THE QUESTIONS ARE EQUAL DO NOTHING
           on_top != 0 && on_top == off_top ? dispatch({ type: TOPIC_UPDATING_STATE, topicID:topicID, status:2}) : null ; 
           //IF ONLINE IS MORE THAN OFFLINE ASK FOR UPDATE
@@ -313,6 +312,7 @@ export const getTopicCount = (topicID) => (dispatch, getState) => {
 
 //GET ALL TOPIC
 export const getTopics = (theme) => (dispatch) => {
+  
   dispatch({ type: TOPIC_LOADING})
   theme && Array.isArray(theme) ? 
   theme.forEach(id => {
@@ -321,25 +321,25 @@ export const getTopics = (theme) => (dispatch) => {
       .then(data=>{
         if(data == 1)
         {
-          console.log('main fail');
           dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'});
           //NO DOWNLOAD FROM OFFLINE TRY ONLINE
         }else{
           //DATA WAS DOWN LOADED OFFLINE
           dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
-          console.log('main success');
         }   
       })
       .then(dataa=>{
-        console.log(`second success ${id}`);
         getTopicDB(id)
         .then(data =>{
-          dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
-              loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
-              .then(d=>{
-                  console.log(`loading and saving topics ${JSON.stringify(d)}`)
-              })
-              .catch(err=>console.log(err))
+              if(data && data.length > 0)
+              {
+                dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
+                loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+                .then(d=>{
+                    console.log(`loading and saving topics ${JSON.stringify(d)}`)
+                })
+                .catch(err=>console.log(err))
+              }     
         })
         .catch(err=>{
           console.log(err)
@@ -435,7 +435,7 @@ const getTopicsDB1 = (topics) => (dispatch) => {
 
 //SELECT SINGLE THEME FROM TOPICS
 export const getTopic = (id) => (dispatch) => {
-  dispatch({ type: TOPIC_GET_ONE, payload: id})
+  dispatch({ type: TOPIC_GET_ONE, payload:id})
 };
 
 //KEEP SELECTED TOPICS
@@ -554,7 +554,7 @@ const selectPutPromise  = (tables, id) => {
     .then(async arr=>{
      await  arr && Array.isArray(arr._array) && arr._array.length > 0 ? resolve(arr._array[0]) : reject(`${tables} id ${id} not found in offline DB`);
     })
-    .catch(error=>{console.log(error); reject(`${tables} id ${id} not found in offline DB`) })    
+    .catch(error=>{reject(`${tables} id ${id} not found in offline DB`) })    
   })
 };
 

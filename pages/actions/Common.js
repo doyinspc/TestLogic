@@ -1,7 +1,13 @@
 import Database from './../api/Database';
-import  SCHEME  from './../api/Schema';
+import SCHEME  from './../api/Schema';
 import config from './../../config';
+import { AsyncStorage } from 'react-native';
+import { createStore } from 'redux';
+import reducer from './../reducers/index';
 
+const sto = createStore(reducer);
+let st = sto.getState().userReducer;
+console.log(st);
 // export const DB_PATH = new Database();
 // export const API_PATH = 'http://192.168.43.193:3001';
 // export const CLIENT_PATH = 'http://192.168.43.193:3001';
@@ -16,8 +22,10 @@ import config from './../../config';
 // export const EMU = 'EMULATOR';;
 
 export const DB_PATH = new Database();
+//export const API_PATH = st.path_main;
 export const API_PATH = config.API_PATHS;
 export const CLIENT_PATH = config.CLIENT_PATH;
+//export const IMAGE_PATH = st.path_image;
 export const IMAGE_PATH = config.IMAGE_PATH;
 export const GOOGLE_API_KEY = config.GOOGLE_API_KEY;
 export const GOOGLE_PATH = config.GOOGLE_PATH;
@@ -26,10 +34,22 @@ export const ADMOB = config.ADMOB;
 export const ADINTER = config.ADINTER;
 export const ADREWARD = config.ADREWARD;
 export const PUBLISHER = config.PUBLISHER;
+export const EMAIL = st['uniqueid'];
 export const EMU = config.EMU;
 
 const db = DB_PATH;
 
+
+const _retrieveData = async (key) => {
+  try {
+    const value = await AsyncStorage.getItem(key);
+     return value;
+  } catch (error) {
+    // Error retrieving data
+  }
+};
+
+console.log(_retrieveData('user'));
 export const CONFIG =(GETSTATE)=>{
     // headers
     const config ={
@@ -60,47 +80,162 @@ export const LOADDATAS  = (data, tables, callback) =>{
      callback(dt);
   };
 
-  export const LOADDATA  =  (data, tables, callback) =>{
-    // data : rows from cloud
-    // tables : database table to be used
-    
-    // get the columns of a table that can be edite
-    const editable_rows = SCHEME[tables].edits;
-    // crea an array to store return valuse 
-    let dt  = [];
-    //check if data is available
-    // run through the array
-    data && Array.isArray(data) && data.length > 0 ? data.forEach(async data_row => {
-        //pick a row via id confirm id is not zero
-        if(data_row.id && parseInt(data_row.id) > 0)
-        {
-          //ARG - ROW id , table name
-          // select row from sqlite db usign id and table name
-          await selectPut(data_row.id, tables, (sqlite_row)=>{
-              //COMPARE THE DATA ROW AND THE SQLITE ROW DATA
-              compare(sqlite_row, data_row, editable_rows, (col)=>{
-                console.log(`Comparing ${tables} ${data_row.id} `);
-                if(col[0] === 0)
-                {
-                  dt.push(data_row.id);
-                  loadUpdate(col[1], tables, data_row.id,  (da)=>{dt.push(data_row.id); console.log(`Updating ${tables} ${data_row.id}`);})
-                }else if(col[0] === 1)
-                {
-                  loadInsert(data_row, tables, (da)=>{dt.push(da); console.log(`Inserting ${tables} ${data_row.id}`);})
-                }
-              else if(col[0] === 2)
-              {
-                console.log(`Exist ${tables} row ${data_row.id} no changes required`);
-                //callback(dt)
-              }
-              })
-        })
-      }
-        
+  export const LOADDATA =   (data, tables, editable_rows) =>{
+    // creaTE an array to store return value 
+ return new Promise((resolve, reject)=>{
+   if(data && Array.isArray(data) && data.length > 0 )
+   {
+       let dx = data.map(data_row => (
+       LoadDataSinglePromise(tables, data_row, editable_rows)
+       .then(async (res)=>{
+           await resolve(res);
+       })
+       .catch(async (err)=>{
+          await  reject(err);
+       })
+     ))
+      resolve(dx);
+ }else{reject(`No Data Provided ${tables} ${JSON.stringify(data)} ${Object.keys(data).length}`) ;}
+})
+};
+
+const LoadDataSinglePromise = (tables, data_row, editable_rows) =>{
+
+ return new Promise((resolve, reject)=>{
+   //pick a row via id confirm id is not zero
+   if(data_row.id && parseInt(data_row.id) > 0)
+   {
+     //ARG - ROW id , table name
+     //select row from sqlite db usign id and table name
+     selectPutPromise(tables, data_row.id)
+     .then(async sqlite_row=>{
+         //IF ROW IN AVAILABLE IN DB
+         //COMPARE THE DATA ROW AND THE SQLITE ROW DATA
+         //AND UPDATE
+         await comparePromise(sqlite_row, data_row, editable_rows)
+         .then(async rep =>{
+              if(rep[0] === 0){
+                 await loadUpdatePromise(rep[1], data_row.id, tables)
+                 .then(async da=>{
+                   console.log(`Updated ${tables} ${data_row.id}`);
+                   resolve(data_row.id);
+                 })
+                 .catch(async err=>{
+                   console.log(`Update failed ${tables} ${data_row.id} ${err}`);
+                   resolve(data_row.id);
+                 })
+             }
+             else if(rep[0] === 1){
+                 await loadInsertPromise(tables, data_row)
+                 .then(async res=>{ 
+                   console.log(`Inserting ${JSON.stringify(res)} ${tables} ${data_row.id}`);
+                   await resolve(res);
+                 })
+                 .catch(async err =>{
+                   //DATA FAIL TO INSERT
+                   //SHOW ERROR
+                   //COUNT INSERT FAILS
+                   await resolve('no update was required');
+                 })
+           }
+           else if(rep[0] === 2){
+               //BOTH ROWS ARE EQUAL NO INSERT OR UPDATE REQUIRED;
+               resolve(data_row.id)
+           }
+         })
+         .catch(err =>{
+           //BOTH DATA WERE AVAILABLE BUT COULD NOT COMPARE
+           reject(`trrr${JSON.stringify(err)}`)
+           console.log(`trrr${JSON.stringify(err)}`);
+         })
      })
-     : null ;
-     callback(dt); 
-  };
+     .catch(async error=>{
+         //IF ROW IS NOT AVAILABLE IN OFFLINE DB
+         //INSERT ROW INTO OFFLINE DB
+         await loadInsertPromise(tables, data_row)
+         .then(async res=>{
+           //DATA WAS INSERTED SUCCESFULLY
+           //GET INSERT ID
+           console.log(`Inserting ${JSON.stringify(res)} ${tables} ${data_row.id}`);
+           await resolve(res)
+         })
+         .catch(async err=>{
+           //DATA FAIL TO INSERT
+           //SHOW ERROR
+           //COUNT INSERT FAILS
+           await console.log(err);
+           await resolve(1);
+         })
+     })
+   }
+ })
+}
+
+const selectPutPromise  = (tables, id) => {
+ const TABLES_NAME = tables;
+ const PARAM = {id:id};
+ return new Promise((resolve, reject)=>{
+   db.selectPromise(TABLES_NAME, PARAM)
+   .then(async arr=>{
+    await  arr && Array.isArray(arr._array) && arr._array.length > 0 ? resolve(arr._array[0]) : reject(`${tables} id ${id} not found in offline DB`);
+   })
+   .catch(error=>{console.log(error); reject(`${tables} id ${id} not found in offline DB`) })    
+ })
+};
+
+const loadInsertPromise  = (tables, data) => {
+ const TABLES_NAME = tables;
+ return new Promise((resolve, reject)=>{
+   db.insertPromise(TABLES_NAME, data)
+   .then(async id=>{
+       await id && id > 0 ? resolve(id): reject(`REJECT insert ${id}`);
+     })
+   .catch(err=>reject(err))
+ })
+};
+
+const loadUpdatePromise  = (data, id, tables) => {
+ const TABLES_NAME = tables;
+ return new Promise((resolve, reject)=>{
+   db.updatePromise(TABLES_NAME, data, id)
+   .then(async uid=>{
+       await uid && uid > 0 ? resolve(uid): reject(`REJECT update ${uid}`);
+     })
+   .catch(err=>reject(err))
+ })
+};
+
+const comparePromise  = (sqldb, insertdb, editable) => {
+ return new Promise((resolve, reject)=>{
+   if(sqldb && Object.keys(sqldb).length > 0 && sqldb !== undefined)
+   {
+     //if row exist in database
+     let correctedRow = {};
+     Object.values(editable).forEach((key)=> {
+       // key: the name of the object key
+       // if approve item in data is not the same as that in DB
+       // store the key and the new data in array correctedRow else ignore
+       if(insertdb[key] && sqldb[key] && sqldb[key] !== insertdb[key] && insertdb[key] !== undefined)
+       {
+         correctedRow[key] = insertdb[key];
+       }
+     });
+     //if any row is corrected return 0 so as to be updatedconsole.log(key);
+     let ar = [0, correctedRow];
+     let arx = [2, insertdb];
+     let ret = correctedRow && Object.keys(correctedRow).length > 0 ? ar : arx ;
+     //return ret;
+     resolve(ret);
+   }
+   else
+   {
+     //IF ROW DOES NOT EXIST
+     //RETURN 1 : ROW BE INSERTED
+     //return [2, insertdb];
+     reject([2, insertdb]);
+   }
+ })
+};
   
   export const DROPDATA  = (tables) =>{
     const TABLES_NAME = SCHEME[tables].name;
@@ -120,50 +255,46 @@ export const LOADDATAS  = (data, tables, callback) =>{
   };
 
 
-  const loadInsert  = async (data, tables, callback) => {
+  const loadInsert  = (data, tables) => {
     const TABLES_NAME = SCHEME[tables].name;
-    const TABLES_STRUCTURE = SCHEME[tables].schema;
-        await db.insert(TABLES_NAME, TABLES_STRUCTURE, data, (d)=>{
-          if(d == 'xx')
-          {
-            // failed to insert
-          }
-          else if(d > 0)
-          {
-            callback(d);
-          }
+    return new Promise((resolve, reject)=>{
+        db.insertPromise(TABLES_NAME, data)
+        .then((d)=>{
+            resolve(d);
         })
+        .catch(err=>{
+          reject(err);
+        })
+      })
   };
 
-  const loadUpdate  = async (data, id, tables, callback) => {
+  const loadUpdate  = (data, id, tables) => {
+    return new Promise((resolve, reject)=>{
     const TABLES_NAME = SCHEME[tables].name;
-    const TABLES_STRUCTURE = SCHEME[tables].schema;
-        await db.update(TABLES_NAME, TABLES_STRUCTURE, data, id, (d)=>{
-          if(d == 'xx')
-          {
-            // failed to insert
-          }
-          else if(d > 0)
-          {
-            callback(d);
-          }
+        db.updatePromise(TABLES_NAME,  data, id)
+        .then((d)=>{
+            resolve(d);
         })
+        .catch(err=>{
+            reject(err);
+        })
+      })
   };
 
-  const selectPut  = async (id, tables, callback) => {
+  const selectPut  = (id, tables) => {
     const TABLES_NAME = SCHEME[tables].name;
-    const TABLES_STRUCTURE = SCHEME[tables].schema;
     const PARAM = {id:id};
-        await db.select(TABLES_NAME, TABLES_STRUCTURE, PARAM,  (d)=>{
-          if(d)
-          {
-            //get single row
-            callback(d._array[0]);
-          }
+      db.selectPromise(TABLES_NAME, PARAM)
+        .then((d)=>{
+            resolve(d._array[0]);
+        })
+        .catch(err=>{
+            reject(err);
         })
   };
 
-  const compare  = async(sqldb, insertdb, editable, callback) => {
+  const compare  = (sqldb, insertdb, editable) => {
+    return new Promise((resolve, reject)=>{
         if(sqldb)
         {
           //if row exist in database
@@ -180,17 +311,17 @@ export const LOADDATAS  = (data, tables, callback) =>{
           //if any row is corrected return 0 so as to be updated
             if(Object.keys(correctedRow).length > 0)
             {
-                callback([0, correctedRow]);
+                resolve([0, correctedRow]);
             }else
             {
-                callback([2, insertdb]);
+                resolve([2, insertdb]);
             }
         }else
         {
           //if row does not exist in db
           //return 1 : row to be inserted
-          callback([1, insertdb]);
+          resolve([1, insertdb]);
         }
-       
+      })  
   };
   

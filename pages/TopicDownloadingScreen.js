@@ -150,29 +150,26 @@ static getDerivedStateFromProps(nextProps, prevState){
     {
       this.relocate()
     }
+   
     else if(selectedIndex == 1 )
-    {
-        //this.updateTopicx();
-    }
-    else if(selectedIndex == 2 )
     {
        await this.props.getTopicsDownloadOnly(this.props.navigation.getParam('topicID'))
     }
   }
   
   comp1 = () => <Icon name='arrow-back' color='white' type='material' />
-  comp2 = () => <Icon name='cloud-download' color='white' type='material' />
-  comp3 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Update</Text>
+  comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Update</Text>
 
 render(){
   const {isLoading, isDownloading, topic, tloading } = this.props.topic;
   const { themes, ids } = this.props.theme;
   const { name } = this.props.subject.subject;
   const { selectedIndex, isVisible, prog, sid} = this.state;
-  const buttons =  [{element:this.comp1}, {element: this.comp2}, {element:this.comp3}] ;
+  const buttons =  [{element:this.comp1}, {element: this.comp2}] ;
   const list_themes = themes && Array.isArray(themes) && themes.length > 0 && ids  && Array.isArray(ids) ? themes.filter((row)=>ids.includes(row.id)) : null;
   const list_data = list_themes && Array.isArray(list_themes) && list_themes.length > 0 ? list_themes.map((row) =>(<Text style={{ color:'white', fontFamily:'PoiretOne', marginTop:2}} key={row.id}>{row.name}</Text>)) : <Text></Text>;
-  if(prog === 100 && topic && topic.active !== 1){
+  if(prog === 100 && topic && topic.active !== 1)
+  {
     this.activateLoad(1);
   }else if(prog <  100 && topic && topic.active !== 2)
   {

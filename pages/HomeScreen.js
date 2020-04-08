@@ -4,10 +4,13 @@ import { StyleSheet, Text, View, ImageBackground , ScrollView, TouchableHighligh
 import { Icon } from 'react-native-elements';
 import { ThemeProvider, Button } from 'react-native-elements';
 import { getSubjectsClear, getTableClear, dropTable } from './actions/Subject';
+import { EMAIL } from './actions/Common';
 import Admob from './advert/Admob';
+import {
+  setTestDeviceIDAsync,
+} from 'expo-ads-admob';
 
 // Your App
-
 const tools = require('./components/Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
@@ -59,8 +62,20 @@ class HomeScreen extends React.Component {
              alignContent:'space-around',
              justifyContent:'flex-end',
              alignSelf:'flex-end',
-             padding:40,
+             paddingTop:40,
+             paddingRight:20,
+             paddingBottom:1,
           }}> Q&A</Text>
+          <Text style={{ 
+             fontFamily:'SulphurPoint',
+             fontSize: 10,
+             color:'white',
+             alignContent:'space-around',
+             justifyContent:'flex-end',
+             alignSelf:'flex-end',
+             paddingTop:2,
+             paddingRight:20,
+          }}>{this.props.user.user.email}</Text>
           <View
               style={{
                 color:'white',
@@ -69,11 +84,10 @@ class HomeScreen extends React.Component {
                 margin: 0,
                 padding: 3,
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                
                 width: '100%'
               }}
           >
-              <Text style={{alignSelf:'center', color:'white', fontFamily:'SulphurPointNormal'}}>Mobile Learning Center</Text>
+              <Text style={{alignSelf:'center', color:'white', fontFamily:'SulphurPointNormal'}}>{`Mobile Learning Center `}</Text>
           </View>
         </ImageBackground>
         
@@ -128,8 +142,8 @@ class HomeScreen extends React.Component {
           </View>
           <View>
           <Button 
-              title='DROP Scores Table'
-              onPress={()=>{this.props.dropTable('score')}}
+              title='DROP Users Table'
+              onPress={()=>{this.props.dropTable('user')}}
               />
           </View>
           <View>
@@ -140,10 +154,44 @@ class HomeScreen extends React.Component {
           </View>
           <View>
           <Button 
+              title='DROP Test Table'
+              onPress={()=>{this.props.dropTable('test')}}
+              />
+          </View>
+          <View>
+          <Button 
+              title='DROP Score Table'
+              onPress={()=>{this.props.dropTable('score')}}
+              />
+          </View>
+          <View>
+
+          <Button 
               title='DROP Topic Table'
               onPress={()=>{this.props.dropTable('topic')}}
               />
           </View>
+          <View>
+
+            <Button 
+                title='DROP Question Table'
+                onPress={()=>{this.props.dropTable('question')}}
+                />
+            </View>
+            <View>
+
+            <Button 
+                title='DROP Answer Table'
+                onPress={()=>{this.props.dropTable('answer')}}
+                />
+            </View>
+            <View>
+
+            <Button 
+                title='DROP Distractor Table'
+                onPress={()=>{this.props.dropTable('distractor')}}
+                />
+            </View>
           <View>
           <Button 
               title='DROP Subject Table'

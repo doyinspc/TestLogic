@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeProvider,  Avatar, Icon, Button } from 'react-native-elements';
-import { TextInput, View, Text, StyleSheet,  TouchableHighlight } from 'react-native';
+import { TextInput, View, Text, StyleSheet,  TouchableHighlight, Alert, AsyncStorage } from 'react-native';
 
 import { connect }from 'react-redux';
 import * as Font from 'expo-font';
@@ -38,10 +38,19 @@ class Register extends React.Component{
   onSubmit = () =>{
     const { name, password, email, social,  active, token } = this.state;
     const user = { name, email, uniqueid:email, passw:password, social, active, token };
-    if(this.state.password && this.state.password == this.state.reppassword){
-        this.props.postUser(user);
+    if(this.state.password && this.state.password == this.state.reppassword)
+    {
+        this.props.postUser(user)
+        .then(res=>{
+          AsyncStorage.setItem('user', JSON.stringify(res));
+          this.props.navigation.navigate('HomeScreen');
+        })
+        .catch(err=>{
+          Alert.alert('Error', err);
+        })
     }else{
       this.setState({ error: 'passwords do not match'});
+      Alert.alert('Error', 'Password does not match..')
     }
 
   }

@@ -117,7 +117,10 @@ render(){
             </View>
             }
         </ScrollView>:<Activity title='Subject' onPress={()=>{this.onPress(1)}} />}
-           <ButtonGroup
+           
+      </View> 
+      <View style={{flex:1, alignSelf:'stretch'}}>
+      <ButtonGroup
             onPress={this.updateIndex}
             selectedIndex={selectedIndex}
             buttons={buttons}
@@ -125,7 +128,7 @@ render(){
             selectedButtonStyle={styles.genButtonStyle}
             textStyle={styles.genButtonTextStyle}
             />
-           </View> 
+      </View>
     </ThemeProvider>
   );
 };

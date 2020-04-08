@@ -1,14 +1,15 @@
 import React from 'react';
-import { StyleSheet, Text, View, Alert } from 'react-native';
-import { createAppContainer } from 'react-navigation';
+import { AppRegistry, Dimensions, StyleSheet, Text, View, Alert } from 'react-native';
+import { createAppContainer, DrawerNavigator  } from 'react-navigation';
 import { createStackNavigator, createDrawerNavigator} from 'react-navigation-stack';
 import { DrawerItems } from 'react-navigation-drawer';
 import { Provider }from 'react-redux';
 import store from "./store";
 import * as Font from 'expo-font';
-import {
-  setTestDeviceIDAsync,
-} from 'expo-ads-admob';
+import { setTestDeviceIDAsync, } from 'expo-ads-admob';
+
+//import SideMenu from './pages/components/SideMenu'
+//import StackNav from './pages/components/StackNav';
 
 import GoogleScreen from './pages/GoogleScreen';
 import FacebookScreen from './pages/FacebookScreen';
@@ -257,8 +258,17 @@ const AppStack = createStackNavigator({
       },
     },
 });
-
+// const drawernav = DrawerNavigator({
+//   Item1: {
+//       screen: StackNav,
+//     }
+//   }, {
+//     contentComponent: SideMenu,
+//     drawerWidth: Dimensions.get('window').width - 120,  
+// });
 const AppContainer = createAppContainer(AppStack);
+//AppRegistry.registerComponent('Testtricks', () => drawernav);
+
 
 export default class App extends React.Component {
   constructor(props) {
@@ -282,9 +292,8 @@ export default class App extends React.Component {
   }
   
   initAds = async () => {
-   await setTestDeviceIDAsync(EMU);
+   await setTestDeviceIDAsync('EMULATOR');
   }
-
 
   render() {
     return (    

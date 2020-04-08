@@ -13,7 +13,7 @@ const local_size = tools.Sizes;
 
 
 
-class GoogleSignin extends Component {
+class GoogleScreen extends Component {
   constructor(props) {
   super(props); 
   this.state = {
@@ -49,20 +49,25 @@ class GoogleSignin extends Component {
           arr['social'] = 1;
           arr['active'] = 1;
           arr['token'] = result.accessToken;
-          this.props.postUser(arr);
-          this.setState({
-            name: result.user.name,
-            email: result.user.email,
-            photoUrl: result.user.photoUrl,
-            signedIn: true,
-            token: result.accessToken
+          this.props.postUser(arr)
+          .then(res =>{
+            this.setState({
+              name: result.user.name,
+              email: result.user.email,
+              photoUrl: result.user.photoUrl,
+              signedIn: true,
+              token: result.accessToken
+            })
           })
-        } else {
-          return { cancelled: true };
+          .catch(err =>{
+            Alert.alert('Error', `Facebook Login Error: ${JSON.stringify(err)}`);
+          })
+        }else 
+        {
+          Alert.alert('Error', `Google Login Error:`);
         }
       } catch (e) {
-        console.log(e);
-        return { error: true };
+        Alert.alert('Error', `Google Login Error: ${e}`);
       }
     }
   
@@ -88,4 +93,4 @@ const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
     user: state.userReducer
   })
-export default connect(mapStateToProps, { postUser })(GoogleSignin);
+export default connect(mapStateToProps, { postUser })(GoogleScreen);

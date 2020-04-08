@@ -63,7 +63,6 @@ class TopicScreen extends React.Component{
       this.props.navigation.navigate('ResourcesScreen', {'topicID':id, 'sid':this.state.page})
     }
   }
-
   //REDIRECT TO TOPIC DOWNLOADING SCREEN : DOWN LOAD QUESTION 
   //ARGUMENTS PASSED THE TOPIC ID SELECTED
   relocateDownload = (id) =>{
@@ -122,8 +121,6 @@ async componentDidMount() {
 initAds = async () => {
   await setTestDeviceIDAsync(EMU);
  }
-
-
 componentWillUnmount() {
   AdMobRewarded.removeAllListeners();
 }
@@ -307,7 +304,6 @@ onChange = (topicID, advert, topicActive, indexes ) => {
               chevron
           />
   renderItemsxs = ({item, index}) =><Text>{item.id}</Text>
-
   
   comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
   comp3 = () => <Icon name='cloud-download' color='white' type='material' />

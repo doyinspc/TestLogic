@@ -280,6 +280,7 @@ module.exports = {
           section_text: { color:color5,  fontSize: 15, fontFamily: 'PoiretOne',  paddingLeft:10,  },
           section_icon: { color:color5, fontSize: 22, justifyContent:'center', textAlign: 'left', paddingLeft:10 },
           genButtonGroup:{height:40, backgroundColor:color1},
+          genButtonGroup1:{height:60, backgroundColor:color1},
           genButtonStyle:{backgroundColor:color2},
           genButtonTextStyle:{color:color5},
           topSection:{flex:.4, backgroundColor:color1, borderBottomRightRadius: 25, borderBottomLeftRadius:25, alignContent:'center', justifyContent:'center'},

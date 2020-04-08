@@ -1,24 +1,16 @@
 import React from 'react';
-import {  Button } from 'react-native-elements';
-import { TextInput, View, Text, StyleSheet } from 'react-native';
+import {  Button, ButtonGroup } from 'react-native-elements';
+import { AsyncStorage, TextInput, View, Text, StyleSheet, Alert } from 'react-native';
 import * as Font from 'expo-font';
 import { connect }from 'react-redux';
 import GoogleScreen from './GoogleScreen';
 import FacebookScreen from './FacebookScreen';
-import { postUser, getUser, getUse } from './actions/User';
-import {
-  USER_GET_ONE,
-  USER_LOADING_ERROR
-} from "./types/User";
+import { postUser, getUser, getUse, getUserOne } from './actions/User';
 
 
 import { DB_PATH } from './actions/Common';
-import  SCHEME  from './api/Schema';
-import axios from 'axios';
 
 const db = DB_PATH;
-const TABLE_NAME = SCHEME.user.name;
-const TABLE_STRUCTURE = SCHEME.user.schema;
 const tools = require('./components/Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
@@ -35,11 +27,12 @@ class LogIn extends React.Component{
     password:'',
     email:'',
     error:'',
-    isActive:true
+    isActive:false,
+    selectedIndex:null
   }
   
   async componentDidMount() {
-    await this.props.getUser();
+    this.props.getUserOne();
     this.setState({isActive: await this.props.user.isActive});
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
@@ -48,36 +41,59 @@ class LogIn extends React.Component{
     this.setState({ fontLoaded: true });
   }
 
-  onSubmit = () => (dispatch) =>{
+  static getDerivedStateFromProps(nextProps, prevState)
+  {
+    if(nextProps.user.isActive)
+    {
+      return{isActive:true}
+    }
+    return null;
+  }
+
+  onSubmit = () =>{
     const { password, email, isActive } = this.state;
-    const user = {password, email, isActive};
-    let PARAM = {
-      email:email,
-      password:password,
+    let userx = {
+      uniqueid:email,
+      passw:password,
       social: 3,
     };
     if(this.state.password)
     {
-      db.select(TABLE_NAME, TABLE_STRUCTURE, PARAM, async (data)=>{
-        if(data._array && Array.isArray(data._array) && parseInt(data.length) > 0){
-           await dispatch({type: USER_GET_ONE, payload: data._array});
-           if(data._array[0])
-           {
-            this.setState({isActive:true});
-           }
-         }else{
-            dispatch({ type : USER_LOADING_ERROR, msg : 'No file'});
-         }
-      })
+      this.props.getUser(userx)
+        .then(res=>{ 
+          AsyncStorage.setItem('user', JSON.stringify(res));
+          this.props.navigation.navigate('HomeScreen');
+        })
+        .catch(err=>{
+          Alert.alert('Error', err);
+        })
     }
   }
 
+  updateIndex = (selectedIndex) =>{
+    this.setState({ selectedIndex });
+    if(selectedIndex == 0 )
+    {
+        this.props.navigation.navigate('ForgotPasswordScreen');
+    }
+    else if(selectedIndex == 1 )
+    {
+        this.props.navigation.navigate('RegisterScreen');
+    }
+  }
+  
+  comp1 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Forgot Password</Text>
+  comp2 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Sign Up</Text>
+
   render(){
-    const { fontLoaded, email, password, isActive } = this.state;
+    const { fontLoaded, email, password, selectedIndex, isActive } = this.state;
+    const buttons = [{element:this.comp1} , {element:this.comp2}] ;
+ 
     if(isActive)
     {
       this.props.navigation.navigate('HomeScreen');
     }
+    
     return (
       <View style={{flex:1}}>
       {fontLoaded ? <View style={{flex:1}}>
@@ -113,33 +129,26 @@ class LogIn extends React.Component{
                 value={password}
                 onChangeText={(text) => this.setState({password: text})}
             />
-            
-            
+ 
             <Button
                 large
                 icon={{name: 'save', type: 'material', color:'#fff' }}
                 title='LOGIN' 
                 buttonStyle={styles.but}
-                onPress={()=>{this.onSubmit()}}
+                onPress={this.onSubmit}
                 />
-                <Button
-                color='#fff'
-                icon={{name: 'arrow-left', type: 'octicon', color:local_color.MAIN }}
-                title='Forgot Username or Password?' 
-                textStyle={{color:local_color.MAIN}}
-                buttonStyle={styles.butlink}
-                onPress={()=>{this.props.navigation.navigate('RegisterScreen')}}
-                />
-              <Button
-                color='#fff'
-                icon={{name: 'arrow-left', type: 'octicon', color:local_color.MAIN }}
-                title='Register' 
-                textStyle={{color:local_color.MAIN}}
-                buttonStyle={styles.butlink}
-                onPress={()=>{this.props.navigation.navigate('RegisterScreen')}}
-                />
+                
+                
        </View>
        </View> : null}
+       <ButtonGroup
+                  onPress={this.updateIndex}
+                  selectedIndex={selectedIndex}
+                  buttons={buttons}
+                  containerStyle={styles.genButtonGroup1}
+                  selectedButtonStyle={styles.genButtonStyle}
+                  textStyle={styles.genButtonTextStyle}
+                  />
        </View>
    
   );
@@ -150,4 +159,4 @@ const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
   user: state.userReducer
 })
-export default connect(mapStateToProps, { postUser, getUser, getUse })(LogIn);
+export default connect(mapStateToProps, { postUser, getUser, getUse, getUserOne })(LogIn);

@@ -41,7 +41,7 @@ export default function(state = initialState, action){
             return {
                 ...state,
                 users : action.payload,
-                user : ar,
+                user : action.payload,
                 isActive : act,
                 isLoading: false
             };

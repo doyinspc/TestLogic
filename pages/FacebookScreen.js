@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import * as Facebook from 'expo-facebook';
-import { Button, SocialIcon } from 'react-native-elements';
-import { View,  StyleSheet } from 'react-native';
+import { SocialIcon } from 'react-native-elements';
+import { View,  StyleSheet, Alert } from 'react-native';
 import { connect }from 'react-redux';
 
 import { FACEBOOK_PATH } from './actions/Common';
@@ -13,7 +13,7 @@ const local_size = tools.Sizes;
 
 
 
-class FacebookSignin extends Component {
+class FacebookScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -27,8 +27,6 @@ class FacebookSignin extends Component {
     
 
  async componentDidMount(){
-   await this.props.getUser();
-   //this.setState({signedIn:true});
    if(this.props.user.isActive)
    {
     this.setState({signedIn:true});
@@ -41,22 +39,20 @@ class FacebookSignin extends Component {
 
   signIn = async() =>{
     try {
-        await Facebook.initializeAsync(FACEBOOK_PATH);
+        //await Facebook.initializeAsync(FACEBOOK_PATH);
         const {
           type,
           token,
           expires,
           permissions,
-          declinedPermissions,
-        } = await Facebook.logInWithReadPermissionsAsync({
-          permissions: ['public_profile'],
-        });
+          declinedPermissions
+        } = await Facebook.logInWithReadPermissionsAsync(FACEBOOK_PATH, {permissions: ['public_profile'],});
+        
         if (type === 'success') {
           // Get the user's name using Facebook's Graph API
           const response = await fetch(`https://graph.facebook.com/me?access_token=${token}`);
           let arr = {};
           let result = await response.json();
-          console.log(result);
           arr['name'] = result.user.name;
           arr['uniqueid'] = result.user.id;
           arr['email'] = result.user.email;
@@ -64,19 +60,25 @@ class FacebookSignin extends Component {
           arr['social'] = 2;
           arr['active'] = 1;
           arr['token'] = token;
-          this.props.postUser(arr);
-          this.setState({
-            name: result.user.name,
-            email: result.user.email,
-            photoUrl: result.user.photoUrl,
-            signedIn: true,
-            token: result.accessToken
+          console.log(arr);
+          this.props.postUser(arr)
+          .then(res=>{
+            this.setState({
+              name: result.user.name,
+              email: result.user.email,
+              photoUrl: result.user.photoUrl,
+              signedIn: true,
+              token: result.accessToken
+            })
           })
+          .catch(err=>{
+            Alert.alert('Error', `Facebook Login failed to save: ${err}`);
+          }) 
         } else {
-          // type === 'cancel'
+          Alert.alert('Error', `Facebook Login failed use other options`);
         }
       } catch ({ message }) {
-        alert(`Facebook Login Error: ${message}`);
+        Alert.alert('Error', `Facebook Login Error: ${message}`);
       }
     }
   
@@ -102,4 +104,4 @@ const styles = StyleSheet.create(local_style);
 const mapStateToProps = state => ({ 
     user: state.userReducer
   })
-export default connect(mapStateToProps, { postUser, getUser })(FacebookSignin);
+export default connect(mapStateToProps, { postUser, getUser })(FacebookScreen);
