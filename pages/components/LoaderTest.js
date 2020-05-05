@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
-import { Button } from 'react-native-elements';
+import { Button, Icon } from 'react-native-elements';
 const tools = require('./Style');
 const local_style = tools.Style;
 const local_color = tools.Colors;
@@ -8,16 +8,15 @@ const local_color = tools.Colors;
 export default function Activity(props) {
   return (
     <View style={{flex:1, alignContent:'center', justifyContent:'center'}}>
-    <ActivityIndicator
+    
+    <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
+        <ActivityIndicator
         color = {local_color.Colors}
         size = "large"
         />
-    <Text style={{ fontFamily:'PoiretOne', alignSelf:'center', margin:0, padding:0, alignContent:'center', justifyContent:'center'}}>{`${props.title} Loading... Please wait..`}</Text>
-    <Button 
-        title="Cancel Process" 
-        buttonStyle={styles.but}
-        onPress={()=>{props.onPress(1)}}
-    />
+<Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', marginHorizontal:10, padding:5, alignContent:'center'}}>{`${props.title} Loading... Please wait..`}</Text>
+    </View>
+    
   </View>
   );
 };

@@ -10,11 +10,13 @@ import {
 
 
 import axios from 'axios';
-import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
+import { USER_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
 var md5 = require('md5');
+
+
 const db = DB_PATH;
-const path = API_PATH;
+const path = USER_PATH;
 const token = CONFIG;
 const loadData = LOADDATA;
 const dropData = DROPDATA;
@@ -39,7 +41,6 @@ export const postUser = (user) => (dispatch, getState) => {
       .then(async res => {
         let arr = [];
         arr.push(res.data);
-        console.log(res.data);
         await loadData(arr, 'users')
         .then(async (d)=>{
          if(res.data){

@@ -35,9 +35,10 @@
       "package": "passme.net",
       "publishBundlePath": "android\\app\\src\\main\\assets\\shell-app.bundle",
       "publishManifestPath": "android\\app\\src\\main\\assets\\shell-app-manifest.json",
-      "config":{
-        "googleMobileAdsAppId" : "ca-app-pub-5431380497963954~1678898004"
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-5431380497963954~1678898004"
       }
-    }
+    },
+    "description": "Mobile learning Center"
   }
 }

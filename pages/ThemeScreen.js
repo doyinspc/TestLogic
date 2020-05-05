@@ -41,8 +41,7 @@ class ThemeScreen extends React.Component{
   }
  
   async componentDidMount() {
-   await this.props.getThemes(JSON.stringify(this.props.navigation.getParam('subjectID')));
-   this.props.getThemes(JSON.stringify(this.props.navigation.getParam('subjectID')))
+   this.props.getThemes(this.props.navigation.getParam('subjectID'))
     .then(res=>{
         this.setState({themeNum:res});
     })
@@ -53,7 +52,7 @@ class ThemeScreen extends React.Component{
         this.setState({themeNum:resp});
       })
       .catch(err=>{
-        this.setState({status:err});
+        alert(err);
       })
   })
     var page = this.props.navigation.getParam('sid');
@@ -93,12 +92,12 @@ class ThemeScreen extends React.Component{
   //DOWNLOAD THEMES FROM HOME/ONLINE SERVER
   //ARGUMENT PASSED SUBJECT ID
   updateTheme =(subject)=>{
-    this.props.getThemesDownload(subject)
+    this.props.getThemesDownload(this.props.navigation.getParam('subjectID'))
       .then(resp =>{
         this.setState({themeNum:resp});
       })
       .catch(err=>{
-        this.setState({status:err});
+        alert(err);
       })
   }
 

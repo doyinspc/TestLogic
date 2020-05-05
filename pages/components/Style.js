@@ -75,7 +75,7 @@ module.exports = {
           label: {
             color: '#000',
             fontSize: 12,
-            marginTop: 5,
+            marginHorizontal :50,
             alignSelf: 'flex-start',
             width: UNIT_WIDTH * 20,
             fontFamily: 'SulphurPoint'
@@ -138,7 +138,7 @@ module.exports = {
           textplace: {
             height: 40, 
             width: UNIT_WIDTH * 20, 
-            marginTop:2,
+            marginHorizontal :50,
             padding: 2, 
             paddingLeft:5,
             borderColor: color4, 

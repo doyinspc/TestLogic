@@ -126,6 +126,7 @@ module.exports = {
                     choices TEXT DEFAULT NULL,
                     active INTEGER DEFAULT 0, 
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+                    ended_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  NOT NULL `
     },
     stat: {

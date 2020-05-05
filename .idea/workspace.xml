@@ -46,11 +46,6 @@
             <path>
               <item name="ExamHacks" type="b2602c69:ProjectViewProjectNode" />
               <item name="ExamHacks" type="462c0819:PsiDirectoryNode" />
-              <item name=".expo-source" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="ExamHacks" type="b2602c69:ProjectViewProjectNode" />
-              <item name="ExamHacks" type="462c0819:PsiDirectoryNode" />
               <item name="android" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -63,14 +58,16 @@
               <item name="ExamHacks" type="b2602c69:ProjectViewProjectNode" />
               <item name="ExamHacks" type="462c0819:PsiDirectoryNode" />
               <item name="android" type="462c0819:PsiDirectoryNode" />
-              <item name="gradle" type="462c0819:PsiDirectoryNode" />
+              <item name="app" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="ExamHacks" type="b2602c69:ProjectViewProjectNode" />
               <item name="ExamHacks" type="462c0819:PsiDirectoryNode" />
               <item name="android" type="462c0819:PsiDirectoryNode" />
-              <item name="gradle" type="462c0819:PsiDirectoryNode" />
-              <item name="wrapper" type="462c0819:PsiDirectoryNode" />
+              <item name="app" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />

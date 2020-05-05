@@ -8,6 +8,17 @@ import {
     USER_LOADING_ERROR 
 } from "../types/User";
 
+import { AsyncStorage } from 'react-native';
+const saveUserId = async user => {
+    try {
+      await AsyncStorage.setItem('user', user)
+      .then(d=>{
+        console.log(JSON.stringify(user));
+      });
+    } catch (error) {
+        console.log(error.message);
+    }
+  };
 const initialState = {
     isLoading: false,
     isActive: false,
@@ -34,15 +45,13 @@ export default function(state = initialState, action){
                 
             };
         case USER_GET_MULTIPLE:
-            let arr = action.payload;
-            let use = arr && Array.isArray(arr) && arr.length > 0 ? arr.filter((row)=>row.active == 1) : null;
-            let ar = use && Array.isArray(use) && use.length > 0 ? use[0] : null;
-            let act = ar ? true : false;
+           
+            saveUserId(JSON.stringify(action.payload));
             return {
                 ...state,
                 users : action.payload,
                 user : action.payload,
-                isActive : act,
+                isActive : true,
                 isLoading: false
             };
         case USER_GET_ONE:

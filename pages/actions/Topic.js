@@ -155,6 +155,7 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                           
                           let newanswers = [];
                           let answer_an = row_ques.answer;
+                          console.log(answer_an);
                           let answers_an = answer_an.split(':::::');
                           answers_an.forEach(a =>{
                             let answerArray = a.split(':::');
@@ -263,7 +264,6 @@ const getTopicDB = (themeID) => {
     }
   axios.get(topic_paths, {params})
     .then(top => {
-      console.log(top.data);
         resolve(top.data);
     })
     .catch(err =>reject(err))
@@ -329,24 +329,23 @@ export const getTopics = (theme) => (dispatch) => {
         }   
       })
       .then(dataa=>{
-        getTopicDB(id)
-        .then(data =>{
-              if(data && data.length > 0)
-              {
-                dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
-                loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
-                .then(d=>{
-                    console.log(`loading and saving topics ${JSON.stringify(d)}`)
-                })
-                .catch(err=>console.log(err))
-              }     
-        })
-        .catch(err=>{
-          console.log(err)
-        })
+        // getTopicDB(id)
+        // .then(data =>{
+        //       if(data && data.length > 0)
+        //       {
+        //         dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
+        //         loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+        //         .then(d=>{
+        //             console.log(`loading and saving topics ${JSON.stringify(d)}`)
+        //         })
+        //         .catch(err=>console.log(err))
+        //       }     
+        // })
+        // .catch(err=>{
+        //   console.log(err)
+        // })
       })
     .catch(err=>{
-        console.log(`general fail ${err}`);
         getTopicDB(id)
         .then(data =>{
           dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
@@ -377,18 +376,17 @@ export const getTopics = (theme) => (dispatch) => {
       getTopicDB(theme)
         .then(data =>{
           dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:theme});
-              loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
-              .then(d=>{
-                  console.log(`loading and saving topics ${JSON.stringify(d)}`)
-              })
-              .catch(err=>console.log(err))
+              // loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+              // .then(d=>{
+              //     console.log(`loading and saving topics ${JSON.stringify(d)}`)
+              // })
+              // .catch(err=>console.log(err))
         })
         .catch(err=>{
           console.log(err)
         })
     })
   .catch(err=>{
-    console.log(`single general fail ${err}`);
     getTopicDB(theme)
     .then(data =>{
       dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:theme});

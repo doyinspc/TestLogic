@@ -258,16 +258,8 @@ const AppStack = createStackNavigator({
       },
     },
 });
-// const drawernav = DrawerNavigator({
-//   Item1: {
-//       screen: StackNav,
-//     }
-//   }, {
-//     contentComponent: SideMenu,
-//     drawerWidth: Dimensions.get('window').width - 120,  
-// });
+
 const AppContainer = createAppContainer(AppStack);
-//AppRegistry.registerComponent('Testtricks', () => drawernav);
 
 
 export default class App extends React.Component {
@@ -288,7 +280,7 @@ export default class App extends React.Component {
       'SulphurPointNormal': require("./assets/fonts/SulphurPoint-Regular.ttf")
     });
     this.setState({ fontLoaded: true });
-    this.initAds().catch((error) => console.log(error));
+    this.initAds().catch((error) => alert(error));
   }
   
   initAds = async () => {

@@ -8,6 +8,7 @@ import Admob from "./advert/Admob";
 
 import { getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic, getTopicCount } from './actions/Topic';
 import Activity from './components/LoaderTest';
+import TopicButton from './components/TopicButton';
 import { FlatList } from 'react-native-gesture-handler';
 import {ADMOB, ADINTER, ADREWARD, PUBLISHER, EMU } from './actions/Common';
 import {
@@ -43,7 +44,6 @@ class TopicScreen extends React.Component{
     };
   }
 
-  
   //REDIRECT TO TEST SETTINGS
   //ARGURMENTS : TOPICS
  relocate = () =>{
@@ -77,7 +77,6 @@ class TopicScreen extends React.Component{
     this.setState({isVisible:true})
   }
 
-  
 async componentDidMount() {
   //GET THE SELECTED THEMES
   let selected_themes = this.props.navigation.getParam('themezID');
@@ -277,7 +276,7 @@ onChange = (topicID, advert, topicActive, indexes ) => {
                 key={index}
                 titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
                 leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: item.active == 2 ? 'grey' : this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: item.active == 2 ? 'cloud-download':this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
-                title={`${item.name} ${item.id} `}
+                title={`${item.name} `}
                 rightTitle={this.rightNote(item.questionx)}
                 subtitle={ item.active == 2 ? 'Downloading... Click to learn more...' : null}
                 bottomDivider
@@ -463,15 +462,15 @@ render(){
         </Overlay>
         {fontLoaded  && !isLoading ? 
          <View style={{flex:1}}>
-        { page == 1 && topics && Object.keys(topics).length > 0 ? 
-           <FlatList
-              data={topics}
-              keyExtractor={this.keyExtractors}
-              initialNumToRender={7}
-              renderItem={this.renderItems}
-              extraData={this.state}
-              style={{flex:1}}
-           />
+        { page == 1 && topics && Object.keys(topics).length > 0 ?
+              <FlatList
+                data={topics}
+                keyExtractor={this.keyExtractors}
+                initialNumToRender={7}
+                renderItem={this.renderItems}
+                extraData={this.state}
+                style={{flex:1}}
+             /> 
            : page == 2 && topics && Object.keys(topics).length > 0  ? 
               <FlatList
                 data={topics}

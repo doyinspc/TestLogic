@@ -8,10 +8,28 @@ import {
     SUBJECT_DOWNLOADING_FAIL,
        
 } from "../types/Subject";
-
+import { AsyncStorage } from 'react-native';
 import axios from 'axios';
 import { API_PATH, DB_PATH, CONFIG, LOADDATA, DROPDATA } from './Common';
 import  SCHEME  from './../api/Schema';
+
+const getUserId = async () => {
+  let userId = '';
+  try {
+    userId = await AsyncStorage.getItem('user')
+    .then(d=>{
+       console.log(d)
+       return d;
+    })
+    .catch(err =>{
+      console.log(err);
+    })
+  } catch (error) {
+    // Error retrieving data
+    console.log(error.message);
+  }
+  return userId;
+}
 
 const db = DB_PATH;
 const token = 'TOKEN';
@@ -23,11 +41,13 @@ const dropData = DROPDATA;
 const TABLE_NAME = SCHEME.subject.name;
 const TABLE_STRUCTURE = SCHEME.subject.schema;
 
+let pa = getUserId();
+console.log(`preserve ${JSON.stringify(pa)}`);
+let pathx = pa.path_main;
 //GET SUBJECTS FROM ONLINE DATABANK
 export const getSubjectsDownload = () => (dispatch, getState) => {
   return new Promise((resolve, reject) =>{
-  //let paths = `${path}subject/`;
-  let paths = `${path}/api/`;
+  let paths = `${pathx}/api/`;
   let params = {
     data:{},
     cat:'all',
@@ -36,30 +56,27 @@ export const getSubjectsDownload = () => (dispatch, getState) => {
   }
   dispatch({ type: SUBJECT_DOWNLOADING });
   axios.get(paths, {params})
-  .then(async res => {
-          await loadData(res.data, 'subject', async (d)=>{
-          if(res.data && Array.isArray(res.data) && res.data.length > 0 )
-          {
-            await dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data });
-            resolve(res.data.length);
-          }else
-          {
-            await dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
-            reject('Not Saved')
-          } 
-        });
-      })
-      .catch(err => {
-        dispatch({type : SUBJECT_DOWNLOADING_FAIL, msg : err })
-        reject(err);
-      })
+  .then(res => {
+        loadData(res.data, SCHEME['subject'].name, SCHEME['subject'].edits)
+          .then( d =>{
+              if(res.data && Array.isArray(res.data) && res.data.length > 0 )
+              {
+                dispatch({type: SUBJECT_DOWNLOADING_SUCCESS, payload: res.data });
+                resolve(res.data.length);
+              }else
+              {
+                dispatch({type : SUBJECT_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
+                reject('Not Saved');
+              } 
+        }).catch(err =>{dispatch({type : SUBJECT_DOWNLOADING_FAIL, msg : err }); reject(JSON.stringify(err));})
+      }).catch(err => {dispatch({type : SUBJECT_DOWNLOADING_FAIL, msg : err }); reject(JSON.stringify(err));})
     })
 };
 
 //GET ALL SUBJECT 
 export const getSubjects = () => (dispatch) => {
   return new Promise((resolve, reject) =>{
-    let PARAM= {};
+    let PARAM={};
     dispatch({ type: SUBJECT_LOADING });
       db.selectPromise(TABLE_NAME, PARAM)
       .then(data =>{

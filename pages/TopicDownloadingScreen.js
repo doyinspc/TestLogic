@@ -66,15 +66,15 @@ class TopicScreen extends React.Component{
 
 async componentDidMount() {
   
-  let arry = this.props.navigation.getParam('topicID');
-  this.props.getTopic(arry);
-  this.props.getTopicCount(arry);
+  let sid = this.props.navigation.getParam('topicID');
+  this.props.getTopic(sid);
+  this.props.getTopicCount(sid);
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
   });
-  this.setState({ fontLoaded: true, page:page, sid:arry });
+  this.setState({ fontLoaded: true, page:page, sid:sid });
   this.initAds().catch((error) => console.log(error));
   //AdMobRewarded.setTestDeviceID(EMU);
   // ALWAYS USE TEST ID for Admob ads
@@ -114,7 +114,8 @@ bannerError(e) {
 
 activateLoad = async (nu) =>{
   let d = this.state.sid;
-  await this.props.updateTopic({active: nu}, d, async (g)=>{
+ await this.props.updateTopic({active: nu}, d, async (g)=>{
+   alert(JSON.stringify(g));
  })
 }
 

@@ -26,29 +26,36 @@ const TABLE_STRUCTURE = SCHEME.theme.schema;
 export const getThemesDownload = (subjectID) => (dispatch, getState) => {
   return new Promise((resolve, reject) =>{
     dispatch({ type: THEME_DOWNLOADING });
-    if(subjectID && parseInt(subjecID) > 0)
+    if(subjectID )
     {
-      //let paths = `${path}/theme/cat/${subjectID}`;
+      console.log(subjectID);
       let paths = `${path}/api/`;
+      console.log(paths);
       let params = {
-        data:{subjectID},
+        data:{subjectID:subjectID},
         cat:'all',
         table:TABLE_NAME,
         token:config
       }
       axios.get(paths, {params})
-          .then(async res => {
-            await loadData(res.data, 'theme', async (d)=>{
+          .then(res => {
+            console.log(res.data);
+            loadData(res.data, SCHEME['theme'].name, SCHEME['theme'].edits)
+            .then(d=>{
               if(res.data && Array.isArray(res.data) && res.data.length > 0 )
               {
-                await dispatch({type: THEME_DOWNLOADING_SUCCESS, payload: res.data });
+                dispatch({type: THEME_DOWNLOADING_SUCCESS, payload: res.data });
                 resolve(res.data.length);
               }else
               {
-                await dispatch({type : THEME_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
+                dispatch({type : THEME_DOWNLOADING_FAIL,  msg : 'Not Saved' }) ;
                 reject('Not Saved')
               } 
-            });
+            })
+            .catch(err => {
+              dispatch({type : THEME_DOWNLOADING_FAIL, msg : err })
+              reject(err);
+            })
           })
           .catch(err => {
             dispatch({type : THEME_DOWNLOADING_FAIL, msg : err })

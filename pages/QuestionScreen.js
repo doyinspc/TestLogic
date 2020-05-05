@@ -2,16 +2,16 @@
 
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
-import { ThemeProvider, Icon, Button, ButtonGroup, Overlay  } from 'react-native-elements';
+import { StyleSheet, Text, View, ScrollView, SafeAreaView, Alert } from 'react-native';
+import { ThemeProvider, Icon, Button, ButtonGroup, Overlay } from 'react-native-elements';
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { RadioButton } from 'react-native-paper';
 import * as Font from 'expo-font';
 import Accordion from './components/Accordion'
 import OptionsButton from './components/OptionsButton';
 import Question from './components/Question';
-import { getTest } from './actions/Test';
-import { getScore, insertScore, updateScore } from './actions/Score';
+import { getTest, getTestPromise } from './actions/Test';
+import { getScore, getScorePromise, insertScore, updateScore } from './actions/Score';
 import WebView from 'react-native-webview';
 
 const tools = require('./components/Style');
@@ -58,85 +58,101 @@ async componentDidMount(){
   let testID = this.props.navigation.getParam('testID');
   this.setState({ testID:testID });
   //load test from test table
-  this.props.getTest(testID);
-  let test_data = this.props.test.test; 
-  if(test_data && Object.keys(test_data).length > 0){
-  let timing = test_data.testtime.split(':::');
-  let cur = 0;
-  timing = timing.map(Number);
-  if(timing[0] === -1)
-        {
-            cur = 0;
-        }
-  else
-        {
-          let sec = timing[2] > 0 ? timing[2]: 0;
-          let min = timing[1] > 0 ? timing[1] * 60: 0;
-          let hr  = timing[0] > 0 ? timing[0] * 60 * 60 : 0;
-          cur = hr + min + sec;
-        }
+  this.props.getTestPromise(testID)
+  .then(test_data =>{
+      let timing = test_data.testtime;
+      let cur = 0;
+      //timing = timing.map(Number);
+      // if(timing[0] === -1)
+      // {
+      //       cur = 0;
+      // }
+      // else
+      // {
+      //     // let sec = timing[2] > 0 ? timing[2]: 0;
+      //     // let min = timing[1] > 0 ? timing[1] * 60: 0;
+      //     // let hr  = timing[0] > 0 ? timing[0] * 60 * 60 : 0;
+      //     // cur = hr + min + sec;
+      // }
+       
+      console.log(timing);
+        //set sata in state
+        let settings = test_data.settings.split(':::');
+        let time_store = {};
+        let ids = JSON.parse(test_data.ids);
+        let time_span = parseInt(settings[1]) === 2 ? test_data.testtime : null;
+        time_span && Array.isArray(ids) && ids.length > 0 ? ids.forEach(id => {
+          time_store[parseInt(id)] = parseInt(time_span);
+        }): null;
+        
+        let testtime = parseInt(settings[1]) === 2 ? time_store : test_data.testtime;
+        this.setState({
+            ids: ids,
+            instructions: JSON.parse(test_data.instructions),
+            questions: JSON.parse(test_data.questions),
+            options: JSON.parse(test_data.options),
+            answers: JSON.parse(test_data.answers),
+            settime: testtime,
+            noq: settings[0],
+            tim: settings[1],
+            ans: settings[2],
+            activeNumber: JSON.parse(test_data.ids)[0]
+        })
+        
+      //get scoreID
+      let scoreID = this.props.navigation.getParam('scoreID');
+      //if the score id is set 
+      if(scoreID && parseInt(scoreID) > 0)
+      {
+        this.props.getScorePromise(scoreID)
+        .then( da =>{
+            let isComp = da.score && parseInt(da.active) === 1 ? true : false;
+            this.setState({ 
+                choices: da.choices !== undefined && Object.keys(da.choices).length > 0 ? JSON.parse(da.choices): {},
+                testtime: da.timespent !== undefined ? JSON.parse(da.timespent):{}, 
+                timeleft: da.timeleft, 
+                score: da.score, 
+                isCompleted: isComp, 
+                isRetest:true, 
+                scoreID: scoreID
+            });
+        })
+        .catch(err=>{
+          let arr = {};
+          arr['testID'] = testID;
+          arr['score'] = 0;
+          arr['timeset'] = cur;
+          arr['settings'] = test_data.settings;
+          arr['timespent'] = JSON.stringify({}); 
+          arr['timeleft'] = JSON.stringify(test_data.testtime);
+          arr['choices'] = JSON.stringify({});
+        
+          this.props.insertScore(arr, (id)=>{
+            this.setState({ isRetest:false , scoreID: id });
+            this.props.getScore(id);
+          });
 
-  if(test_data && Object.keys(test_data).length > 0)
-  {
-    //set sata in state
-    let settings = test_data.settings.split(':::');
-    let time_store = {};
-    let ids = JSON.parse(test_data.ids);
-    let time_span = parseInt(settings[1]) === 2 ? test_data.testtime : null;
-    time_span && Array.isArray(ids) && ids.length > 0 ? ids.forEach(id => {
-      time_store[parseInt(id)] = parseInt(time_span);
-    }): null;
-    
-    let testtime = parseInt(settings[1]) === 2 ? time_store : test_data.testtime;
-    this.setState({
-        ids: ids,
-        instructions: JSON.parse(test_data.instructions),
-        questions: JSON.parse(test_data.questions),
-        options: JSON.parse(test_data.options),
-        answers: JSON.parse(test_data.answers),
-        settime: testtime,
-        noq: settings[0],
-        tim: settings[1],
-        ans: settings[2],
-        activeNumber: JSON.parse(test_data.ids)[0]
-    })
-  }
-  //get scoreID
-  let scoreID = this.props.navigation.getParam('scoreID');
-  //if the score id is set 
-  if(scoreID && parseInt(scoreID) > 0)
-  {
-    this.props.getScore(scoreID);
-    this.setState({ isRetest:true, scoreID: scoreID});
-  }else
-  {
-    let arr = {};
-    arr['testID'] = testID;
-    arr['score'] = 0;
-    arr['timeset'] = cur;
-    arr['settings'] = test_data.settings;
-    arr['timespent'] = JSON.stringify({}); 
-    arr['timeleft'] = JSON.stringify(test_data.testtime);
-    arr['choices'] = JSON.stringify({});
-    
-    this.props.insertScore(arr, (id)=>{
-      this.setState({ isRetest:false , scoreID: id });
-      this.props.getScore(id);
-    });
-  }
-  if(!this.props.score.isLoading)
-  {
-    let da = this.props.score.score;
-    let isComp = da.score && parseInt(da.active) === 1 ? true : false;
-    this.setState({ 
-        choices: da.choices !== undefined && Object.keys(da.choices).length > 0 ? JSON.parse(da.choices): {},
-        testtime: da.timespent !== undefined ? JSON.parse(da.timespent):{}, 
-        timeleft: da.timeleft, 
-        score: da.score, 
-        isCompleted: isComp, 
-    });
-  }
-}
+        })
+        
+      }else{
+        let arr = {};
+        arr['testID'] = testID;
+        arr['score'] = 0;
+        arr['timeset'] = cur;
+        arr['settings'] = test_data.settings;
+        arr['timespent'] = JSON.stringify({}); 
+        arr['timeleft'] = JSON.stringify(test_data.testtime);
+        arr['choices'] = JSON.stringify({});
+      
+        this.props.insertScore(arr, (id)=>{
+          this.setState({ isRetest:false , scoreID: id });
+          this.props.getScore(id);
+        });
+      }
+  })
+  .catch(err=>{
+    Alert.alert('Error', JSON.stringify(err));
+  })
   await Font.loadAsync({
     'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
@@ -327,7 +343,6 @@ onBackward=()=> {
   {
     let newActiveNumber = this.state.ids[newIndex];
     let oldActiveNumber = this.state.activeNumber;
-    console.log(`${newIndex} ${newActiveNumber} ${oldIndex} ${oldActiveNumber}`)
     if(parseInt(this.state.tim) === 2)
     {
       let settimes = {...this.state.settime};
@@ -395,7 +410,6 @@ getCurrentTime = () =>{
     let stime = parseInt(tim) === 2 ? settime[activeNumber] : settime;
     let now = Math.floor(new Date().getTime());
     let diff = 0;
-    console.log(activeNumber);
     let did = activeNumber && activeNumber != undefined ? activeNumber.toString(): 1;
     let sc = choices[did] && choices[did] !== undefined ? choices[did] : null ;
     
@@ -621,4 +635,4 @@ const mapStateToProps = state => ({
   score: state.scoreReducer,
   user: state.userReducer
 })
-export default connect(mapStateToProps, { getTest, getScore, insertScore, updateScore })(QuestionScreen);
+export default connect(mapStateToProps, { getTest, getScore, insertScore, updateScore , getScorePromise, getTestPromise })(QuestionScreen);

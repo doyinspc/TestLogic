@@ -64,6 +64,31 @@ export const getScore = (thm) => (dispatch, getState) => {
   })
 };
 
+
+//SELECT SINGLE FROM OFFLINE DB
+export const getScorePromise = (id) => (dispatch) => {
+  return new Promise((resolve, reject)=>{
+    db.selectPromise(TABLE_NAME, {'id':id })
+    .then(dat=>{
+        if(dat && Array.isArray(dat._array) && dat._array.length > 0)
+        {
+          dispatch({type: SCORE_DOWNLOADING_SUCCESS, payload:dat._array, id:dat})
+          dispatch({ type: SCORE_GET_ONE, payload:id})
+          resolve(dat._array[0]);
+        }
+        else
+        {
+          let e = new Error('No File');
+          reject(e);
+        }
+    })
+    .catch(err=>{
+        dispatch({type: SCORE_INSERT_FAIL,  msg:err});
+        reject(err);
+    })
+  }) 
+};
+
 //GET SINGLE SCORE
 export const insertScore = (PARAM, callback) =>(dispatch, getState) =>{
   db.insertScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, 1, (data)=>{

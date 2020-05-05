@@ -60,7 +60,7 @@ class GoogleScreen extends Component {
             })
           })
           .catch(err =>{
-            Alert.alert('Error', `Facebook Login Error: ${JSON.stringify(err)}`);
+            Alert.alert('Error', `Google Login Error: ${JSON.stringify(err)}`);
           })
         }else 
         {
@@ -69,6 +69,7 @@ class GoogleScreen extends Component {
       } catch (e) {
         Alert.alert('Error', `Google Login Error: ${e}`);
       }
+      this.props.onLog(arr);
     }
   
     
@@ -77,10 +78,7 @@ class GoogleScreen extends Component {
       const { signedIn } = this.state;
       return (
         <View>
-          {signedIn ? 
-          () =>{this.props.navigation.navigate('HomeScreen', {'data':this.state}) }:
           <SocialIcon reverse raised  type='google'  onPress={()=>{this.signIn()}} />
-          }
         </View>
       );
     }

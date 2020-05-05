@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect }from 'react-redux';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon, Overlay, Button } from 'react-native-elements';
+import { ThemeProvider, Avatar,  ListItem, ButtonGroup, Icon, Overlay, Button, Alert } from 'react-native-elements';
 import * as Font from 'expo-font';
 import Admob from "./advert/Admob";
 import Adinter from "./advert/Adinter";
@@ -35,14 +35,14 @@ class SubjectScreen extends React.Component{
       this.setState({subjectNum:res});
   })
   .catch(err=>{
-    this.setState({status:err});
-    this.props.getSubjectsDownload()
-    .then(resp =>{
-      this.setState({subjectNum:resp});
-    })
-    .catch(err=>{
       this.setState({status:err});
-    })
+      this.props.getSubjectsDownload()
+      .then(resp =>{
+        alert('Success');
+      })
+      .catch(err =>{
+        alert( `network ${JSON.stringify(err)} `);
+      })
   })
   
   var page = this.props.navigation.getParam('sid');
@@ -77,7 +77,13 @@ relocateMock = (value) =>{
 //DOWNLOAD FROM HOME SERVER
 //RELOAD PAGE WHEN DONE
 updateSubjects =()=>{
-  this.props.getSubjectsDownload();
+  this.props.getSubjectsDownload()
+  .then(resp =>{
+    alert('Success')
+  })
+  .catch(err=>{
+    alert('Network Error');
+  })
 }
 
 changeVisibility = () =>{

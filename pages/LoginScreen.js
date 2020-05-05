@@ -6,8 +6,8 @@ import { connect }from 'react-redux';
 import GoogleScreen from './GoogleScreen';
 import FacebookScreen from './FacebookScreen';
 import { postUser, getUser, getUse, getUserOne } from './actions/User';
-
-
+import Commom from './actions/Common';
+import Activity from './components/LoaderTest';
 import { DB_PATH } from './actions/Common';
 
 const db = DB_PATH;
@@ -40,14 +40,11 @@ class LogIn extends React.Component{
     });
     this.setState({ fontLoaded: true });
   }
-
-  static getDerivedStateFromProps(nextProps, prevState)
-  {
-    if(nextProps.user.isActive)
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.user.isActive === true) 
     {
-      return{isActive:true}
+      this.props.navigation.navigate('HomeScreen');
     }
-    return null;
   }
 
   onSubmit = () =>{
@@ -70,6 +67,11 @@ class LogIn extends React.Component{
     }
   }
 
+  logData=(d)=>{
+    Alert.alert('Error', d);
+    this.setState({isActive:true})
+  }
+
   updateIndex = (selectedIndex) =>{
     this.setState({ selectedIndex });
     if(selectedIndex == 0 )
@@ -88,59 +90,60 @@ class LogIn extends React.Component{
   render(){
     const { fontLoaded, email, password, selectedIndex, isActive } = this.state;
     const buttons = [{element:this.comp1} , {element:this.comp2}] ;
- 
-    if(isActive)
-    {
-      this.props.navigation.navigate('HomeScreen');
-    }
+    
     
     return (
       <View style={{flex:1}}>
-      {fontLoaded ? <View style={{flex:1}}>
+      {fontLoaded? 
+      <View style={{flex:1}}>
+
         <View style={styles.topContainer}>
           <Text style={styles.h1}>Login</Text>
           <Text style={styles.h2}>Choose a Login method</Text>
        </View>
        <View style={styles.bottomContainer}>
-       <View style={{flexDirection:'row', justifyContent:'center'}}>
-                  <GoogleScreen/>
-                  <FacebookScreen/>
-        </View>
-            
-              <View style={styles.textwidthx}>
-              <Text style={styles.label}>Email or Phone Number</Text> 
+       {!this.props.user.isLoading ? 
+       <View style={{flexDirection:'column', marginVertical:20}}>
+          <View style={{flex:1, flexDirection:'row', justifyContent:'center'}}>
+              <GoogleScreen  onLog={()=>{this.logData(d)}} />
+              <FacebookScreen onLog={()=>{this.logData(d)}} />
+          </View>
+
+           <View style={{flex:3, flexDirection:'column', justifyContent:'center', marginHorizontal:50}}> 
+              <View style={styles.textwidthxb}>
+                  <Text style={styles.label}>Email or Phone Number</Text> 
               </View>
-             <TextInput
-                style={styles.textplace}
-                placeholder='Email'
-                type='email'
-                value={email}
-                onChangeText={(text) => this.setState({email: text})}
-            />
-            <View style={styles.textwidthx}>
-            <Text style={styles.label}>Password</Text>
-            </View> 
-            <TextInput
-                style={styles.textplace}
-                placeholder='Password'
-                type='password'
-                password={true}
-                secureTextEntry={true}
-                value={password}
-                onChangeText={(text) => this.setState({password: text})}
-            />
- 
-            <Button
-                large
-                icon={{name: 'save', type: 'material', color:'#fff' }}
-                title='LOGIN' 
-                buttonStyle={styles.but}
-                onPress={this.onSubmit}
+                <TextInput
+                    style={styles.textplace}
+                    placeholder='Email'
+                    type='email'
+                    value={email}
+                    onChangeText={(text) => this.setState({email: text})}
                 />
-                
-                
-       </View>
-       </View> : null}
+                <View style={styles.textwidthx}>
+                <Text style={styles.label}>Password</Text>
+                </View> 
+                <TextInput
+                    style={styles.textplace}
+                    placeholder='Password'
+                    type='password'
+                    password={true}
+                    secureTextEntry={true}
+                    value={password}
+                    onChangeText={(text) => this.setState({password: text})}
+                />
+    
+                <Button
+                    large
+                    icon={{name: 'save', type: 'material', color:'#fff' }}
+                    title='LOGIN' 
+                    buttonStyle={styles.but}
+                    onPress={this.onSubmit}
+                    />
+              </View>
+        </View>
+       : <Activity title='Checking.. for active login' />}
+       </View></View> :null}
        <ButtonGroup
                   onPress={this.updateIndex}
                   selectedIndex={selectedIndex}

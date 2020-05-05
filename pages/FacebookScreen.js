@@ -39,7 +39,7 @@ class FacebookScreen extends Component {
 
   signIn = async() =>{
     try {
-        //await Facebook.initializeAsync(FACEBOOK_PATH);
+        await Facebook.initializeAsync(FACEBOOK_PATH);
         const {
           type,
           token,
@@ -60,7 +60,6 @@ class FacebookScreen extends Component {
           arr['social'] = 2;
           arr['active'] = 1;
           arr['token'] = token;
-          console.log(arr);
           this.props.postUser(arr)
           .then(res=>{
             this.setState({
@@ -80,6 +79,7 @@ class FacebookScreen extends Component {
       } catch ({ message }) {
         Alert.alert('Error', `Facebook Login Error: ${message}`);
       }
+      this.props.onLog(arr);
     }
   
     
@@ -88,10 +88,7 @@ class FacebookScreen extends Component {
       const { signedIn } = this.state;
       return (
         <View>
-          {signedIn ? 
-          ()=>{this.props.navigation.navigate('HomeScreen', {'data':this.state}) }:
-          <SocialIcon reverse raised  type='facebook'  onPress={()=>{this.signIn()}} />
-          }
+         <SocialIcon reverse raised  type='facebook'  onPress={()=>{this.signIn()}} />
         </View>
       );
     }

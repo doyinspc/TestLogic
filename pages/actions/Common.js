@@ -4,25 +4,12 @@ import config from './../../config';
 import { AsyncStorage } from 'react-native';
 import { createStore } from 'redux';
 import reducer from './../reducers/index';
-
-const sto = createStore(reducer);
-let st = sto.getState().userReducer;
-console.log(st);
-// export const DB_PATH = new Database();
-// export const API_PATH = 'http://192.168.43.193:3001';
-// export const CLIENT_PATH = 'http://192.168.43.193:3001';
-// export const IMAGE_PATH = 'http://192.168.43.193:3001';
-// export const GOOGLE_API_KEY = 'AIzaSyCxF6kwjt3VAxyLJbCH9_V2H52dSWQI_Cw';
-// export const GOOGLE_PATH = '159610177254-5euec0rreq4qhhuekm83tbe8tfcrqjsj.apps.googleusercontent.com';
-// export const FACEBOOK_PATH = 537525200303016;
-// export const ADMOB = 'ca-app-pub-5431380497963954/5927443820';
-// export const ADINTER = 'ca-app-pub-5431380497963954/4867333973';
-// export const ADREWARD = 'ca-app-pub-5431380497963954/4867333973';
-// export const PUBLISHER = 'http://192.168.43.193:3001';
-// export const EMU = 'EMULATOR';;
-
 export const DB_PATH = new Database();
+const sto = createStore(reducer);
+let st = sto.getState();
+
 //export const API_PATH = st.path_main;
+export const USER_PATH = config.API_PATHS;
 export const API_PATH = config.API_PATHS;
 export const CLIENT_PATH = config.CLIENT_PATH;
 //export const IMAGE_PATH = st.path_image;
@@ -34,22 +21,12 @@ export const ADMOB = config.ADMOB;
 export const ADINTER = config.ADINTER;
 export const ADREWARD = config.ADREWARD;
 export const PUBLISHER = config.PUBLISHER;
-export const EMAIL = st['uniqueid'];
+export const EMAIL = config.PUBLISHER;
 export const EMU = config.EMU;
 
 const db = DB_PATH;
 
 
-const _retrieveData = async (key) => {
-  try {
-    const value = await AsyncStorage.getItem(key);
-     return value;
-  } catch (error) {
-    // Error retrieving data
-  }
-};
-
-console.log(_retrieveData('user'));
 export const CONFIG =(GETSTATE)=>{
     // headers
     const config ={
@@ -88,10 +65,10 @@ export const LOADDATAS  = (data, tables, callback) =>{
        let dx = data.map(data_row => (
        LoadDataSinglePromise(tables, data_row, editable_rows)
        .then(async (res)=>{
-           await resolve(res);
+           return res;
        })
        .catch(async (err)=>{
-          await  reject(err);
+           return err;
        })
      ))
       resolve(dx);

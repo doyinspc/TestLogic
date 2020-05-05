@@ -90,6 +90,30 @@ export const getTest = (id) => (dispatch) => {
   dispatch({ type: TEST_GET_ONE, payload: id})
 };
 
+//SELECT SINGLE FROM OFFLINE DB
+export const getTestPromise = (id) => (dispatch) => {
+  return new Promise((resolve, reject)=>{
+    db.selectPromise(TABLE_NAME, {'id':id })
+    .then(dat=>{
+        if(dat && Array.isArray(dat._array) && dat._array.length > 0)
+        {
+          dispatch({type: TEST_DOWNLOADING_SUCCESS, payload:dat._array, id:dat})
+          dispatch({ type: TEST_GET_ONE, payload:id})
+          resolve(dat._array[0]);
+        }
+        else
+        {
+          let e = new Error('No File');
+          reject(e);
+        }
+    })
+    .catch(err=>{
+        dispatch({type: TEST_INSERT_FAIL,  msg:err});
+        reject(err);
+    })
+  }) 
+};
+
 export const getTestDB = (id) => (dispatch) => {
   return new Promise((resolve, reject)=>{
     db.selectPromise(TABLE_NAME, {'id':id })
