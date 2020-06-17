@@ -91,7 +91,7 @@ class ScoresScreen extends React.Component{
     }
     else if(selectedIndex == 3 )
     {
-      this.props.navigation.navigate('TestSheetScreen', {'testID':this.state.testID});
+      this.props.navigation.navigate('TestSheetScreen', {'testID':this.state.testID, 'scoreID': null});
     }
    
   }
@@ -114,7 +114,7 @@ class ScoresScreen extends React.Component{
                       : (item.score * 100) >= 60  && (item.score * 100) < 80 ?  <Avatar overlayContainerStyle={{backgroundColor: 'blue'}} activeOpacity={0.7}  rounded  icon={{ name: 'done', color:'white', backgroundColor:'red' }} />
                         : <Avatar overlayContainerStyle={{backgroundColor:local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: 'done-all', color:'white', backgroundColor:'red' }} />
         }
-          title={item.created_at}
+          title={item.created_at+' '+item.id}
           rightTitle={`${Math.floor(item.score * 100)}%`}
           subtitle={`${this.state.noq && this.state.noq > 0 && Object.keys(JSON.parse(item.choices)).length > 0 ? Math.floor(((Object.keys(JSON.parse(item.choices)).length/this.state.noq) * 100))  : 0 }% completed`}
           titleStyle={styles.listItem}
@@ -156,7 +156,7 @@ render(){
          <View style={{flex:1}}>
             {scores && Object.keys(scores).length > 0 ?
               <FlatList
-                  data={scores}
+                  data={scores.reverse()}
                   keyExtractor={this.keyExtractors}
                   initialNumToRender={4}
                   renderItem={this.renderItems}

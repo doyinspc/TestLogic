@@ -51,6 +51,7 @@ class ScoresScreen extends React.Component{
     super(props);
     this.state = {
       testID: null,
+      subjectID: null,
       fontLoaded: false,
       tableHead : ['Title', 'Description'],
       tableData : [],
@@ -69,8 +70,6 @@ class ScoresScreen extends React.Component{
     };
   }
 
- 
-
   relocate = () =>{
     let value = this.state.testID;
     if(value && value > 0)
@@ -84,7 +83,8 @@ class ScoresScreen extends React.Component{
     this.setState({testID:this.props.navigation.getParam('testID')})
     let test_data = this.props.test.test;
     let isLoading = this.props.test.isLoading;
-    if(!isLoading && test_data && Object.keys(test_data).length > 0){
+    if(!isLoading && test_data && Object.keys(test_data).length > 0)
+    {
         let test_array = [];
         let hours = test_data.testtime/(60 * 60);
         let hour = Math.floor(hours);
@@ -110,7 +110,7 @@ class ScoresScreen extends React.Component{
         newTableData = test_array;
         this.setState({ tableData: newTableData, timeSetting:settings[1], description:test_data.description });
     }
-    this.setState({ testID: this.props.navigation.getParam('testID')});
+    this.setState({ testID: this.props.navigation.getParam('testID'), subjectID:test_data.subjectID});
     this.props.getScores(this.props.navigation.getParam('testID'));
     let testQuantity = 0;
     let maxScore = 0;
@@ -139,14 +139,12 @@ class ScoresScreen extends React.Component{
     this.timer = setInterval(()=>{ this.getCurrentTime(); }, 1000);
     this.timerx = setInterval(()=>{ this.getFutureTime(); }, 1000);
   }
- 
-
   getCurrentTime = () =>{
     let hours = new Date().getHours();
     let minutes = new Date().getMinutes();
     let seconds = new Date().getSeconds();
 
-    this.setState({currentTime: `${hours} : ${minutes} ` });
+    this.setState({currentTime: `${hours.toString().padStart(2, '0')} : ${minutes.toString().padStart(2, '0')} ` });
   }
   getFutureTime = () =>{
     let {hours, minutes, seconds } = this.state;
@@ -155,15 +153,32 @@ class ScoresScreen extends React.Component{
     
     let tdate = new Date();
     tdate.setTime(newTime);
-    this.setState({futureTime: `${tdate.getHours()} : ${tdate.getMinutes()} ` });
+    this.setState({futureTime: `${tdate.getHours().toString().padStart(2, '0')} : ${tdate.getMinutes().toString().padStart(2, '0')} ` });
   }
-
   componentWillUnmount(){
     clearInterval(this.timer);
     clearInterval(this.timerx);
+    this.setState({
+      testID: null,
+      subjectID: null,
+      fontLoaded: false,
+      tableHead : ['Title', 'Description'],
+      tableData : [],
+      selectedIndex : null,
+      currentTime : null,
+      futureTime : null,
+      hours:null,
+      minutes:null,
+      seconds:null,
+      timeSetting: null,
+      answerSetting: null,
+      maxScore: 0,
+      testQuantity:0,
+      description: null,
+      isVisible:false,
+    })
   }
-
-   deleteTest= () =>{
+  deleteTest= () =>{
     //delete action
   }
   relocate=()=>{
@@ -197,7 +212,7 @@ render(){
  const { themes } = this.props.theme;
  const { topics } = this.props.topic;
  const { name } = this.props.subject.subject;
- const { fontLoaded, selectedIndex } = this.state;
+ const { fontLoaded, selectedIndex, test } = this.state;
 
  this.getCurrentTime;
  this.getFutureTime;
@@ -287,6 +302,7 @@ render(){
           <Text style={styles.h1}>{name}</Text>
           <View style={{flexDirection:'row', justifyContent:'center'}}>
                   <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
+                  <Icon reverse raised name='ios-list' type='ionicon' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('TestScreen', {'subjectID': this.state.subjectID})}} />
                   <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.changeVisibility()}}/>
           </View>
       </View>
@@ -311,7 +327,7 @@ render(){
                 <Text style={styles.h2_sheet}>Number of Attempts</Text><Text style={styles.h2_sheets}>{testQuantity}</Text>
               </View>
               <View style={styles.row_sheet} >
-                <Text style={styles.h2_sheet}>Maximum score obtained</Text><Text style={styles.h2_sheets}>{maxScore}</Text>
+                <Text style={styles.h2_sheet}>Maximum score obtained</Text><Text style={styles.h2_sheets}>{Math.round(maxScore, 1)}</Text>
               </View>
               <View style={styles.col_sheet} >
                 <Text style={styles.h2_sheet}>Timer Preference</Text>

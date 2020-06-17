@@ -18,7 +18,6 @@ const getUserId = async () => {
   try {
     userId = await AsyncStorage.getItem('user')
     .then(d=>{
-       console.log(d)
        return d;
     })
     .catch(err =>{
@@ -42,8 +41,7 @@ const TABLE_NAME = SCHEME.subject.name;
 const TABLE_STRUCTURE = SCHEME.subject.schema;
 
 let pa = getUserId();
-console.log(`preserve ${JSON.stringify(pa)}`);
-let pathx = pa.path_main;
+let pathx = path;
 //GET SUBJECTS FROM ONLINE DATABANK
 export const getSubjectsDownload = () => (dispatch, getState) => {
   return new Promise((resolve, reject) =>{

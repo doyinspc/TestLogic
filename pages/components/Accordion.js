@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import { View, TouchableOpacity, Text, StyleSheet} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import WebView from 'react-native-webview';
+import * as Font from 'expo-font';
 export default class Accordian extends Component{
 
     constructor(props) {
@@ -9,7 +10,16 @@ export default class Accordian extends Component{
         this.state = { 
           data: props.data,
           expanded : false,
+          fontLoaded: false
         }
+    }
+
+    async componentDidMount() {
+      await Font.loadAsync({
+        'SulphurPoint': require("../../assets/fonts/SulphurPoint-Bold.ttf"),
+        'SulphurPointNormal': require("../../assets/fonts/SulphurPoint-Regular.ttf")
+      });
+      this.setState({ fontLoaded: true });
     }
   
   render() {
@@ -17,8 +27,8 @@ export default class Accordian extends Component{
     return (
        <View style={{margin:0}}>
             <TouchableOpacity style={styles.row} onPress={()=>this.toggleExpand()}>
-                <Text style={[styles.title, styles.font]}>{this.props.title && this.props.title.length ? this.props.title : 'Read'}</Text>
-                <Icon name={this.state.expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={30} color='#0000ff' />
+                <Text style={styles.title}>{this.props.title && this.props.title.length ? this.props.title : 'Read'}</Text>
+                <Icon name={this.state.expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={30} color='#ffffff' />
             </TouchableOpacity>
             <View style={styles.parentHr}/>
             {
@@ -28,8 +38,8 @@ export default class Accordian extends Component{
                     originWhitelist={['*']}
                     source={{ html: this.props.data }}
                     scalesPageToFit={false}
-                    style={{minHeight:40}}
-                    scrollEnabled={true}
+                    style={{minHeight:300, height:'auto'}}
+                    scrollEnabled={false}
                   /> 
                 </View>
             }
@@ -47,7 +57,8 @@ const styles = StyleSheet.create({
     title:{
         fontSize: 14,
         fontWeight:'bold',
-        color: 'gray',
+        color: '#fff',
+        fontFamily:'SulphurPointNormal',
     },
     row:{
         flexDirection: 'row',
@@ -56,7 +67,7 @@ const styles = StyleSheet.create({
         paddingLeft:25,
         paddingRight:18,
         alignItems:'center',
-        backgroundColor: '#ccf',
+        backgroundColor: '#000000',
     },
     parentHr:{
         height:1,

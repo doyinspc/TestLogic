@@ -89,7 +89,7 @@ render(){
         {fontLoaded  && !isLoading ?  
          <ScrollView>
             {tests  && Object.keys(tests).length > 0 ?
-            tests.map((l, i) => (
+            tests.reverse().map((l, i) => (
             <ListItem
                 key={i}
                 titleStyle={styles.listItem}
@@ -116,10 +116,9 @@ render(){
               <Text style={{fontSize: 14, fontFamily:'SulphurPointNormal', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Go to the home page and prepare a test</Text>
             </View>
             }
-        </ScrollView>:<Activity title='Subject' onPress={()=>{this.onPress(1)}} />}
+        </ScrollView>:<Activity title='Test' onPress={()=>{this.onPress(1)}} />}
            
-      </View> 
-      <View style={{flex:1, alignSelf:'stretch'}}>
+     
       <ButtonGroup
             onPress={this.updateIndex}
             selectedIndex={selectedIndex}

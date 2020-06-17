@@ -35,6 +35,7 @@ module.exports = {
         name TEXT NOT NULL, 
         abbrv TEXT, 
         img TEXT, 
+        numid TEXT,
         questionx TEXT DEFAULT NULL,
         grp INTEGER DEFAULT 0, 
         advert INTEGER DEFAULT 0,  
@@ -68,12 +69,12 @@ module.exports = {
     },
     answer: {
         name:'answers',
-        schema: 'id INTEGER PRIMARY KEY, questionID INTEGER NOT NULL REFERENCES questions, name TEXT NOT NULL, type INTEGER DEFAULT 0,  active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP ',
+        schema: 'id INTEGER PRIMARY KEY, questionID INTEGER , name TEXT NOT NULL, type INTEGER DEFAULT 0,  active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP ',
         edits: ['name', 'active']
     },
     distractor: {
         name:'distractors',
-        schema: 'id INTEGER PRIMARY KEY, questionID INTEGER NOT NULL REFERENCES questions, name TEXT NOT NULL, type INTEGER DEFAULT 0,  active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP ',
+        schema: 'id INTEGER PRIMARY KEY, questionID INTEGER, name TEXT NOT NULL, type INTEGER DEFAULT 0,  active INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP ',
         edits: ['name', 'active']
     },
     test: {

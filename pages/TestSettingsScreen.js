@@ -147,19 +147,21 @@ class TestSettingsScreen extends React.Component{
   onSubmit = () =>{
     this.props.navigation.navigate('TestSheetScreen', {'testID':this.state.testID});
   }
-  onPrepare(){
+onPrepare(){
     this.setState({statePos:'Loading Questions', fontLoaded: false});
     let arry = this.props.navigation.getParam('topics');
     this.setState({statePos: this.props.question.msg});
     this.props.getQuestions(arry, this.state.noq)
     .then(q =>{
-      if(q == 1){
+      if(q == 1)
+      {
         this.setState({ fontLoaded: true });
       }else
       {
           this.setState({statePos: 'Preparing Test...'});
           this.deConstruct(q)
           .then(data =>{
+           // console.log(data);
               this.setState({statePos: 'Saving Test...'});
               this.saveTest(data)
               .then(tID =>{
@@ -223,45 +225,54 @@ deConstruct = async (arr) =>{
         let ans = element.answer;
         let answ = [];
         let answer = {};
-        if(ans && ans.length > 0){
+        if(ans && ans.length > 0)
+        {
             answ = ans.split(':::::');
         }
-
+        
         if(answ.length > 0){
-          if(answ.length == 1){
+          if(answ.length == 1)
+          {
               let answer_string = answ[0].split(':::');
               answer[answer_string[0]] = answer_string[1];
           }
-          else if(answ.length > 1){
-                answ = this.shuffle(answ);
-                let answer_string = answ[0].split(':::');
-                answer[answer_string[0]] = answer_string[1];
+          else if(answ.length > 1)
+          {
+              answ = this.shuffle(answ);
+              let answer_string = answ[0].split(':::');
+              answer[answer_string[0]] = answer_string[1];
           }
-        }else{
-            answer = 'All options are incorrect';
+        }else
+        {
+            answer = {'a1':'No correct answer'};
         }
         //get distractor
           let dis = element.distractor;
           let disw = [];
           let diswer = [];
-          //confirm if any distractor is available
-          if(dis && dis.length > 0){
+          //confirm if any distractor is available/
+          if(dis && dis != null && dis.length > 0)
+          {
             //if available convert the string to array
             disw = dis.split(':::::');
           }else{
             //else no distractor string create empty array
-            disw = ['None answer']
+            disw = {0: 'No answer'};
           }
           
-          if(disw.length > 0){
-            if(disw.length < 4){
+          if(disw.length > 0)
+          {
+            if(disw.length < 4)
+            {
               // less than three distractors
-              for(let i = 0; i < disw.length; i++){
+              for(let i = 0; i < disw.length; i++)
+              {
                 let diswer_string = disw[i].split(':::');
                 diswer[`d${diswer_string[0]}`] = diswer_string[1];
               }
             }
-            else if(disw.length > 3){
+            else if(disw.length > 3)
+            {
                 // more than three distractors available
                 //shuffle and pick first three
                 disw = this.shuffle(disw);
@@ -275,15 +286,14 @@ deConstruct = async (arr) =>{
                 let diswer_string2 = disw[2].split(':::');
                 diswer[`d${diswer_string2[0]}`] = diswer_string2[1];
             }
-          }else{
-            diswer[0] = 'All options are incorrect';
+          }else
+          {
+            diswer = {'d0':'All options are incorrect'};
           }
         //combine answer and distractor
         let merged = {...diswer, ...answer};
         //get answers position
         let getKeys = Object.keys(merged);
-        
-       
         let options = [];
         getKeys.map((d) =>{
             options.push([d, merged[d]]);

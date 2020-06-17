@@ -1,14 +1,14 @@
 import React from 'react';
 import { connect }from 'react-redux';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Alert } from 'react-native';
 import { ThemeProvider, Icon, PricingCard, ButtonGroup } from 'react-native-elements';
 
 
 import * as Font from 'expo-font';
 import Activity from './components/LoaderTest';
 
-import { getTest,  } from './actions/Test';
-import { getScore,  } from './actions/Score';
+import { getTest, getTestPromise  } from './actions/Test';
+import { getScore, getScorePromise  } from './actions/Score';
 
 const tools = require('./components/Style');
 const local_style = tools.Style;
@@ -25,8 +25,9 @@ class ScoresScreen extends React.Component{
       fontLoaded: false,
       scoreID: null,
       testID:null,
+      score:{},
+      test:{},
       selectedIndex:null,
-      test:{}
     };
   }
 
@@ -37,20 +38,16 @@ class ScoresScreen extends React.Component{
     }
   }
 
-  timeLefts = (ty, tin) =>{
-    let ti = JSON.parse(tin);
-    if(ti && Object.keys(ti).length > 0)
-    {
-      let val = Object.values(ti);
-      let sumLeft = val.reduce((a, b)=> a + b, 0);
-      let timeGiven = 0;
-      let timeleft = sumLeft;
-      let mins = Math.floor(timeleft/60);
-      let secs = timeleft - (mins * 60);
-      return `${mins}m ${secs}s`
-    }else{
-      return `--.--`;
-    }
+  timeLefts = (timeLeft) =>{
+    let hours = timeLeft/(60 * 60);
+    let hour = Math.floor(hours);
+    let mins = (timeLeft - (hour * 60 * 60)) / 60;
+    let min = Math.floor(mins);
+    let sec = timeLeft - ((hour * 60 * 60) + (min * 60)) ;
+    hour = hour > 0 ? hour : '--';
+    min = min > 0 ? min : '--';
+    sec = sec > 0 ? sec : '--';
+    return `${hour.toString().padStart(2, '0')} hrs : ${min.toString().padStart(2, '0')} mins : ${sec.toString().padStart(2, '0')} secs` ;
 }
  
   async componentDidMount() {
@@ -58,15 +55,34 @@ class ScoresScreen extends React.Component{
     this.props.getTest(JSON.stringify(this.props.navigation.getParam('testID')));
     let scoreID = this.props.navigation.getParam('scoreID');
     let testID = this.props.navigation.getParam('testID');
-    this.setState({testID:testID, scoreID:scoreID, test:this.props.test})
+
+    this.props.getTestPromise(testID)
+      .then(test_data =>{this.setState({test: test_data})})
+      .catch(err=>{Alert.alert('Error', JSON.stringify(err));})
+    this.props.getScorePromise(scoreID)
+      .then(score_data =>{this.setState({score: score_data})})
+      .catch(err=>{Alert.alert('Error', 'score'+scoreID+JSON.stringify(err));})
+
+    this.setState({testID:testID, scoreID:scoreID})
     await Font.loadAsync({
       'SulphurPoint': require("../assets/fonts/SulphurPoint-Bold.ttf"),
       'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
     });
     this.setState({ fontLoaded: true, scoreID, testID });
   }
+
+
+
   componentWillUnmount() {
     clearInterval(this.state);
+    this.setState({
+      fontLoaded: false,
+      scoreID: null,
+      testID:null,
+      score:{},
+      test:{},
+      selectedIndex:null,
+    });
   }
 
   updateIndex = (selectedIndex) =>{
@@ -90,8 +106,7 @@ class ScoresScreen extends React.Component{
   comp3 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Retake</Text>
 
 render(){
- const { score, test } = this.props;
- const { fontLoaded, selectedIndex, testID, scoreID  } = this.state;
+ const { fontLoaded, selectedIndex, score, test  } = this.state;
  const buttons = [{element:this.comp1}, {element:this.comp2}, {element:this.comp3}];
 
   let correctAnswers = [];
@@ -102,13 +117,16 @@ render(){
   let q_answered = 0;
   let q_unanswered = 0;
   let tim ='No Time';
-  if(!this.props.test.isLoading && !this.props.score.isLoading)
+  let sco = score !== undefined && score.timespent !== undefined && score.timespent !== 'null'  && Array.isArray(Object.values(JSON.parse(score.timespent))) && Object.values(JSON.parse(score.timespent)).length > 0 ? Object.values(JSON.parse(score.timespent)) : [];
+  
+  if(test)
   {
-  let choices = this.props.score.score !== undefined && this.props.score.score.choices !== undefined ? JSON.parse(this.props.score.score.choices) : {};
-  let answers = this.props.test.test !== undefined && this.props.test.test.answers !== undefined ? JSON.parse(this.props.test.test.answers):{};
-  noq = this.props.test.test !== undefined ?  Object.keys(answers).length : 0;
-  final_score = this.props.score.score !== undefined ? this.props.score.score.score * 100: 0;
-  tim = this.props.score.score !== undefined ? this.timeLefts(this.props.score.score.timespent, this.props.score.score.timespent): 'No Time';
+    let choices = score !== undefined && score.choices !== undefined ? JSON.parse(score.choices) : {};
+    let answers = test !== undefined && test.answers !== undefined ? JSON.parse(test.answers) : {};
+    noq = test !== undefined ?  Object.keys(answers).length : 0;
+    final_score = score !== undefined ? score.score * 100: 0;
+    tim = score !== undefined && sco !== undefined && sco !== 'null'  && Array.isArray(Object.values(sco)) && Object.values(sco).length > 0 ? Object.values(sco).map(Number).reduce(function(a, b){return a + b}, 0) : 'No Time';
+
   if(final_score > 0)
   {
     for(let i in answers)
@@ -140,7 +158,7 @@ render(){
       `${noq} questions `,
       `${correctAnswers.length} questions passed`, 
       `${wrongAnswers.length} questions failed`, 
-      `${tim} spent`, 
+      `${this.timeLefts(tim)} spent`, 
     ];
 
   }else{
@@ -148,7 +166,7 @@ render(){
       `${noq} questions `,
       `${q_answered} answered ${q_unanswered} unanswered ${emptyAnswers.length} left`,
       `${q_unanswered} left`, 
-      `${tim} spent left`,
+      `${this.timeLefts(tim)} spent`,
     ];
 
   }
@@ -156,16 +174,17 @@ render(){
   return (
     <ThemeProvider >
       <View style={{flex:1}}>
-       {fontLoaded && !test.isLoading && !score.isLoading ? 
+       {fontLoaded && test.title && test.title != undefined && final_score >= 0 ? 
         final_score > 0 ?
         <View style={{flex: 1, justifyContent:'center'}}>
             <PricingCard
             color={local_color.color3}
-            title={`${test.test.title}`}
+            title={`${test.title}`}
             titleFont = "SulphurPointNormal"
             priceFont = "PoiretOne"
-            price= {`${final_score}%`}
+            price= {`${Math.round(final_score, 1)}%`}
             titleStyle={{fontFamily:'SulphurPointNormal'}}
+            font={'SulphurPointNormal'}
             info={info}
             infoStyle={{fontFamily:'SulphurPointNormal'}}
             button={{ title: ' View Performance ', icon:'done-all' }}
@@ -176,10 +195,10 @@ render(){
         <View style={{flex: 1, justifyContent:'center'}}>
            <PricingCard
             color={local_color.color4}
-            title={`${test.test.title}`}
+            title={`${test.title}`}
             titleFont = "SulphurPointNormal"
             pricingFont = "PoiretOne"
-            price= {`${final_score}%`}
+            price= {`${Math.round(final_score, 1)}%`}
             titleStyle={{fontFamily:'SulphurPointNormal'}}
             info={info}
             infoStyle={{fontFamily:'SulphurPointNormal'}}
@@ -210,4 +229,4 @@ const mapStateToProps = state => ({
   test: state.testReducer,
   user: state.userReducer
 })
-export default connect(mapStateToProps,{ getTest, getScore })(ScoresScreen);
+export default connect(mapStateToProps,{ getTest, getScore, getTestPromise, getScorePromise })(ScoresScreen);

@@ -168,7 +168,7 @@ render(){
           </View>
       </View>
       <View style={{flex:1}}>
-      <Admob type='fullbanner'/>
+      <Admob type='fullbanner' />
       <Overlay
           isVisible={this.state.isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -285,7 +285,7 @@ render(){
             selectedButtonStyle={styles.genButtonStyle}
             textStyle={styles.genButtonTextStyle}
             />
-           </View>     
+        </View>     
     </ThemeProvider>
   );
 };

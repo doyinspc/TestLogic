@@ -7,7 +7,7 @@ const local_color = tools.Colors;
 // Your App
 export default function Activity(props) {
   return (
-    <View style={{flex:1, alignContent:'center', justifyContent:'center'}}>
+    <View style={{flex:1, alignContent:'center', justifyContent:'center', alignSelf:'center'}}>
     
     <View style={{flex:1, minHeight:400, alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>
         <ActivityIndicator

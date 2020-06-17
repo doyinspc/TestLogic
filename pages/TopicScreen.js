@@ -8,6 +8,7 @@ import Admob from "./advert/Admob";
 
 import { getTopics, getTopicSelected, getTopicsDownloadOnly, getTopicsDBs, updateTopic, getTopicCount } from './actions/Topic';
 import Activity from './components/LoaderTest';
+import FAB from './components/FAB';
 import TopicButton from './components/TopicButton';
 import { FlatList } from 'react-native-gesture-handler';
 import {ADMOB, ADINTER, ADREWARD, PUBLISHER, EMU } from './actions/Common';
@@ -28,10 +29,13 @@ class TopicScreen extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
+      themeID:null,
       fontLoaded: false,
       isVisible: false,
+      isFAB: false,
       isDownloading: false,
       selectedIndex: null,
+      activeCase: null,
       checked: {},
       values: [],
       page:1,
@@ -50,8 +54,8 @@ class TopicScreen extends React.Component{
   let values = this.state.values;
     if(values && values.length > 0)
     {
-    this.props.getTopicSelected(values);
-    this.props.navigation.navigate('TestSettingsScreen', { 'topics':this.state.values, testID:null});
+      this.props.getTopicSelected(values);
+      this.props.navigation.navigate('TestSettingsScreen', { 'topics':this.state.values, testID:null});
     }
  }
 
@@ -77,11 +81,54 @@ class TopicScreen extends React.Component{
     this.setState({isVisible:true})
   }
 
+  // SHOW FAB
+  showFAB = (id, active, index) =>{
+    this.setState({isFAB:true, activeCase:id })
+  }
+
+  // SHOW FAB
+  closeFAB = () =>{
+    this.setState({isFAB:false, activeCase:null })
+  }
+
+  // SHOW FAB
+  addTopic = () =>{
+    const currentIndex = this.state.values.indexOf(this.state.activeCase); 
+    const newValues = [...this.state.values];
+    let news = {...this.state.checked};
+    news[this.state.activeCase] = news[this.state.activeCase] ? false : true;
+      if (currentIndex === -1) {
+        newValues.push(this.state.activeCase);
+      } else {
+        newValues.splice(currentIndex, 1);
+      }
+    this.setState({isFAB:false, activeCase:null, values:newValues, checked:news })
+  }
+
+  // SHOW FAB
+  removeTopic = () =>{;
+    const currentIndex = this.state.values.indexOf(this.state.activeCase); 
+    const newValues = [...this.state.values];
+    let news = {...this.state.checked};
+    news[this.state.activeCase] = news[this.state.activeCase] ? false : true;
+      if (currentIndex === -1) {
+        newValues.push(this.state.activeCase);
+      } else {
+        newValues.splice(currentIndex, 1);
+      }
+    this.setState({isFAB:false, activeCase:null, values:newValues, checked:news })
+ }
+
+ updateTopicQuestions = () =>{
+  this.setState({isFAB:false, showAdvertAlert:true, watchVideoTopic:this.state.activeCase });
+  this.activateTopic
+}
+
 async componentDidMount() {
   //GET THE SELECTED THEMES
   let selected_themes = this.props.navigation.getParam('themezID');
   //GET TOPICS FROM OFFLINE 
-  this.props.getTopics(selected_themes)
+  this.props.getTopics(selected_themes);
   //LOAD FONT
   var page = this.props.navigation.getParam('sid');
   await Font.loadAsync({
@@ -89,7 +136,7 @@ async componentDidMount() {
     'SulphurPointNormal': require("../assets/fonts/SulphurPoint-Regular.ttf")
   });
   //SET STATE
-  this.setState({ fontLoaded: true, page:page });
+  this.setState({ fontLoaded: true, page:page, themeID:selected_themes });
 
   //INITIALIZE VIDEO ADVERT
   this.initAds().catch((error) => console.log(error));
@@ -109,7 +156,7 @@ async componentDidMount() {
       () =>{}
   );
   AdMobRewarded.addEventListener('rewardedVideoDidClose',
-      () => console.log('interstitialDidLoad3')
+      () =>{this.activateTopic()}
   );
   AdMobRewarded.addEventListener('rewardedVideoWillLeaveApplication',
       () => console.log('interstitialDidLoad4')
@@ -128,7 +175,6 @@ componentDidUpdate(nextProps, prevState){
   if(nextProps.topic.tupdate[prevState.watchVideoTopic] == 1){
     this.props.updateTopic({active: 2}, prevState.watchVideoTopic, async (g)=>{})
   }
-
 }
 
 bannerError(e) {
@@ -144,11 +190,10 @@ activateLoad = async () =>{
 activateTopic = async () =>{
   //IF VIDEO WAS WATCHED THEN ACTIVATE DOWNLOAD
   this.setState({isVisible:false})
-  let d = this.state.watchVideoTopic;
-  await this.props.updateTopic({active: 2}, d, async (g)=>{
-    await this.onChange(d, 0, 2 )
+  let d = this.state.activeCase;
+  await this.props.updateTopic({active: 2}, this.state.activeCase, async (g)=>{
+      await this.props.getTopicsDownloadOnly(this.state.activeCase, async(c)=>{});
   })
-  await this.props.getTopicsDownloadOnly(d, async(c)=>{});
 }
 
 showRewarded = async () =>{
@@ -275,15 +320,15 @@ onChange = (topicID, advert, topicActive, indexes ) => {
     <ListItem
                 key={index}
                 titleStyle={item.active === 1 ? styles.listItem : [styles.listItem, {opacity:0.4}] }  
-                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: item.active == 2 ? 'grey' : this.state.checked[item.id] ? 'skyblue' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: item.active == 2 ? 'cloud-download':this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
-                title={`${item.name} `}
+                leftAvatar={<Avatar overlayContainerStyle={{backgroundColor: item.active == 2 ? 'grey' : this.state.checked[item.id] ? 'green' : local_color.color2}} activeOpacity={0.7}  rounded  icon={{ name: item.active == 2 ? 'cloud-download':this.state.checked[item.id] ? 'done' :'school', color:'white', backgroundColor:'red' }} />}
+                title={`${item.name}- ${item.active} -${item.questionx} -${item.numid}`}
                 rightTitle={this.rightNote(item.questionx)}
                 subtitle={ item.active == 2 ? 'Downloading... Click to learn more...' : null}
                 bottomDivider
                 friction={90}
                 tension={100}
                 activeScale={0.85}
-                onPress={()=>{item.active == 2  ? this.relocateDownload(item.id) : this.state.downloads[item.id] ? this.onDownloading(item.id) : this.onChange(item.id, item.advert, item.active, index)}}   
+                onPress={()=>this.showFAB(item.id, item.active, index)}  
             />
   renderItemsx = ({item, index}) =><Text>{item.id}</Text>
   
@@ -306,7 +351,7 @@ onChange = (topicID, advert, topicActive, indexes ) => {
   
   comp2 = () => <Icon name={ this.state.page == 1 ? 'book' : 'spellcheck'} color='white' type='material' />
   comp3 = () => <Icon name='cloud-download' color='white' type='material' />
-  comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next</Text>
+  comp4 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Next ( {this.state.values.length} )</Text>
   comp3a = () => <Icon name='spinner' color='white' type='evilicon' />
 
 render(){
@@ -321,12 +366,16 @@ render(){
   
   return (
     <ThemeProvider >
+     <View style={{flex:1}}>
+     
+     
       <View style={styles.topSection}>
           <Text style={styles.h1}>{name}</Text><View style={{flexDirection:'row', justifyContent:'center'}}>
                   <Icon reverse raised name='home' type='material' color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}} />
                   <Icon reverse raised name='ios-stats' type='ionicon'  color={local_color.color_icon} onPress={()=>{this.props.navigation.navigate('HomeScreen')}}/>
                   <Icon reverse raised name='md-help' type='ionicon' color={local_color.color_icon} onPress={()=>{this.changeVisibility()}}/>
           </View>
+         
       </View>
        <View style={{flex:1}}>
        <Admob type='fullbanner'/>
@@ -342,6 +391,7 @@ render(){
           <View style={{flex:1, justifyContent:'space-between', alignContent:'space-between'}}>
           <Text style={styles.h1_overlay}>Info.</Text>
           <ScrollView>
+          
           <View style={{flexDirection:'column', flexWrap:'wrap', margin:0, padding:10, justifyContent:'center', alignContent:'center'}}>
           <View style={{ marginBottom:10}} >
                 <Text style={styles.h2_overlay}>Subject</Text>
@@ -393,7 +443,22 @@ render(){
             />
           </View>
         </Overlay>
-
+        <Overlay
+          isVisible={this.state.isFAB}
+          windowBackgroundColor="rgba(0, 0, 0, .1)"
+          overlayBackgroundColor= "rgba(0, 0, 0, 0)"
+          style={{activeOpacity:0.3}}
+          margin={0}
+          padding={0}
+          width="100%"
+        >
+          <View style={{flex:1}}>
+           <FAB icon={this.state.checked[this.state.activeCase] ? 'minus' : 'plus'} color={this.state.checked[this.state.activeCase] ? 'red' : 'green'}  location={40} onPress={()=>this.addTopic}/>
+           <FAB icon='cloud-download' color='skyblue' location={100} onPress={()=>this.updateTopicQuestions}/>
+           <FAB icon='close' color='red' location={160} onPress={()=>this.closeFAB}/>
+           
+          </View>
+        </Overlay>
         <Overlay
           isVisible={this.state.showAdvertAlert}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -485,8 +550,11 @@ render(){
           <Icon name='cloud-download' type='material' size={70} color={local_color.color1} />
           <Text style={{fontSize: 20, fontFamily:'PoiretOne', alignSelf:'center', justifyContent:'center', margin:0, padding:0, alignContent:'center'}}>Download Topics</Text>
         </View>
+        
         }
+           
         </View>:<Activity title='Topics' onPress={()=>{this.onPress(1)}} />}
+        
         <ButtonGroup
             onPress={this.updateIndex}
             selectedIndex={selectedIndex}
@@ -495,7 +563,8 @@ render(){
             selectedButtonStyle={styles.genButtonStyle}
             textStyle={styles.genButtonTextStyle}
             />
-           </View>     
+           </View> 
+           </View>    
     </ThemeProvider>
   );
 };

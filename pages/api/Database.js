@@ -112,12 +112,12 @@ initDB = (TABLE_NAME, TABLE_STRUCTURE) => {
 
 
 closeDatabase(db) {
-    if (db) {
-      //console.log("Closing DB");
+
+  try{
+      console.log("Closing DB");
        db._db.close()
-      //console.log("Database CLOSED");
-    } else {
-      console.log("Database was not OPENED");
+  }catch(err){
+      console.log("Database was not OPENED"+JSON.stringify(err));
     }
   };
 
@@ -466,7 +466,7 @@ closeDatabase(db) {
                       }) 
                   }, 
                   (error)=>{callback(0); console.log(error.message)}, 
-                  //this.closeDatabase(this.db)
+                  this.closeDatabase(this.db)
           );
       }
 
@@ -513,32 +513,32 @@ closeDatabase(db) {
   }
 
 
-  drop(TABLE_NAME, TABLE_STRUCTURE) {
+ async drop(TABLE_NAME, TABLE_STRUCTURE) {
+    return await new Promise((resolve, reject)=>{
     const query = `DROP TABLE ${TABLE_NAME} `;
-    this.db.transaction((tx) => {
-      tx.executeSql(query, [], (transaction, result) => {
-                  console.log(`DROP ${TABLE_NAME}`);
-              },
-              (t, error) => {
-                console.log(error.message);
-               
-              }
-            ) 
-          }, 
-          (t, error)=>{console.log(error.message)}
+    let db = this.openDB();
+    db.transaction((tx) => {
+      tx.executeSql(query, [], (transaction, result) => {resolve(`DROP ${TABLE_NAME}`);},
+              (t, error) => {reject(JSON.stringify(error.message));console.log(error.message);}
+            )}, 
+              (t, error)=>{reject(JSON.stringify(error.message)); console.log(error.message)}
         );
-      }
+      this.closeDatabase(db);
+    })
+  }
 
 async selectPromise(TABLE_NAME, param) {
   return await new Promise((resolve, reject)=>{
     let completeQuery = build_param(param);
     const query = `SELECT *  FROM ${ TABLE_NAME } ${ completeQuery }`;
+    let db = this.openDB();
     db.transaction(
       (tx) => { 
         tx.executeSql(query, [], (transaction, result) => {resolve(result.rows);}, (error) => {reject(JSON.stringify(error.message)); console.log(JSON.stringify(error.message))}
       )}, 
       (t, error) => {reject(JSON.stringify(error.message)); console.log(JSON.stringify(error.message))},
       );
+    this.closeDatabase(db)
   })
 }
 
@@ -555,13 +555,16 @@ insertPromise = async(TABLE_NAME,  param) =>{
       let qux = `${quxs.toString()}`; 
 
       const query = `INSERT OR IGNORE INTO ${TABLE_NAME} (${nux}) VALUES (${qux})`;
+      
     return await new Promise((resolve, reject)=>{
-      this.db.transaction((tx) => {
-        tx.executeSql(query, insert_array, (transaction, result) => { result.insertId && result.insertId > 0 ? resolve(param.id) : reject(`constraint error ${result}`);},
-                    (t, error) => {reject(error.message);}) 
+      let db = this.openDB();
+      db.transaction((tx) => {
+      tx.executeSql(query, insert_array, (transaction, result) => { result.insertId && result.insertId > 0 ? resolve(param.id) : reject(`constraint error ${result}`);},
+                    (t, error) => {console.log(error.message);reject(error.message);}) 
                 }, 
-                (t, error)=>{reject(error.message);},     
+                (t, error)=>{console.log(error.message);reject(error.message);},     
         )
+      this.closeDatabase(db)
     })
   }
 
@@ -579,15 +582,19 @@ insertPromise = async(TABLE_NAME,  param) =>{
 
     const query = `INSERT OR IGNORE INTO ${TABLE_NAME} (${nux}) VALUES (${qux})`;
   return await new Promise((resolve, reject)=>{
-    this.db.transaction((tx) => {
-      tx.executeSql(query, insert_array, (transaction, result) => { result.insertId && result.insertId > 0 ? resolve(result.insertId) : reject(`constraint error ${result}`);},
+    let db = this.openDB();
+    db.transaction((tx) => {
+    tx.executeSql(query, insert_array, (transaction, result) => { result.insertId && result.insertId > 0 ? resolve(result.insertId) : reject(`constraint error ${result}`);},
                   (t, error) => {reject(error.message);}) 
               }, 
               (t, error)=>{reject(error.message);},     
       )
+    this.closeDatabase(db);
   })
 }
 
+
+//UPDATE TABLE
   async updatePromise(TABLE_NAME, param, id) {
     let insert_array = []
     let qux = '';
@@ -599,34 +606,43 @@ insertPromise = async(TABLE_NAME,  param) =>{
     qux = `${quxs.toString()}`;   
     let query = `UPDATE ${TABLE_NAME} SET ${qux} WHERE id = ${id} `;
     return await new Promise((resolve, reject)=>{
-      this.db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {resolve(id)}, (t, error) => {reject(error.message);}
+      let db = this.openDB();
+      db.transaction((tx) => {tx.executeSql(query, insert_array, (transaction, result) => {resolve(id)}, (t, error) => {reject(error.message);}
           )}, 
       (t, error)=>{reject(error.message)},         
         ); 
+      this.closeDatabase(db);
     })
     
   }  
 
+  //SELECT ALL QUESTIONS
   async selectQuestionsPromise(param, num) {
     const query0 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM answers WHERE  answers.questionID = questions.id GROUP BY questionID ";
     const query1 = " SELECT  GROUP_CONCAT(id || ':::' || name , ':::::') as names FROM distractors WHERE  distractors.questionID = questions.id GROUP BY questionID ";
     const query = `SELECT *, questions.id as qid, instructions.id as ind, instructions.name as namex, instructions.topicID as td, (${query0}) AS answer, (${query1}) AS distractor FROM questions LEFT JOIN instructions ON questions.instructionID = instructions.id WHERE instructions.topicID IN (${param}) ORDER BY RANDOM() LIMIT ${num}`;
     return await new Promise((resolve, reject)=>{
-    this.db.transaction(
+    let db = this.openDB();
+    db.transaction(
               (tx) => { tx.executeSql(query, [], (transaction, result) => {resolve(result.rows._array);}, (t, error) => {reject(1); console.log(error.message)}) }, 
               (t, error)=>{reject(1); console.log(error.message)},  
       );
+    this.closeDatabase(db)
     })
   }
 
+  //SELECT TOPIC
   async selectTopicPromise(TABLE_NAME,  param) {
       return await new Promise((resolve, reject)=>{
-      let completeQuery = build_in_param(param);
+      let db = this.openDB();
+      let completeQuery = build_param(param);
       const query = `SELECT *, (SELECT COUNT(id) FROM questions WHERE instructionID IN ( SELECT id FROM instructions WHERE instructions.topicID = topics.id ) ) AS numid FROM ${ TABLE_NAME } ${completeQuery} `;
-      this.db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) =>{resolve(result.rows)}, (t, error) =>{reject(1); console.log(error.message)}
+      
+      db.transaction((tx) => {tx.executeSql(query, [], (transaction, result) =>{resolve(result.rows)}, (t, error) =>{reject(1); console.log(error.message)}
               )}, 
             (t, error)=>{reject(1); console.log(error.message)},     
         );
+      this.closeDatabase(db)
     })
   }
 }

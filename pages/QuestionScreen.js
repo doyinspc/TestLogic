@@ -9,6 +9,7 @@ import { RadioButton } from 'react-native-paper';
 import * as Font from 'expo-font';
 import Accordion from './components/Accordion'
 import OptionsButton from './components/OptionsButton';
+import Activity from './components/LoaderTest';
 import Question from './components/Question';
 import { getTest, getTestPromise } from './actions/Test';
 import { getScore, getScorePromise, insertScore, updateScore } from './actions/Score';
@@ -36,6 +37,7 @@ class QuestionScreen extends React.Component{
       scoreID:null,
       isRetest: false,
       settime: null,
+      settimer: null,
       noq: null,
       tim: null,
       ans: null,
@@ -45,11 +47,12 @@ class QuestionScreen extends React.Component{
       gestureName: 'none',
       currentTime:'',
       starttime: Math.floor(new Date().getTime()),
-      starting: Math.floor(new Date().getTime()/1000),
+      endtime: Math.floor(new Date().getTime()),
+      starting: new Date().getTime(),
       selectedIndex: 2,
       score: 0,
       isVisible: false,
-      isCompleted: false,
+      isCompleted: null,
     };
   }
 
@@ -75,17 +78,19 @@ async componentDidMount(){
       //     // cur = hr + min + sec;
       // }
        
-      console.log(timing);
         //set sata in state
         let settings = test_data.settings.split(':::');
         let time_store = {};
         let ids = JSON.parse(test_data.ids);
-        let time_span = parseInt(settings[1]) === 2 ? test_data.testtime : null;
+        let time_span = parseInt(settings[1]) === 2 ? timing : null;
+        //SHARE THE TIMING EVENLY FOR EACH QUESTION
+        //IF OPTION 2
         time_span && Array.isArray(ids) && ids.length > 0 ? ids.forEach(id => {
           time_store[parseInt(id)] = parseInt(time_span);
         }): null;
-        
-        let testtime = parseInt(settings[1]) === 2 ? time_store : test_data.testtime;
+        //IF OPTION ONE LEAVE TIME
+        //IF OPTION TWO SHARE TIME  
+        let testtime = parseInt(settings[1]) === 2 ? time_store : timing;
         this.setState({
             ids: ids,
             instructions: JSON.parse(test_data.instructions),
@@ -99,17 +104,22 @@ async componentDidMount(){
             activeNumber: JSON.parse(test_data.ids)[0]
         })
         
-      //get scoreID
+      //GET SCOREID
       let scoreID = this.props.navigation.getParam('scoreID');
-      //if the score id is set 
+      //CHECK IF SCORE WAS SET
+      //IF SCORE IS AVAILABLE IT IS A RETEST
       if(scoreID && parseInt(scoreID) > 0)
       {
+        //SCORE IS SET: THIS IS A RETEST
+        //GET THE SCORE DATA
         this.props.getScorePromise(scoreID)
         .then( da =>{
+            //IF SCORE IS SET AND TEST IS ACTIVE MEANS IT IS NOT A CONTINUATION
             let isComp = da.score && parseInt(da.active) === 1 ? true : false;
             this.setState({ 
                 choices: da.choices !== undefined && Object.keys(da.choices).length > 0 ? JSON.parse(da.choices): {},
                 testtime: da.timespent !== undefined ? JSON.parse(da.timespent):{}, 
+                timespent: da.timespent !== undefined ? JSON.parse(da.timespent):{}, 
                 timeleft: da.timeleft, 
                 score: da.score, 
                 isCompleted: isComp, 
@@ -118,6 +128,8 @@ async componentDidMount(){
             });
         })
         .catch(err=>{
+          //NO SCORE WAS SET MEANING ITS A NEW TEST SCORE
+          //SO SET DEFAULT VALUES
           let arr = {};
           arr['testID'] = testID;
           arr['score'] = 0;
@@ -127,14 +139,21 @@ async componentDidMount(){
           arr['timeleft'] = JSON.stringify(test_data.testtime);
           arr['choices'] = JSON.stringify({});
         
-          this.props.insertScore(arr, (id)=>{
-            this.setState({ isRetest:false , scoreID: id });
+          this.props.insertScore(arr)
+          .then(id=>{
+            this.setState({ isRetest:false , scoreID : id, isCompleted: false  });
             this.props.getScore(id);
-          });
+          })
+          .catch(err =>{
+            Alert.alert('Error Score inputs', JSON.stringify(err));
+          })
 
         })
         
       }else{
+        //NO SCORE WAS SET MEANING ITS A NEW TEST SCORE
+        //SO SET DEFAULT VALUES AND SAVE
+
         let arr = {};
         arr['testID'] = testID;
         arr['score'] = 0;
@@ -143,11 +162,15 @@ async componentDidMount(){
         arr['timespent'] = JSON.stringify({}); 
         arr['timeleft'] = JSON.stringify(test_data.testtime);
         arr['choices'] = JSON.stringify({});
-      
-        this.props.insertScore(arr, (id)=>{
-          this.setState({ isRetest:false , scoreID: id });
+        
+        this.props.insertScore(arr)
+        .then(id=>{
+          this.setState({ isRetest:false , scoreID: id , isCompleted: false});
           this.props.getScore(id);
-        });
+        })
+        .catch(err =>{
+          Alert.alert('Error Score input', JSON.stringify(err));
+        })
       }
   })
   .catch(err=>{
@@ -163,11 +186,27 @@ async componentDidMount(){
 
  //record the score
 setChoice=(questionID, selectionID)=>{
+
+      //STAGE ONE : SET CHOICE
       let ch = {...this.state.choices};
       ch[questionID] = selectionID;
       this.setState({choices:ch});
+      //QUESION HAS NOT BEEN ANSWERED
+      //DETERMINE IF IT IS FIRST OCCURANCE OR RETURN
+      //IF FIRST OCCURANCE GET CURRENT TIME SUBTRACT FROM STRATING TIME AND STORE
+      //IF NOT FIRST TIME , GET THE LAST TIME ADD CURRENT CHANGES AND SAVE
+      let old_starting_time = this.state.starting;    //GET TIME QUESTION WAS PRESENTED
+      let all_timespents = {...this.state.timespent}; //GET OBJECT OF ALL TIME SPENT
+      let old_timespent = all_timespents[questionID] ? all_timespents[questionID] : 0 ; // IF TIME SET FOR CURRENT ID ISSET USE ELSE SET TO ZERO
+      let current_time = new Date().getTime();
+      let time_difference = current_time - old_starting_time;
+      let real_timespent = old_timespent + Math.floor(time_difference/1000);
+      all_timespents[questionID] = real_timespent;
+      console.log(all_timespents);
+      //STAGE TWO : SET TIMING
       if(parseInt(this.state.tim) === 2)
       {
+        //SEPARATE TIMING
         let settimes = {...this.state.settime};
         let cur = 0; 
         let currenttime = this.state.currentTime.split(':');
@@ -179,29 +218,29 @@ setChoice=(questionID, selectionID)=>{
         }
         else
         {
-          let sec = currenttime[2] > 0 ? currenttime[2]: 0;
-          let min = currenttime[1] > 0 ? currenttime[1] * 60: 0;
+          let sec = currenttime[2] > 0 ? currenttime[2] : 0;
+          let min = currenttime[1] > 0 ? currenttime[1] * 60 : 0;
           let hr  = currenttime[0] > 0 ? currenttime[0] * 60 * 60 : 0;
           cur = hr + min + sec;
         }
         settimes[this.state.activeNumber] = cur;
-        this.setState({settime:settimes});
+        this.setState({settime:settimes, settimer:settimes, timespent:all_timespents});
       }
     else if(parseInt(this.state.tim) === 1)
     {
+      //SINGLE TIMING
       let settimes = {...this.state.settime};  //GET ALL TIME STORED
       let ending = Math.floor(new Date().getTime()/1000); //GET CURRENT TIME IN SECONDS
       let lasttime = settimes[this.state.activeNumber.toString()] ? settimes[this.state.activeNumber] : 0; //GET PREVIOS TIME FOR PARTICULAR ID
       let cur = lasttime + (ending - this.state.starting); // SUBTRACT NOW FROM TIME STARTED ANDADD LAST TIME USED, IF ANY
       settimes[this.state.activeNumber] = cur; //STORE IN OBJECT
-      this.setState({settime: settimes}); //SET STATE
+      this.setState({settimer: settimes, timespent:all_timespents}); //SET STATE
     }
       
  }
  //mark the test and record
 markTest=()=>{
-
-  let { answers, choices, scoreID, testtime, testID, settime } = this.state;
+  let { answers, choices, scoreID, testtime, testID, settime, timespent } = this.state;
   let correctAnswers = [];
 
   for(let i in answers)
@@ -216,32 +255,36 @@ markTest=()=>{
   let arr = {}
   arr['score']  = score.toString();
   arr['choices']  = JSON.stringify(choices);
-  arr['timespent']  = JSON.stringify(settime);
+  arr['timespent']  = JSON.stringify(timespent);
   arr['timeleft']  = JSON.stringify(settime);
   arr['active']  = 1;
-    this.props.updateScore(arr, scoreID, (data)=>{
-  });
- this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
+  this.props.updateScore(arr, scoreID)
+  .then(data =>{
+    this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
+  }).catch(err=>{
+    Alert.alert('Failed', JSON.stringify(err));
+  })
+  
 }
-
 storeTest=()=>{
    //pause test save questions
       //exit to score screen
-      let {choices, timeleft, scoreID, testID, settime } = this.state;
+      let {choices, timeleft, scoreID, testID, settime, timespent } = this.state;
       //1. set up an array of items to store
       let arr = {};
       arr['choices'] = JSON.stringify(choices);
-      arr['timespent']  = JSON.stringify(settime);
+      arr['timespent']  = JSON.stringify(timespent);
       arr['timeleft']  = JSON.stringify(settime)
       arr['active']  = 2;
       //2. get the id to store the data
       let scoreIDs = scoreID;
       //3. update the score database
-      this.props.updateScore(arr, scoreID, (data)=>{
-
+      this.props.updateScore(arr, scoreID)
+      .then(data =>{
+        this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreID });
+      }).catch(err=>{
+        Alert.alert('Failed', JSON.stringify(err));
       })
-      //4. close this page : move to the scores page
-      this.props.navigation.navigate('ScoreScreen', {'testID': testID, 'scoreID':scoreIDs});
 }
  //swipe
 onSwipeUp=(gestureState)=> {
@@ -266,13 +309,18 @@ changeQuestion=(activeIndex, activeNumber)=> {
  
 }
 onForward=()=> {
+  //CURRENT INDEX
   let oldIndex = this.state.activeIndex;
+  //NEXT INDEX
   let newIndex = oldIndex + 1;
+  //IF THE NEXT INDEX IS LESS THAN THE TOTAL NUMBER OF QUESTIONS
   if(newIndex < Object.keys(this.state.answers).length)
   {
+    //GET THE NEXT ACTIVE NUMBER
     let newActiveNumber = this.state.ids[newIndex];
+    //GET THE CURRENT ACTIVE NUMBER
     let oldActiveNumber = this.state.activeNumber;
-    
+    // CONFIRM THE TIMING TYPES
     if(parseInt(this.state.tim) === 2)
     {
       let settimes = {...this.state.settime};
@@ -301,28 +349,34 @@ onForward=()=> {
 
     }else if(parseInt(this.state.tim) === 1)
     {
-      //IF THE QUESTION HAS BEEN ANSWERED
-      //NO NEED TO STORE THE TIME SPENT
-      let did = oldActiveNumber .toString();
-      let sc = this.state.choices[did] && choices[did] !== undefined ? this.state.choices[did] : null ;
+      //OPTION ONE USE SINGLE TIMING
+      //CONFIRM IF QUESTION HAS BEEN ANSWERED
+      let did = oldActiveNumber.toString();
+      let sc = this.state.choices[did] && this.state.choices[did] !== undefined ? this.state.choices[did] : null ;
+      
       if(sc && sc.length > 0 && sc != null)
       {
+         //IF THE QUESTION HAS BEEN ANSWERED
+         //NO NEED TO STORE THE TIME SPENT
+         //RESET STARTING FOR NEXT QUESTION
         let settimes = {...this.state.settime};
         let ending = Math.floor(new Date().getTime()/1000);
         let lasttime = settimes[oldActiveNumber.toString()] ? settimes[oldActiveNumber] : 0;
         let cur = lasttime + (ending - this.state.starting);
         settimes[oldActiveNumber] = cur;
+
         this.setState({
           activeIndex: newIndex, 
           activeNumber: newActiveNumber,
-          settime: settimes,
-          starting: Math.floor(new Date().getTime()/1000),
+          starting: new Date().getTime(),
         });
       }else
       {
+        
         this.setState({
           activeIndex: newIndex, 
-          activeNumber: newActiveNumber
+          activeNumber: newActiveNumber,
+          starting: new Date().getTime(),
         });
       }
     }
@@ -367,12 +421,14 @@ onBackward=()=> {
         activeNumber: newActiveNumber,
         settime: settimes,
         starttime: Math.floor(new Date().getTime()),
+        starting: new Date().getTime(),
       });
 
     }else{
       this.setState({
         activeIndex: newIndex, 
-        activeNumber: newActiveNumber
+        activeNumber: newActiveNumber,
+        starting: new Date().getTime(),
       });
 
     }
@@ -382,7 +438,14 @@ updateIndex = (selectedIndex) =>{
   this.setState({ selectedIndex });
  if(selectedIndex == 0 )
   {
+    if(this.state.isCompleted)
+    {
+      this.props.navigation.navigate('ScoreScreen', {'testID': this.state.testID, 'scoreID': this.state.scoreID });
+    }else
+    {
       this.storeTest();
+    }
+      
   }
   else if(selectedIndex == 1 )
   {
@@ -405,8 +468,9 @@ onSwipe=(gestureName, gestureState)=> {
   }
 }
 getCurrentTime = () =>{
-    let { settime, starttime, tim, activeIndex, activeNumber, choices } = this.state;
-    
+    let { settime, starttime, tim, activeIndex, activeNumber, choices, isCompleted, timespent } = this.state;
+    if(isCompleted === false)
+    {
     let stime = parseInt(tim) === 2 ? settime[activeNumber] : settime;
     let now = Math.floor(new Date().getTime());
     let diff = 0;
@@ -441,7 +505,7 @@ getCurrentTime = () =>{
       min = min > 0 ? min : '--';
       sec = sec > 0 ? sec : '--';
       this.setState({currentTime: `${hour} : ${min} : ${sec}` });
-    }else
+    }else if(isCompleted === true)
     {
       //IF THE TIMER SELECTED IS 1: SUBMIT WHEN TIME IS BELOW 0
       if(parseInt(tim) === 1)
@@ -454,45 +518,62 @@ getCurrentTime = () =>{
         sc && sc.length > 0 ? this.setChoice(activeNumber, sc) : this.setChoice(activeNumber, '000');
       }
     }
+  }
+  else
+  {
+    let timeLeft = timespent && timespent[activeNumber.toString()]? timespent[activeNumber.toString()] : 0;
+    let hours = timeLeft/(60 * 60);
+    let hour = Math.floor(hours);
+    let mins = (timeLeft - (hour * 60 * 60)) / 60;
+    let min = Math.floor(mins);
+    let sec = timeLeft - ((hour * 60 * 60) + (min * 60)) ;
+    hour = hour > 0 ? hour : '--';
+    min = min > 0 ? min : '--';
+    sec = sec > 0 ? sec : '--';
+    this.setState({currentTime: `${hour} : ${min} : ${sec}` });
+  }
 }
 componentWillUnmount(){
-  this.state = {
+  this.setState({
     instructions: {},
-    ids:{},
-    questions:{},
-    options:{},
-    choices:{},
-    timespent:{},
-    answers:{},
-    checks:{},
-    fontLoaded: false,
-    testID:null,
-    scoreID:null,
-    isRetest: false,
-    settime: null,
-    noq: null,
-    tim: null,
-    ans: null,
-    activeNumber: 1,
-    activeIndex: 0,
-    activeTime: 0,
-    gestureName: 'none',
-    currentTime:'',
-    starttime: Math.floor(new Date().getTime()),
-    starting: Math.floor(new Date().getTime()/1000),
-    selectedIndex: 2,
-    score: 0,
-    isVisible: false,
-    isCompleted: false,
-  };
+      ids:{},
+      questions:{},
+      options:{},
+      choices:{},
+      timespent:{},
+      answers:{},
+      checks:{},
+      fontLoaded: false,
+      testID:null,
+      scoreID:null,
+      isRetest: false,
+      settime: null,
+      settimer: null,
+      noq: null,
+      tim: null,
+      ans: null,
+      activeNumber: 1,
+      activeIndex: 0,
+      activeTime: 0,
+      gestureName: 'none',
+      currentTime:'',
+      starttime: Math.floor(new Date().getTime()),
+      endtime: Math.floor(new Date().getTime()),
+      starting: new Date().getTime(),
+      selectedIndex: 2,
+      score: 0,
+      isVisible: false,
+      isCompleted: null,
+  })
 }
 
 comp1 = () => <Icon name='pause'color='white'   type='material' />
 comp2 = () => <Icon name='done' color='white'   type='material' />
+comp3 = () => <Text style={{color:'white', fontFamily:'SulphurPointNormal'}} >Score {Math.floor(this.state.score * 100)}% : Next</Text>
 
 render(){
- const { fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans, tim, isCompleted } = this.state;
- const buttons =[{element:this.comp1}, {element:this.comp2}];
+ const { isRetest, fontLoaded, activeNumber, activeIndex, selectedIndex, ids, options, choices, questions, answers, instructions, currentTime, ans, tim, isCompleted } = this.state;
+ const buttons = isCompleted ? [{element:this.comp3}] :  [{element:this.comp1}, {element:this.comp2}];
  
  const config = {
     velocityThreshold: 0.3,
@@ -512,11 +593,16 @@ render(){
           onPress={()=>this.changeQuestion(i, l)}
           />
   )): null;
-this.getCurrentTime
+  if(!isCompleted)
+  {
+    this.getCurrentTime;
+  }
+ 
   return (
     <ThemeProvider>
-        {fontLoaded && ids.length > 0 ?
-        <View style={{flex:1}}> 
+      <View style={{flex:1}}> 
+        {fontLoaded && ids.length > 0  && isCompleted !== null?
+        <>
         <Overlay
           isVisible={this.state.isVisible}
           windowBackgroundColor="rgba(7, 7, 7, .3)"
@@ -591,10 +677,12 @@ this.getCurrentTime
                         disable={ choices[activeNumber] ?  true : false }
                         activeNumber={activeNumber}
                         optionID={element[0]}
+                        answer={Object.keys(this.state.answers[activeNumber])[0]}
+                        choice={this.state.choices[activeNumber]}
                         tim={tim}
                         ans={ans}
                         isCompleted={isCompleted}
-                        handlePress={()=>{this.setChoice(activeNumber, element[0])}}
+                        handlePress={()=>{this.setChoice(activeNumber, element[0])}} 
                       />
                   </View>
                   )) : null}
@@ -622,8 +710,9 @@ this.getCurrentTime
                   textStyle={styles.genButtonTextStyle}
                   />
              
-            </View>
-        :<View></View>}
+          </> 
+        :<Activity title='Preparing Test, Please wait...' onPress={()=>{this.onPress(1)}} />}
+         </View>
     </ThemeProvider>
   );
 };

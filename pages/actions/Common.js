@@ -7,10 +7,10 @@ import reducer from './../reducers/index';
 export const DB_PATH = new Database();
 const sto = createStore(reducer);
 let st = sto.getState();
-
+console.log(config);
 //export const API_PATH = st.path_main;
 export const USER_PATH = config.API_PATHS;
-export const API_PATH = config.API_PATHS;
+export const API_PATH = 'http://192.168.43.193:8086/testtricks'; //config.API_PATHS;
 export const CLIENT_PATH = config.CLIENT_PATH;
 //export const IMAGE_PATH = st.path_image;
 export const IMAGE_PATH = config.IMAGE_PATH;
@@ -25,7 +25,6 @@ export const EMAIL = config.PUBLISHER;
 export const EMU = config.EMU;
 
 const db = DB_PATH;
-
 
 export const CONFIG =(GETSTATE)=>{
     // headers

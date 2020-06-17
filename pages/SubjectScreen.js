@@ -41,7 +41,7 @@ class SubjectScreen extends React.Component{
         alert('Success');
       })
       .catch(err =>{
-        alert( `network ${JSON.stringify(err)} `);
+        alert( `Poor network connection: unable to connect. Retry.. `);
       })
   })
   

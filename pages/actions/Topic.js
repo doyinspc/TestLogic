@@ -113,12 +113,13 @@ export const getTopicsDownload = (themeID) => (dispatch, getState) => {
 }
 
 //GET TOPICS FROM ONLINE DATABANK
-export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
+export const getTopicsDownloadOnlyEx = (topi) => (dispatch, getState) => {
   //START DOWNLOAD
   console.log(`activating ${topi}`)
   dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
   //let instruction_paths = `${path}/instruction/cat/${topi}`;
   let instruction_paths = `${path}/api/`;
+  console.log(instruction_paths);
   let params = {
     data:{topicID:topi},
     cat:'all',
@@ -140,7 +141,7 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                     let paramsx = {
                       data:{instructionID:topi},
                       cat:'question',
-                      table:'instructions',
+                      table:'questions',
                       token:config
                     }
                     axios.get(question_paths, {params:paramsx})
@@ -151,31 +152,30 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                       dispatch({ type:TOPIC_DOWNLOADING_START, topicid:topi, topicquestions:question_number});
                       let questioncount = 0;
                       //LOOP THROUGH QUESTIONS AND SAVE
+                     
                         ques.data.forEach(row_ques =>{
-                          
                           let newanswers = [];
+                          let newdistractors = [];
                           let answer_an = row_ques.answer;
-                          console.log(answer_an);
                           let answers_an = answer_an.split(':::::');
                           answers_an.forEach(a =>{
                             let answerArray = a.split(':::');
                             let newanswer = {};
-                            newanswer['id'] = answerArray[0];
+                            newanswer['id'] = parseInt(answerArray[0]);
                             newanswer['name'] = answerArray[1];
-                            newanswer['questionID'] = row_ques.id;
+                            newanswer['questionID'] = parseInt(row_ques.id);
+                            newanswer['type'] = 0;
                             newanswers.push(newanswer);
-                            
                           })
-                          console.log(newanswers);
-                          let newdistractors = [];
+                         
                           let distractor_an = row_ques.distractor;
                           let distractors_an = distractor_an.split(':::::');
                           distractors_an.forEach(a =>{
                             let distractorArray = a.split(':::');
                             let newdistractor = {};
-                            newdistractor['id'] = distractorArray[0];
+                            newdistractor['id'] = parseInt(distractorArray[0]);
                             newdistractor['name'] = distractorArray[1];
-                            newdistractor['questionID'] = row_ques.id;
+                            newdistractor['questionID'] = parseInt(row_ques.id);
                             newdistractors.push(newdistractor);
                           })
 
@@ -195,20 +195,146 @@ export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
                           qr['created_at'] = row_ques.created_at;
                           qr['updated_at'] = row_ques.updated_at;
 
-                        console.log(JSON.stringify(newdistractors));
-
+                        
                         let q_arr = [qr];
                         loadDataPromise(q_arr, SCHEME['question'].name, SCHEME['question'].edits)
                           .then(rep =>{
-                            questioncount = questioncount + 1;
-                            dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});  
-                            console.log(`${ questioncount} saved`);
+                            console.log(rep);
                           })
                           .then(an => {
-                              loadDataPromise(newanswers, SCHEME['answer'].name, SCHEME['answer'].edits).then(r =>{}).catch(e =>{})
+                            newanswers.forEach(row_ans =>{
+                              loadDataPromise([row_ans], SCHEME['answer'].name, SCHEME['answer'].edits)
+                              .then(r =>{}).catch(e =>{console.log(JSON.stringify(e))})
+                            })
                           })
                           .then(di => {
-                              loadDataPromise(newdistractors, SCHEME['distractor'].name, SCHEME['distractor'].edits).then(r_d=>{}).catch(e_d=>{})
+                            newdistractors.forEach(row_dis =>{
+                              loadDataPromise([row_dis], SCHEME['distractor'].name, SCHEME['distractor'].edits).then(r_d=>{}).catch(e=>{console.log(JSON.stringify(e))})
+                            })
+                          })
+                          .then(di => {
+                            questioncount = questioncount + 1;
+                            console.log(`${ questioncount} saved`);
+                            dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});  
+                          })
+                          .catch(err => console.log(err))
+                        });
+                      })
+                      .catch(err => console.log(err))
+                    //END DOWNLOADING QUESTION
+                  }): console.log(`No data instrucion`);
+                    //END SAVING INSTRUCTIONS
+            })
+            .catch(err => console.log(err))
+            //END DOWNLOADING INSTRUCTION     
+}
+
+//GET TOPICS FROM ONLINE DATABANK
+export const getTopicsDownloadOnly = (topi) => (dispatch, getState) => {
+  //START DOWNLOAD
+  console.log(`activating ${topi}`)
+  dispatch({ type: TOPIC_DOWNLOADING, payload: 1});
+  //let instruction_paths = `${path}/instruction/cat/${topi}`;
+  let instruction_paths = `${path}/api/`;
+  console.log(instruction_paths);
+  let params = {
+    data:{topicID:topi},
+    cat:'all',
+    table:'instructions',
+    token:config
+  }
+            //START DOWNLOADING INSTRUCIONS
+            axios.get(instruction_paths, {params})
+            .then(inst => {
+                //START SAVING 
+                //CHECK IF INSTRUCTION IS AVAILABLE
+                inst && inst.data && Array.isArray(inst.data) && inst.data.length > 0 ? 
+                loadDataPromise(inst.data, SCHEME['instruction'].name, SCHEME['instruction'].edits)
+                .then( rep =>{
+                    let instructionID = [];
+                    let instructions = inst.data;
+                    instructions.map((row) =>(instructionID.push(row.id)));//START DOWNLOADING QUESTIONS
+                    let question_paths = `${path}/api/`;
+                    let paramsx = {
+                      data:{instructionID:topi},
+                      cat:'question',
+                      table:'questions',
+                      token:config
+                    }
+                    axios.get(question_paths, {params:paramsx})
+                    .then(ques => {
+                      console.log(JSON.stringify(ques.data));
+                      //TOTAL QUESTIONS DOWNLOADED FOR THE TOPIC
+                      //DISPATCH TOTAL NUMBER FOR THAT TOPIC
+                      let question_number = ques.data.length;
+                      dispatch({ type:TOPIC_DOWNLOADING_START, topicid:topi, topicquestions:question_number});
+                      let questioncount = 0;
+                      //LOOP THROUGH QUESTIONS AND SAVE
+                     
+                        ques.data.forEach(row_ques =>{
+                          
+                          let newanswers = [];
+                          let newdistractors = [];
+                          let answer_an = row_ques.answer;
+                          let answers_an = answer_an.split(':::::');
+                          answers_an.forEach(a =>{
+                            let answerArray = a.split(':::');
+                            let newanswer = {};
+                            newanswer['id'] = parseInt(answerArray[0]);
+                            newanswer['name'] = answerArray[1];
+                            newanswer['questionID'] = parseInt(row_ques.id);
+                            newanswer['type'] = 0;
+                            newanswers.push(newanswer);
+                          })
+                         
+                          let distractor_an = row_ques.distractor;
+                          let distractors_an = distractor_an.split(':::::');
+                          distractors_an.forEach(a =>{
+                            let distractorArray = a.split(':::');
+                            let newdistractor = {};
+                            newdistractor['id'] = parseInt(distractorArray[0]);
+                            newdistractor['name'] = distractorArray[1];
+                            newdistractor['questionID'] = parseInt(row_ques.id);
+                            newdistractors.push(newdistractor);
+                          })
+
+                          let qr = {};
+                          qr['id'] = row_ques.id;
+                          qr['instructionID'] = row_ques.instructionID;
+                          qr['question'] = row_ques.question;
+                          qr['question_video'] = row_ques.question_video;
+                          qr['question_audio'] = row_ques.question_audio;
+                          qr['question_image'] = row_ques.question_image;
+                          qr['type'] = row_ques.type;
+                          qr['option_type'] = row_ques.option_type;
+                          qr['issued'] = row_ques.issued;
+                          qr['passed'] = row_ques.passed;
+                          qr['grp'] = row_ques.grp;
+                          qr['active'] = row_ques.active;
+                          qr['created_at'] = row_ques.created_at;
+                          qr['updated_at'] = row_ques.updated_at;
+
+                        
+                        let q_arr = [qr];
+                        loadDataPromise(q_arr, SCHEME['question'].name, SCHEME['question'].edits)
+                          .then(rep =>{
+                            console.log(rep);
+                          })
+                          .then(an => {
+                            newanswers.forEach(row_ans =>{
+                              loadDataPromise([row_ans], SCHEME['answer'].name, SCHEME['answer'].edits)
+                              .then(r =>{}).catch(e =>{console.log(JSON.stringify(e))})
+                            })
+                          })
+                          .then(di => {
+                            newdistractors.forEach(row_dis =>{
+                              loadDataPromise([row_dis], SCHEME['distractor'].name, SCHEME['distractor'].edits).then(r_d=>{}).catch(e=>{console.log(JSON.stringify(e))})
+                            })
+                          })
+                          .then(di => {
+                            questioncount = questioncount + 1;
+                            console.log(`${ questioncount} saved`);
+                            dispatch({ type: TOPIC_DOWNLOADING_STATE, topicid:topi, tquestions:questioncount});  
                           })
                           .catch(err => console.log(err))
                         });
@@ -256,17 +382,21 @@ const getTopicDB = (themeID) => {
   let theme_id_string = '';
   theme_id_string = themeID && Array.isArray(themeID) ? themeID.toString() : thm.push(themeID).toString();
   let topic_paths = `${path}/api/`;
+  
     let params = {
         data:{themeID:themeID},
         cat:'topic',
         table:TABLE_NAME,
         token:config
     }
+
   axios.get(topic_paths, {params})
     .then(top => {
         resolve(top.data);
     })
-    .catch(err =>reject(err))
+    .catch(err =>{ 
+        reject(err);
+    })
     })
 }
 //GET TOPICS FROM ONLINE DATABANK
@@ -312,40 +442,40 @@ export const getTopicCount = (topicID) => (dispatch, getState) => {
 
 //GET ALL TOPIC
 export const getTopics = (theme) => (dispatch) => {
-  
-  dispatch({ type: TOPIC_LOADING})
+  dispatch({ type: TOPIC_LOADING});
   theme && Array.isArray(theme) ? 
   theme.forEach(id => {
+    console.log(id);
       let PARAM = {themeID : id};
       db.selectTopicPromise(TABLE_NAME, PARAM)
       .then(data=>{
-        if(data == 1)
+        if(Array.isArray(data._array) && data._array.length > 0)
         {
-          dispatch({type: TOPIC_LOADING_ERROR, msg: 'No Data'});
-          //NO DOWNLOAD FROM OFFLINE TRY ONLINE
-        }else{
           //DATA WAS DOWN LOADED OFFLINE
           dispatch({ type: TOPIC_GET_MULTIPLE, payload: data._array, status:3});
-        }   
-      })
-      .then(dataa=>{
-        // getTopicDB(id)
-        // .then(data =>{
-        //       if(data && data.length > 0)
-        //       {
-        //         dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
-        //         loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
-        //         .then(d=>{
-        //             console.log(`loading and saving topics ${JSON.stringify(d)}`)
-        //         })
-        //         .catch(err=>console.log(err))
-        //       }     
-        // })
-        // .catch(err=>{
-        //   console.log(err)
-        // })
+        }else   
+        {
+          //NO DOWNLOAD FROM OFFLINE TRY ONLINE
+          getTopicDB(id)
+          .then(data =>{
+                if(data && data.length > 0)
+                {
+                  console.log('ggggag'+data);
+                  dispatch({ type: TOPIC_GET_MULTIPLE, payload: data, status:3});
+                  loadDataPromise(data, SCHEME['topic'].name, SCHEME['topic'].edits)
+                  .then(d=>{
+                      console.log(`loading and saving topics ${JSON.stringify(d)}`)
+                  })
+                  .catch(err=>console.log(err))
+                }     
+          })
+          .catch(err=>{
+            console.log(err)
+          })
+        }
       })
     .catch(err=>{
+      console.log('pos3');
         getTopicDB(id)
         .then(data =>{
           dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:id});
@@ -372,7 +502,6 @@ export const getTopics = (theme) => (dispatch) => {
       }  
     })
     .then(dataa=>{
-      console.log(`single second success ${theme}`);
       getTopicDB(theme)
         .then(data =>{
           dispatch({ type: TOPIC_DOWNLOADING_SUCCESS, payload:data, id:theme});
@@ -473,7 +602,7 @@ export const loadDataPromise  =   (data, tables, editable_rows) =>{
 };
 
 const LoadDataSinglePromise = (tables, data_row, editable_rows) =>{
- 
+ console.log(data_row.id);
   return new Promise((resolve, reject)=>{
     //pick a row via id confirm id is not zero
     if(data_row.id && parseInt(data_row.id) > 0)
@@ -558,6 +687,7 @@ const selectPutPromise  = (tables, id) => {
 
 const loadInsertPromise  = (tables, data) => {
   const TABLES_NAME = tables;
+ 
   return new Promise((resolve, reject)=>{
     db.insertPromise(TABLES_NAME, data)
     .then(async id=>{

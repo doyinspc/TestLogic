@@ -72,8 +72,8 @@ export const getScorePromise = (id) => (dispatch) => {
     .then(dat=>{
         if(dat && Array.isArray(dat._array) && dat._array.length > 0)
         {
-          dispatch({type: SCORE_DOWNLOADING_SUCCESS, payload:dat._array, id:dat})
-          dispatch({ type: SCORE_GET_ONE, payload:id})
+          
+          dispatch({ type: SCORE_GET_ONE, payload:id});
           resolve(dat._array[0]);
         }
         else
@@ -83,31 +83,37 @@ export const getScorePromise = (id) => (dispatch) => {
         }
     })
     .catch(err=>{
-        dispatch({type: SCORE_INSERT_FAIL,  msg:err});
         reject(err);
     })
   }) 
 };
 
 //GET SINGLE SCORE
-export const insertScore = (PARAM, callback) =>(dispatch, getState) =>{
-  db.insertScore(TABLE_NAME, TABLE_STRUCTURE, PARAM, 1, (data)=>{
-    callback(data);
-    dispatch({
-      type: SCORE_GET_ONE,
-      id: data
+export const insertScore = (PARAM) =>(dispatch, getState) =>{
+  return new Promise((resolve, reject)=>{
+  db.insertTestPromise(TABLE_NAME, PARAM)
+  .then(data =>{
+       dispatch({type: SCORE_GET_ONE, id: data});
+       resolve(data);
+    })
+    .catch(err =>{
+      reject(err)
     })
   })
 };
 
 //GET SINGLE SCORE
-export const updateScore = (PARAM, id, callback) =>(dispatch, getState) =>{
-  db.update(TABLE_NAME, TABLE_STRUCTURE, PARAM, id, (data)=>{
-    dispatch({
-      type: SCORE_GET_ONE,
-      id: data
+export const updateScore = (PARAM, id) =>(dispatch, getState) =>{
+  return new Promise((resolve, reject)=>{
+    db.updatePromise(TABLE_NAME, PARAM, id)
+    .then(data =>{
+         dispatch({type: SCORE_GET_ONE, id: data});
+         resolve(data);
+      })
+      .catch(err =>{
+        reject(err)
+      })
     })
-  })
 };
 
 
