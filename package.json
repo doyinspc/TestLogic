@@ -17,7 +17,7 @@
     "expo-google-app-auth": "^8.0.1",
     "expo-sqlite": "~8.0.0",
     "expokit": "^35.0.3",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "galio-framework": "^0.6.3",
     "link": "^0.1.5",
     "md5": "^2.2.1",
